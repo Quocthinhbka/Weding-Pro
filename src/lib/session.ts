@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 export const ADMIN_COOKIE = "admin_session";
 export const ADMIN_MAX_AGE = 60 * 60 * 24 * 14;
 
-function secret() {
+export function secret() {
   const s = process.env.SESSION_SECRET;
   if (s && s.length >= 16) return s;
   if (process.env.NODE_ENV === "production") {

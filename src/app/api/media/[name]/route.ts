@@ -1,6 +1,6 @@
 import path from "node:path";
-import { MEDIA_NAME, mediaDir, mediaMime } from "@/lib/media";
-import { fileResponse } from "@/lib/video";
+import { fileResponse, MEDIA_NAME, mediaDir, mediaMime } from "@/lib/media";
+
 
 // Ảnh / nhạc đã tải lên. Tên tệp là ngẫu nhiên và không bao giờ bị ghi đè nên cho trình duyệt lưu đệm lâu.
 export async function GET(req: Request, ctx: RouteContext<"/api/media/[name]">) {

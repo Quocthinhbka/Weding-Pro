@@ -100,28 +100,6 @@ export function addWish(guestId: number | null, name: string, message: string) {
   return get<Wish>("SELECT * FROM wishes WHERE id = ?", Number(result.lastInsertRowid))!;
 }
 
-/* ---------- Video ---------- */
-
-export type Video = {
-  id: number;
-  name: string;
-  message: string | null;
-  original_file: string;
-  file: string | null;
-  mime: string | null;
-  poster: string | null;
-  size: number;
-  status: "processing" | "ready" | "failed";
-  approved: number;
-  created_at: number;
-};
-
-export function publicVideos() {
-  return all<Pick<Video, "id" | "name" | "message" | "poster" | "created_at">>(
-    "SELECT id, name, message, poster, created_at FROM videos WHERE approved = 1 AND status = 'ready' ORDER BY created_at DESC",
-  );
-}
-
 /* ---------- Vòng quay ---------- */
 
 export type Spin = { id: number; prize_label: string; is_win: number; claim_code: string | null; claimed_at: number | null; prize_id: number };

@@ -18,7 +18,6 @@ export default async function Dashboard() {
     ["Sẽ tham dự", `${yes.length} lượt · ${people(yes)} người`],
     ["Không đến được", rsvps.length - yes.length],
     ["Lời chúc", count("SELECT COUNT(*) AS n FROM wishes")],
-    ["Video chờ duyệt", count("SELECT COUNT(*) AS n FROM videos WHERE approved = 0")],
     ["Lượt quay", count("SELECT COUNT(*) AS n FROM spins")],
     ["Quà chưa trao", count("SELECT COUNT(*) AS n FROM spins WHERE is_win = 1 AND claimed_at IS NULL")],
   ] as const;

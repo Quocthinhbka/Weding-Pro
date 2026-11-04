@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
+import { CropDialog } from "./crop-dialog";
 
 // Các ô nhập dùng trong trang cấu hình thiệp.
 
 export type MediaKind = "photo" | "qr" | "audio";
 
-export async function uploadFile(file: File, kind: MediaKind): Promise<string> {
+export async function uploadFile(file: Blob, kind: MediaKind): Promise<string> {
   const fallbackType = kind === "audio" ? "audio/mpeg" : "image/jpeg";
   const res = await fetch(`/api/admin/media?kind=${kind}`, {
     method: "POST",
@@ -95,13 +96,14 @@ function useUpload(kind: MediaKind, onDone: (url: string) => void) {
   return { input, busy, error, handle };
 }
 
-/** Ô ảnh: xem trước + nút tải ảnh mới. */
+/** Ô ảnh: xem trước + chọn hoặc kéo thả ảnh vào, căn chỉnh và cắt đúng tỉ lệ rồi mới tải lên. */
 export function ImageField({
   label,
   value,
   onChange,
   kind = "photo",
-  aspect = "aspect-[3/4]",
+  ratio = 3 / 4,
+  outSide = 1600,
   optional = false,
   className = "",
 }: {
@@ -109,25 +111,51 @@ export function ImageField({
   value: string;
   onChange: (url: string) => void;
   kind?: "photo" | "qr";
-  aspect?: string;
+  ratio?: number; // rộng / cao của khung hiển thị trên thiệp
+  outSide?: number; // cạnh dài của ảnh sau khi cắt
   optional?: boolean;
   className?: string;
 }) {
-  const { input, busy, error, handle } = useUpload(kind, onChange);
+  const input = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [over, setOver] = useState(false);
+  const [error, setError] = useState("");
+
+  function pick(f: File | undefined) {
+    if (input.current) input.current.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) return setError("Vui lòng chọn một tệp ảnh.");
+    setError("");
+    setFile(f);
+  }
+
   return (
     <div className={className}>
       <span className="label">{label}</span>
-      <div className={`relative w-full overflow-hidden rounded-2xl bg-paper ring-1 ring-line ${aspect}`}>
+      <div
+        style={{ aspectRatio: ratio }}
+        className={`relative w-full overflow-hidden rounded-2xl bg-paper ring-1 ${over ? "ring-2 ring-olive" : "ring-line"}`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setOver(true);
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setOver(false);
+          pick(e.dataTransfer.files[0]);
+        }}
+      >
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element -- xem trước trong trang quản trị
           <img src={value} alt={label} className={`h-full w-full ${kind === "qr" ? "object-contain p-2" : "object-cover"}`} />
         ) : (
-          <div className="grid h-full place-items-center text-xs text-ink-soft">Chưa có ảnh</div>
+          <div className="grid h-full place-items-center p-2 text-center text-xs text-ink-soft">Chưa có ảnh. Kéo ảnh thả vào đây</div>
         )}
-        {busy && <div className="absolute inset-0 grid place-items-center bg-cream/80 text-sm">Đang tải lên…</div>}
+        {over && <div className="absolute inset-0 grid place-items-center bg-olive/20 text-sm font-medium text-olive-deep">Thả ảnh để căn chỉnh</div>}
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
-        <button type="button" className="rounded-lg bg-olive px-3 py-1.5 text-xs text-white hover:bg-olive-deep disabled:opacity-50" disabled={busy} onClick={() => input.current?.click()}>
+        <button type="button" className="rounded-lg bg-olive px-3 py-1.5 text-xs text-white hover:bg-olive-deep" onClick={() => input.current?.click()}>
           {value ? "Đổi ảnh" : "Tải ảnh lên"}
         </button>
         {optional && value && (
@@ -137,7 +165,19 @@ export function ImageField({
         )}
       </div>
       {error && <p className="mt-1 text-xs text-[#8a4a3e]">{error}</p>}
-      <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => handle(e.target.files?.[0])} />
+      <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
+      {file && (
+        <CropDialog
+          file={file}
+          spec={{ aspect: ratio, outSide, png: kind === "qr" }}
+          title={`Căn chỉnh: ${label}`}
+          onCancel={() => setFile(null)}
+          onDone={async (blob) => {
+            onChange(await uploadFile(blob, kind));
+            setFile(null);
+          }}
+        />
+      )}
     </div>
   );
 }

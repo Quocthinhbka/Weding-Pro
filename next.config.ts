@@ -8,6 +8,13 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/**": ["./node_modules/@img/**/*"],
   },
+  // Trang quay video lời chúc là tệp tĩnh public/wedmemo/index.html (chép từ dự án WedMemo).
+  async rewrites() {
+    return [
+      { source: "/wedmemo", destination: "/wedmemo/index.html" },
+      { source: "/wedmemo/kiosk", destination: "/wedmemo/index.html" },
+    ];
+  },
   images: {
     // Ảnh tạm là SVG; ảnh thật (jpg/webp) vẫn được tối ưu như bình thường.
     dangerouslyAllowSVG: true,

@@ -67,3 +67,36 @@ export async function saveMedia(body: ReadableStream<Uint8Array>, kind: MediaKin
   fs.writeFileSync(path.join(mediaDir(), name), out);
   return { url: `/api/media/${name}`, size: out.length };
 }
+
+/** Trả file kèm hỗ trợ HTTP Range để trình phát video tua được. */
+export function fileResponse(file: string, mime: string, rangeHeader: string | null, extra: Record<string, string> = {}) {
+  let stat: fs.Stats;
+  try {
+    stat = fs.statSync(file);
+  } catch {
+    return new Response("Không tìm thấy", { status: 404 });
+  }
+  const headers: Record<string, string> = {
+    "Content-Type": mime,
+    "Accept-Ranges": "bytes",
+    "Cache-Control": "private, max-age=3600",
+    ...extra,
+  };
+  const match = rangeHeader?.match(/bytes=(\d*)-(\d*)/);
+  if (match && (match[1] || match[2])) {
+    let start = match[1] ? Number(match[1]) : stat.size - Number(match[2]);
+    let end = match[1] && match[2] ? Number(match[2]) : stat.size - 1;
+    start = Math.max(0, start);
+    end = Math.min(end, stat.size - 1);
+    if (start > end) {
+      return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${stat.size}` } });
+    }
+    const stream = Readable.toWeb(fs.createReadStream(file, { start, end })) as ReadableStream;
+    return new Response(stream, {
+      status: 206,
+      headers: { ...headers, "Content-Range": `bytes ${start}-${end}/${stat.size}`, "Content-Length": String(end - start + 1) },
+    });
+  }
+  const stream = Readable.toWeb(fs.createReadStream(file)) as ReadableStream;
+  return new Response(stream, { headers: { ...headers, "Content-Length": String(stat.size) } });
+}

@@ -5,6 +5,8 @@ import { saveSettings } from "@/app/admin/actions";
 import type { QuizQuestion } from "@/content/quiz";
 import { dateInfo, SECTION_LABELS, type SectionKey, type WeddingConfig } from "@/content/wedding";
 import { lunarText } from "@/lib/lunar";
+import { ConfigPreview } from "./config-preview";
+import { CropDialog, type Aspects } from "./crop-dialog";
 import { AddButton, AudioField, Card, ImageField, ItemTools, move, newId, NumberField, TextArea, TextField, uploadFile } from "./fields";
 
 const NAV = [
@@ -21,12 +23,35 @@ const NAV = [
   ["hien-thi", "Hiển thị"],
 ] as const;
 
+// Mục cấu hình -> phần tương ứng trong thiệp, để khung xem trước tự cuộn tới đúng chỗ đang chỉnh.
+const PREVIEW_SECTION: Record<string, string> = {
+  "co-dau-chu-re": "couple",
+  "gia-dinh": "family",
+  "ngay-cuoi": "countdown",
+  "dia-diem": "schedule",
+  "loi-moi": "family",
+  "anh-bia": "hero",
+  "chuyen-tinh": "story",
+  album: "album",
+  "mung-cuoi": "gifts",
+  "tro-choi": "games",
+};
+
 export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: WeddingConfig; initialQuiz: QuizQuestion[] }) {
   const [config, setConfig] = useState(initialConfig);
   const [quiz, setQuiz] = useState(initialQuiz);
   const [saved, setSaved] = useState(() => JSON.stringify([initialConfig, initialQuiz]));
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
+  const [previewOpen, setPreviewOpen] = useState(false); // chỉ dùng trên màn hình hẹp
+  const [section, setSection] = useState<{ sec: string; n: number } | null>(null);
+  const lastSec = useRef("");
+  const showSection = (id: string) => {
+    const sec = PREVIEW_SECTION[id];
+    if (!sec || sec === lastSec.current) return;
+    lastSec.current = sec;
+    setSection((prev) => ({ sec, n: (prev?.n ?? 0) + 1 }));
+  };
   const dirty = JSON.stringify([config, quiz]) !== saved;
   // Có thay đổi mới thì ẩn thông báo "đã lưu" cũ.
   const status = dirty && message?.ok ? null : message;
@@ -68,13 +93,13 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
   const date = dateInfo(config);
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="pb-24">
       <div>
         <h1 className="font-serif text-2xl font-semibold">Cấu hình thiệp</h1>
         <p className="mt-1 text-sm text-ink-soft">Chỉnh nội dung rồi bấm “Lưu thay đổi” ở cuối màn hình – thiệp được cập nhật ngay.</p>
         <nav className="mt-3 flex flex-wrap gap-1.5 text-xs">
           {NAV.map(([id, label]) => (
-            <a key={id} href={`#${id}`} className="whitespace-nowrap rounded-full bg-cream px-3 py-1 ring-1 ring-line hover:bg-white">
+            <a key={id} href={`#${id}`} onClick={() => showSection(id)} className="whitespace-nowrap rounded-full bg-cream px-3 py-1 ring-1 ring-line hover:bg-white">
               {label}
             </a>
           ))}
@@ -88,6 +113,9 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
             {status?.text ?? (dirty ? "● Có thay đổi chưa lưu" : "Mọi thay đổi đã được lưu")}
           </span>
           <div className="ml-auto flex items-center gap-2">
+            <button type="button" className="btn btn-outline !py-2 !text-xs lg:hidden" onClick={() => setPreviewOpen(true)}>
+              📱 Xem trước
+            </button>
             <a href="/" target="_blank" className="btn btn-outline !py-2 !text-xs">
               Xem thiệp ↗
             </a>
@@ -98,6 +126,11 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
         </div>
       </div>
 
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div
+          className="min-w-0 space-y-6"
+          onFocusCapture={(e) => showSection((e.target as HTMLElement).closest("section[id]")?.id ?? "")}
+        >
       <Card id="co-dau-chu-re" title="Cô dâu & chú rể">
         <div className="grid gap-6 sm:grid-cols-2">
           {(["groom", "bride"] as const).map((who) => (
@@ -105,7 +138,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
               <p className="font-semibold">{who === "groom" ? "Chú rể" : "Cô dâu"}</p>
               <TextField label="Tên hiển thị" value={config[who].name} maxLength={40} onChange={(v) => edit((d) => void (d[who].name = v))} />
               <TextField label="Năm sinh (không bắt buộc)" value={config[who].born} maxLength={20} onChange={(v) => edit((d) => void (d[who].born = v))} />
-              <ImageField label="Ảnh chân dung (dọc, tỉ lệ 3:4)" value={config[who].photo} onChange={(v) => edit((d) => void (d[who].photo = v))} className="max-w-[220px]" />
+              <ImageField label="Ảnh chân dung (dọc, tỉ lệ 3:4)" value={config[who].photo} ratio={3 / 4} outSide={1600} onChange={(v) => edit((d) => void (d[who].photo = v))} className="max-w-[220px]" />
             </div>
           ))}
         </div>
@@ -247,7 +280,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
 
       <Card id="anh-bia" title="Ảnh bìa & nhạc nền">
         <div className="grid gap-6 sm:grid-cols-[220px_1fr]">
-          <ImageField label="Ảnh bìa (ảnh dọc)" value={config.heroImage} aspect="aspect-[2/3]" onChange={(v) => edit((d) => void (d.heroImage = v))} />
+          <ImageField label="Ảnh bìa (ảnh dọc, tỉ lệ 2:3)" value={config.heroImage} ratio={2 / 3} outSide={1800} onChange={(v) => edit((d) => void (d.heroImage = v))} />
           <div className="space-y-3">
             <AudioField value={config.music.src} onChange={(v) => edit((d) => void (d.music.src = v))} />
             <TextField label="Tên bài hát" value={config.music.title} onChange={(v) => edit((d) => void (d.music.title = v))} />
@@ -259,7 +292,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
       <Card id="chuyen-tinh" title="Câu chuyện tình yêu">
         {config.loveStory.map((s, i) => (
           <div key={i} className="grid gap-4 rounded-2xl bg-white/70 p-4 ring-1 ring-line sm:grid-cols-[160px_1fr]">
-            <ImageField label="Ảnh" value={s.image} aspect="aspect-square" onChange={(v) => edit((d) => void (d.loveStory[i].image = v))} />
+            <ImageField label="Ảnh (vuông)" value={s.image} ratio={1} outSide={1200} onChange={(v) => edit((d) => void (d.loveStory[i].image = v))} />
             <div className="space-y-3">
               <div className="flex justify-end">
                 <ItemTools
@@ -284,7 +317,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
       <Card id="mung-cuoi" title="Hộp mừng cưới" description="Nên dùng ảnh QR xuất từ ứng dụng ngân hàng (chụp màn hình rồi cắt gọn).">
         {config.gifts.map((g, i) => (
           <div key={i} className="grid gap-4 rounded-2xl bg-white/70 p-4 ring-1 ring-line sm:grid-cols-[180px_1fr]">
-            <ImageField label="Mã QR" kind="qr" optional value={g.qr} aspect="aspect-square" onChange={(v) => edit((d) => void (d.gifts[i].qr = v))} />
+            <ImageField label="Mã QR (vuông)" kind="qr" optional value={g.qr} ratio={1} outSide={1000} onChange={(v) => edit((d) => void (d.gifts[i].qr = v))} />
             <div className="space-y-3">
               <div className="flex justify-end">
                 <ItemTools
@@ -383,36 +416,93 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
           ))}
         </div>
       </Card>
+        </div>
+
+        <aside
+          className={
+            previewOpen
+              ? "fixed inset-0 z-40 grid place-items-center bg-ink/60 p-4 lg:static lg:block lg:bg-transparent lg:p-0"
+              : "hidden lg:block"
+          }
+        >
+          <div className="h-[82dvh] w-full max-w-[400px] rounded-3xl bg-paper p-3 lg:sticky lg:top-28 lg:h-[calc(100dvh-11.5rem)] lg:max-w-none lg:bg-transparent lg:p-0">
+            <ConfigPreview config={config} section={section} onClose={() => setPreviewOpen(false)} />
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
 
+const ALBUM_ASPECTS: Aspects = [
+  ["Giữ nguyên tỉ lệ", null],
+  ["1:1", 1],
+  ["3:4", 3 / 4],
+  ["4:3", 4 / 3],
+  ["16:9", 16 / 9],
+];
+
 function AlbumEditor({ album, onChange }: { album: string[]; onChange: (album: string[]) => void }) {
   const input = useRef<HTMLInputElement>(null);
-  const [progress, setProgress] = useState("");
+  const [queue, setQueue] = useState<File[]>([]); // ảnh đang chờ căn chỉnh, ảnh đầu tiên đang mở hộp thoại
+  const [over, setOver] = useState(false);
   const [error, setError] = useState("");
+  const added = useRef<string[]>([]); // ảnh đã tải lên trong lượt này
+  const [total, setTotal] = useState(0);
 
-  async function addFiles(files: FileList | null) {
-    if (!files?.length) return;
-    setError("");
-    const added: string[] = [];
-    const list = Array.from(files);
-    for (let i = 0; i < list.length; i++) {
-      setProgress(`Đang tải ${i + 1}/${list.length}…`);
-      try {
-        added.push(await uploadFile(list[i], "photo"));
-      } catch (err) {
-        setError(`${list[i].name}: ${(err as Error).message}`);
-      }
-    }
-    setProgress("");
+  function pickFiles(files: FileList | null) {
+    const images = Array.from(files ?? []).filter((f) => f.type.startsWith("image/")); // đọc trước khi xoá ô chọn tệp (FileList bị rỗng theo)
     if (input.current) input.current.value = "";
-    if (added.length) onChange([...album, ...added]);
+    if (!images.length) return;
+    setError("");
+    added.current = [];
+    setTotal(images.length);
+    setQueue(images);
   }
 
+  // Xong (hoặc dừng giữa chừng) thì thêm các ảnh đã tải vào album.
+  function finish() {
+    if (added.current.length) onChange([...album, ...added.current]);
+    added.current = [];
+    setQueue([]);
+  }
+
+  async function addUploaded(file: Blob) {
+    added.current.push(await uploadFile(file, "photo"));
+    if (queue.length <= 1) finish();
+    else setQueue((q) => q.slice(1));
+  }
+
+  // Tải nguyên bản (không cắt) các ảnh còn lại.
+  async function uploadRest(files: File[]) {
+    for (const f of files) {
+      try {
+        added.current.push(await uploadFile(f, "photo"));
+      } catch (err) {
+        setError(`${f.name}: ${(err as Error).message}`);
+      }
+    }
+    finish();
+  }
+
+  const current = queue[0];
+  const n = total - queue.length + 1;
+
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-6">
+    <div
+      className={`space-y-3 rounded-2xl ${over ? "ring-2 ring-olive" : ""}`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        pickFiles(e.dataTransfer.files);
+      }}
+    >
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-4 xl:grid-cols-6">
         {album.map((src, i) => (
           <div key={`${i}-${src}`} className="group relative aspect-square overflow-hidden rounded-xl bg-paper ring-1 ring-line">
             {/* eslint-disable-next-line @next/next/no-img-element -- xem trước trong trang quản trị */}
@@ -438,11 +528,25 @@ function AlbumEditor({ album, onChange }: { album: string[]; onChange: (album: s
           </div>
         ))}
       </div>
-      <button type="button" disabled={!!progress} onClick={() => input.current?.click()} className="btn btn-primary !py-2 !text-xs">
-        {progress || "Tải thêm ảnh (chọn được nhiều ảnh)"}
+      <button type="button" onClick={() => input.current?.click()} className="btn btn-primary !py-2 !text-xs">
+        Tải thêm ảnh (chọn hoặc kéo thả nhiều ảnh)
       </button>
       {error && <p className="text-xs text-[#8a4a3e]">{error}</p>}
-      <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
+      <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => pickFiles(e.target.files)} />
+      {current && (
+        <CropDialog
+          key={`${n}-${current.name}`}
+          file={current}
+          spec={{ aspects: ALBUM_ASPECTS, outSide: 2000 }}
+          title={total > 1 ? `Căn chỉnh ảnh ${n}/${total}` : "Căn chỉnh ảnh"}
+          onCancel={finish}
+          onDone={addUploaded}
+          onSkip={[
+            { label: "Dùng ảnh gốc (không cắt)", run: () => addUploaded(current) },
+            ...(queue.length > 1 ? [{ label: `Dùng ảnh gốc cho cả ${queue.length} ảnh còn lại`, run: () => uploadRest(queue) }] : []),
+          ]}
+        />
+      )}
     </div>
   );
 }

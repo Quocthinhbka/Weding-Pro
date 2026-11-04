@@ -5,7 +5,7 @@ Trang thiệp cưới online, phong cách hoa cúc:
 - Phong bì "Mở thiệp" kèm nhạc nền.
 - Lịch trình hai địa điểm, bản đồ, chỉ đường, thêm vào lịch.
 - Xác nhận tham dự (RSVP).
-- Sổ lưu bút và video lời chúc.
+- Sổ lưu bút và video lời chúc (trang riêng `/wedmemo`, chuyển từ dự án WedMemo).
 - Bốn trò chơi có thưởng.
 - Hộp mừng cưới.
 - Trang quản trị `/admin`.
@@ -21,6 +21,10 @@ Mọi nội dung đều chỉnh được ngay trên trình duyệt, không cần
 3. Trang **Cấu hình thiệp** mở ra.
 4. Sửa nội dung rồi bấm **Lưu thay đổi** ở cuối màn hình. Thiệp cập nhật ngay, không cần chạy lại máy chủ.
 
+Bên phải có khung **Xem trước** là thiệp thật, đổi theo từng thay đổi ở bên trái (chưa cần lưu) và tự cuộn tới phần bạn đang chỉnh. Trên điện thoại, bấm **📱 Xem trước** ở thanh dưới.
+
+**Tải ảnh:** chọn ảnh hoặc kéo thả vào ô ảnh, hộp thoại căn chỉnh hiện ra. Kéo ảnh để dời, kéo thanh hoặc cuộn chuột để phóng to, rồi bấm **Cắt và tải lên**. Ảnh được cắt đúng tỉ lệ của ô (chân dung 3:4, ảnh bìa 2:3, chuyện tình và QR vuông) và thu nhỏ trước khi tải. Album cho chọn tỉ lệ từng ảnh, hoặc dùng ảnh gốc.
+
 | Mục | Chỉnh được |
 |---|---|
 | Cô dâu & chú rể | Tên, năm sinh, ảnh chân dung (tải lên) |
@@ -34,6 +38,8 @@ Mọi nội dung đều chỉnh được ngay trên trình duyệt, không cần
 | Mừng cưới | Ảnh QR, ngân hàng, số tài khoản, chủ tài khoản |
 | Trò chơi | Số giây mỗi câu đố, số cặp lật hình, toàn bộ câu đố và đáp án |
 | Hiển thị | Bật / tắt từng phần của thiệp |
+
+Tên cô dâu chú rể và ngày cưới trên khung video ở `/wedmemo` lấy từ trang này.
 
 Giải thưởng vòng quay chỉnh ở trang **Trò chơi** trong khu quản trị.
 
@@ -112,7 +118,7 @@ Caddy sẽ tự xin chứng chỉ HTTPS. Sau khoảng một phút, mở `https:/
   - Link nhanh kèm tên: `https://<tên-miền>/?to=Anh%20Nam`.
 - **Xác nhận:** danh sách khách xác nhận tham dự. Nút **Tải file Excel (CSV)** xuất file mở được bằng Excel với đầy đủ dấu tiếng Việt.
 - **Lời chúc:** ẩn, hiện hoặc xoá lời chúc.
-- **Video:** xem, **duyệt** (video chỉ hiện công khai sau khi duyệt), tải về hoặc xoá.
+- **Video lời chúc (`/wedmemo`):** không nằm trong `/admin`. Xem phần "Video lời chúc" bên dưới.
 - **Trò chơi:**
   - Chỉnh giải vòng quay: tên, màu, trọng số, số lượng.
   - Đánh dấu "đã trao quà" theo mã đổi quà.
@@ -120,6 +126,21 @@ Caddy sẽ tự xin chứng chỉ HTTPS. Sau khoảng một phút, mở `https:/
 - **Quay số:** màn hình bốc số may mắn để chiếu lên TV hoặc máy chiếu tại tiệc.
   - Mỗi khách xác nhận "có tham dự" được cấp một số.
   - Có thể lọc theo sự kiện. Bấm **Toàn màn hình** khi chiếu.
+
+## Video lời chúc (`/wedmemo`)
+
+Chuyển từ dự án WedMemo, giữ nguyên giao diện: quay bằng camera, chọn khung trang trí in thẳng vào video, đếm ngược, chọn 15/30/60 giây, đổi camera.
+
+- Khách quét mã QR (`public/wedmemo/qr.svg`, trỏ về `https://thinhtrang.love/wedmemo`) để quay bằng điện thoại.
+- Máy ở sảnh: mở `https://<tên-miền>/wedmemo/kiosk`. Có màn hình chào kèm QR, chống thoát toàn màn hình, tự về màn hình chào sau 90 giây không ai chạm.
+  ```
+  chrome --kiosk --autoplay-policy=no-user-gesture-required https://<tên-miền>/wedmemo/kiosk
+  ```
+- Clip **công khai** ai cũng xem được. Clip **riêng tư** chỉ xem khi bấm **Mở khoá** trong thư viện và nhập mã `WEDMEMO_CODE` trong `.env`. Rời thư viện là tự khoá lại.
+- Clip chưa gửi được (mất mạng) nằm trong trình duyệt của máy đã ghi và tự gửi lại khi có mạng.
+- Xoá trong thư viện (sau khi mở khoá) = chuyển sang `wedmemo/trash/` trong volume dữ liệu.
+- Dữ liệu lưu ở `<DATA_DIR>/uploads/wedmemo/`, nên `scripts/backup.sh` cũng sao lưu luôn.
+- Firefox ghi ra WebM, iPhone có thể không phát được.
 
 ## Sao lưu
 

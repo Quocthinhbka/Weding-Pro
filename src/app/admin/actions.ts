@@ -11,9 +11,7 @@ import { saveConfig, saveQuiz } from "@/lib/config";
 import { configSchema, quizSchema } from "@/lib/config-schema";
 import { all, get, run, tx } from "@/lib/db";
 import { clientIp, rateLimit } from "@/lib/http";
-import type { Video } from "@/lib/queries";
 import { adminPasswordConfigured, checkPassword } from "@/lib/session";
-import { deleteVideoFiles } from "@/lib/video";
 
 const inviteCode = customAlphabet("abcdefghijkmnpqrstuvwxyz23456789", 7);
 
@@ -96,24 +94,6 @@ export async function setWishHidden(id: number, hidden: boolean) {
 export async function deleteWish(id: number) {
   await requireAdmin();
   run("DELETE FROM wishes WHERE id = ?", id);
-  refresh();
-}
-
-/* ---------- Video ---------- */
-
-export async function setVideoApproved(id: number, approved: boolean) {
-  await requireAdmin();
-  run("UPDATE videos SET approved = ? WHERE id = ?", approved ? 1 : 0, id);
-  refresh();
-}
-
-export async function deleteVideo(id: number) {
-  await requireAdmin();
-  const video = get<Video>("SELECT * FROM videos WHERE id = ?", id);
-  if (video) {
-    deleteVideoFiles(video);
-    run("DELETE FROM videos WHERE id = ?", id);
-  }
   refresh();
 }
 
