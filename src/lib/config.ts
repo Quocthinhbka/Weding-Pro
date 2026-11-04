@@ -1,6 +1,6 @@
 import "server-only";
 import { defaultQuiz, type QuizQuestion } from "@/content/quiz";
-import { defaultConfig, type WeddingConfig } from "@/content/wedding";
+import { defaultConfig, normalizeConfig, type WeddingConfig } from "@/content/wedding";
 import { get, run } from "./db";
 import { mergeDefaults } from "./merge";
 
@@ -28,7 +28,7 @@ function writeSetting(key: string, value: unknown) {
 }
 
 export function getConfig(): WeddingConfig {
-  return mergeDefaults(defaultConfig, readSetting("wedding"));
+  return normalizeConfig(mergeDefaults(defaultConfig, readSetting("wedding")));
 }
 
 export function saveConfig(config: WeddingConfig) {

@@ -8,7 +8,7 @@ import { MusicCard } from "./music-card";
 export function Hero({ config }: { config: WeddingConfig }) {
   const { groom, bride } = config;
   return (
-    <section className="relative h-[88dvh] min-h-[560px] w-full overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden">
       <Image src={config.heroImage} alt={`${groom.name} và ${bride.name}`} fill priority sizes="480px" className="object-cover" />
       <div className="absolute inset-0 bg-gradient-to-b from-ink/35 via-transparent to-ink/65" />
       <div className="absolute inset-x-0 top-10 text-center text-white">
@@ -20,7 +20,8 @@ export function Hero({ config }: { config: WeddingConfig }) {
         <h2 className="font-script text-6xl leading-none drop-shadow">{bride.name}</h2>
         <p className="mt-6 font-serif text-xl tracking-[0.3em]">{dateInfo(config).dots}</p>
       </div>
-    </section>
+      <p className="absolute inset-x-0 bottom-3 animate-float text-center text-[11px] uppercase tracking-[0.3em] text-white/85">Vuốt lên ⌃</p>
+    </div>
   );
 }
 
@@ -28,7 +29,7 @@ export function Family({ config }: { config: WeddingConfig }) {
   const { groom, bride } = config;
   const sides = [config.families.trai, config.families.gai];
   return (
-    <section className="relative px-6 py-16 text-center">
+    <div className="relative text-center">
       <DaisySprig className="absolute -right-8 -top-6 w-28 opacity-50" flip />
       <Reveal>
         <SectionTitle title="Đại diện gia đình" />
@@ -59,7 +60,7 @@ export function Family({ config }: { config: WeddingConfig }) {
           </div>
         </div>
       </Reveal>
-    </section>
+    </div>
   );
 }
 
@@ -77,54 +78,53 @@ function Portrait({ src, name, role }: { src: string; name: string; role: string
   );
 }
 
-export function Couple({ config }: { config: WeddingConfig }) {
+export function Portraits({ config }: { config: WeddingConfig }) {
+  return (
+    <Reveal className="grid grid-cols-2 gap-5">
+      <Portrait src={config.groom.photo} name={config.groom.name} role="Chú rể" />
+      <Portrait src={config.bride.photo} name={config.bride.name} role="Cô dâu" />
+    </Reveal>
+  );
+}
+
+export function InviteCard({ config }: { config: WeddingConfig }) {
   const main = mainEvent(config);
   const venue = main && venueById(config, main.venueId);
   const date = dateInfo(config);
+  if (!main) return null;
   return (
-    <section className="bg-paper/60 px-6 py-16">
-      <Reveal className="grid grid-cols-2 gap-5">
-        <Portrait src={config.groom.photo} name={config.groom.name} role="Chú rể" />
-        <Portrait src={config.bride.photo} name={config.bride.name} role="Cô dâu" />
-      </Reveal>
-
-      {main && (
-        <Reveal className="mt-12 rounded-[2rem] bg-cream px-6 py-10 text-center shadow-sm ring-1 ring-line" delay={100}>
-          <p className="text-sm text-ink-soft">Trân trọng kính mời bạn tới dự</p>
-          <h3 className="mt-2 text-balance font-serif text-3xl font-semibold uppercase tracking-[0.12em] text-olive-deep">{main.title}</h3>
-          <p className="mt-4 text-sm uppercase tracking-[0.25em] text-ink-soft">Vào lúc</p>
-          <p className="font-serif text-4xl text-ink">{main.time.replace(":", "h")}</p>
-          <div className="mx-auto mt-5 grid max-w-[300px] grid-cols-[1fr_auto_1fr] items-center">
-            <p className="border-y border-line py-2 text-sm font-medium uppercase tracking-widest">{date.weekday}</p>
-            <p className="px-4 font-serif text-6xl leading-none text-olive-deep">{date.day}</p>
-            <p className="border-y border-line py-2 text-sm font-medium uppercase tracking-widest">Tháng {date.month}</p>
+    <Reveal className="rounded-[2rem] bg-cream px-6 py-8 text-center shadow-sm ring-1 ring-line">
+      <p className="text-sm text-ink-soft">Trân trọng kính mời bạn tới dự</p>
+      <h3 className="mt-2 text-balance font-serif text-3xl font-semibold uppercase tracking-[0.12em] text-olive-deep">{main.title}</h3>
+      <p className="mt-4 text-sm uppercase tracking-[0.25em] text-ink-soft">Vào lúc</p>
+      <p className="font-serif text-4xl text-ink">{main.time.replace(":", "h")}</p>
+      <div className="mx-auto mt-5 grid max-w-[300px] grid-cols-[1fr_auto_1fr] items-center">
+        <p className="border-y border-line py-2 text-sm font-medium uppercase tracking-widest">{date.weekday}</p>
+        <p className="px-4 font-serif text-6xl leading-none text-olive-deep">{date.day}</p>
+        <p className="border-y border-line py-2 text-sm font-medium uppercase tracking-widest">Tháng {date.month}</p>
+      </div>
+      <p className="mt-1 font-serif text-xl tracking-[0.3em]">{date.year}</p>
+      <p className="mt-2 text-sm italic text-ink-soft">(Tức ngày {date.lunar})</p>
+      {venue && (
+        <>
+          <div className="mt-6">
+            <Daisy size={26} className="mx-auto" />
+            <p className="mt-2 text-balance font-semibold text-ink">{venue.name}</p>
+            <p className="text-sm text-ink-soft">{venue.address}</p>
           </div>
-          <p className="mt-1 font-serif text-xl tracking-[0.3em]">{date.year}</p>
-          <p className="mt-2 text-sm italic text-ink-soft">(Tức ngày {date.lunar})</p>
-          {venue && (
-            <>
-              <div className="mt-6">
-                <Daisy size={26} className="mx-auto" />
-                <p className="mt-2 text-balance font-semibold text-ink">{venue.name}</p>
-                <p className="text-sm text-ink-soft">{venue.address}</p>
-              </div>
-              <a href={directionsUrl(venue)} target="_blank" rel="noopener noreferrer" className="btn btn-outline mt-6">
-                Chỉ đường
-              </a>
-            </>
-          )}
-        </Reveal>
+          <a href={directionsUrl(venue)} target="_blank" rel="noopener noreferrer" className="btn btn-outline mt-6">
+            Chỉ đường
+          </a>
+        </>
       )}
-    </section>
+    </Reveal>
   );
 }
 
 export function IntroMusic() {
   return (
-    <section className="px-6 py-14">
-      <Reveal>
-        <MusicCard />
-      </Reveal>
-    </section>
+    <Reveal>
+      <MusicCard />
+    </Reveal>
   );
 }

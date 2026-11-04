@@ -109,6 +109,14 @@ Caddy sẽ tự xin chứng chỉ HTTPS. Sau khoảng một phút, mở `https:/
 
 **Cập nhật khi đổi code:** nội dung thiệp sửa trong trang quản trị nên không cần triển khai lại. Chỉ khi đổi code mới cần chép mã mới lên VPS rồi chạy lại `docker compose up -d --build`. Dữ liệu khách nằm trong volume `wedding_data`, nên không bị mất khi cập nhật.
 
+## Thiệp chia sector
+
+Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nhấn PageDown) trượt tới sector kế tiếp; có chấm điều hướng ở mép phải.
+- Mỗi sector vừa trọn một màn hình (đã kiểm tra ở 360×640, 390×844, 430×932). Lịch trình tách theo địa điểm.
+- **Chuyện tình** và **mỗi chủ đề album** là sector dài 1,75 màn hình: vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector, lần 3 sang sector sau. Tối đa 4 kỷ niệm, 8 chủ đề album, 8 ảnh mỗi chủ đề.
+- **Hộp mừng cưới** là một hòm, bấm vào mới mở hộp thoại mã QR. Chọn ứng dụng ngân hàng trong trang cấu hình thì bấm vào QR sẽ mở thẳng app đó (qua deeplink VietQR) và chép sẵn số tài khoản.
+- Màn hình quá thấp (cao dưới 560px, như máy nằm ngang) thì tắt snap, cuộn như trang thường.
+
 ## Quản trị (`https://<tên-miền>/admin`)
 
 - **Cấu hình thiệp:** toàn bộ nội dung, ảnh, nhạc, câu đố, bật/tắt các phần (xem mục trên).

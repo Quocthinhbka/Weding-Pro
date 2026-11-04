@@ -10,10 +10,10 @@ export function GamesTeaser() {
   const { state, openRsvp } = useGuest();
   const lucky = state?.rsvp?.luckyNumber;
   return (
-    <section className="px-6 py-16">
-      <SectionTitle eyebrow="Mini Games" title="Trò chơi có thưởng" subtitle="Vừa chơi vừa chờ ngày vui – quà được trao tận tay tại tiệc cưới!" />
+    <div>
+      <SectionTitle compact eyebrow="Mini Games" title="Trò chơi có thưởng" subtitle="Vừa chơi vừa chờ ngày vui – quà được trao tận tay tại tiệc cưới!" />
 
-      <div className="mb-5 rounded-[2rem] bg-olive px-6 py-6 text-center text-white shadow-md">
+      <div className="mb-4 rounded-[2rem] bg-olive px-6 py-5 text-center text-white shadow-md">
         <p className="text-xs uppercase tracking-[0.3em] text-white/80">Bốc số may mắn tại tiệc</p>
         {lucky ? (
           <>
@@ -30,18 +30,18 @@ export function GamesTeaser() {
         )}
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-2.5">
         {gamesList.map((g) => (
-          <Link key={g.href} href={g.href} className="flex items-center gap-4 rounded-2xl bg-white/80 p-4 shadow-sm ring-1 ring-line transition hover:-translate-y-0.5 hover:shadow-md">
+          <Link key={g.href} href={g.href} className="flex items-center gap-4 rounded-2xl bg-white/80 p-3 shadow-sm ring-1 ring-line transition hover:-translate-y-0.5 hover:shadow-md">
             <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-paper text-3xl">{g.icon}</span>
             <span className="min-w-0">
               <span className="block font-semibold text-ink">{g.title}</span>
-              <span className="block text-sm text-ink-soft">{g.text}</span>
+              <span className="hide-short block text-sm text-ink-soft">{g.text}</span>
             </span>
             <span className="ml-auto text-xl text-olive">›</span>
           </Link>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

@@ -29,7 +29,7 @@ export function Countdown() {
   ];
 
   return (
-    <section className="px-6 py-16">
+    <div className="mt-6">
       <Reveal>
         <SectionTitle eyebrow="Đếm ngược" title="Ngày chung đôi" subtitle={left?.done ? "Hôm nay là ngày vui của chúng mình! 💛" : "Cùng đếm ngược đến ngày chung đôi"} />
         <div className="grid grid-cols-4 gap-2.5">
@@ -41,6 +41,6 @@ export function Countdown() {
           ))}
         </div>
       </Reveal>
-    </section>
+    </div>
   );
 }

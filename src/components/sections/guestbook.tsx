@@ -49,15 +49,16 @@ export function Guestbook({ initial }: { initial: Wish[] }) {
   }
 
   return (
-    <section className="px-6 py-16">
+    <div className="flex min-h-0 flex-1 flex-col">
       <SectionTitle
+        compact
         eyebrow="Guestbook"
         title="Sổ lưu bút"
         subtitle="Trân trọng cảm ơn sự yêu mến và những lời chúc phúc ngọt ngào bạn dành cho chúng mình!"
       />
-      <form onSubmit={submit} className="space-y-3 rounded-[2rem] bg-paper/70 p-5 ring-1 ring-line">
+      <form onSubmit={submit} className="shrink-0 space-y-3 rounded-[2rem] bg-paper/70 p-4 ring-1 ring-line">
         <input className="field" placeholder="Tên của bạn *" value={displayName} onChange={(e) => setName(e.target.value)} required maxLength={80} />
-        <textarea className="field min-h-24" placeholder="Lời chúc của bạn *" value={message} onChange={(e) => setMessage(e.target.value)} required maxLength={1000} />
+        <textarea className="field min-h-20" placeholder="Lời chúc của bạn *" value={message} onChange={(e) => setMessage(e.target.value)} required maxLength={1000} />
         <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
         {error && <p className="text-sm text-[#8a4a3e]">{error}</p>}
         <button type="submit" className="btn btn-primary w-full" disabled={busy}>
@@ -65,7 +66,7 @@ export function Guestbook({ initial }: { initial: Wish[] }) {
         </button>
       </form>
 
-      <div className="mt-6 max-h-[460px] space-y-3 overflow-y-auto pr-1">
+      <div className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
         {wishes.length === 0 && <p className="py-6 text-center text-sm text-ink-soft">Hãy là người đầu tiên gửi lời chúc nhé!</p>}
         {wishes.map((w) => (
           <article key={w.id} className="rounded-2xl bg-white/80 p-4 shadow-sm ring-1 ring-line">
@@ -78,6 +79,6 @@ export function Guestbook({ initial }: { initial: Wish[] }) {
           </article>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

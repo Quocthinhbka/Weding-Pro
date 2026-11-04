@@ -17,7 +17,22 @@ export type Venue = {
 };
 export type WeddingEvent = { id: string; title: string; time: string; venueId: string };
 export type StoryItem = { title: string; text: string; image: string };
-export type Gift = { title: string; bank: string; accountNumber: string; accountName: string; qr: string };
+export type Gift = {
+  title: string;
+  bank: string;
+  accountNumber: string;
+  accountName: string;
+  qr: string;
+  /** Mã ứng dụng ngân hàng (xem content/banks.ts). Có thì bấm vào mã QR sẽ mở thẳng ứng dụng đó. */
+  bankApp: string;
+};
+/** Một chủ đề của album: tên và các ảnh, hiển thị thành một sector riêng. */
+export type AlbumTheme = { title: string; images: string[] };
+
+/** Giới hạn để mỗi sector vẫn vừa trong 1,75 màn hình. */
+export const MAX_STORY = 4;
+export const MAX_THEMES = 8;
+export const MAX_THEME_PHOTOS = 8;
 
 export const SECTION_LABELS = {
   music: "Giai điệu hạnh phúc (thẻ nhạc)",
@@ -49,7 +64,7 @@ export type WeddingConfig = {
   heroImage: string;
   music: { src: string; title: string; artist: string };
   loveStory: StoryItem[];
-  album: string[];
+  album: AlbumTheme[];
   gifts: Gift[];
   sections: Record<SectionKey, boolean>;
   games: { quizSeconds: number; memoryPairs: number };
@@ -99,10 +114,14 @@ export const defaultConfig: WeddingConfig = {
     { title: "Lời cầu hôn", text: "Một câu hỏi, một cái gật đầu, và một lời hứa đi cùng nhau thật lâu.", image: "/images/story-3.svg" },
     { title: "Về chung một nhà", text: "Một ngày để nhớ, một đời để thương.", image: "/images/story-4.svg" },
   ],
-  album: Array.from({ length: 9 }, (_, i) => `/images/album-${i + 1}.svg`),
+  // Ảnh tạm: 5 chủ đề × 8 ảnh, dùng lại 9 ảnh mẫu. Thay bằng ảnh thật trong trang cấu hình.
+  album: Array.from({ length: 5 }, (_, t) => ({
+    title: `Chủ đề ${t + 1}`,
+    images: Array.from({ length: 8 }, (_, i) => `/images/album-${((t * 8 + i) % 9) + 1}.svg`),
+  })),
   gifts: [
-    { title: "Mừng cưới chú rể", bank: "Tên ngân hàng", accountNumber: "0000000000", accountName: "TEN CHU TAI KHOAN", qr: "/images/qr-groom.svg" },
-    { title: "Mừng cưới cô dâu", bank: "Tên ngân hàng", accountNumber: "0000000000", accountName: "TEN CHU TAI KHOAN", qr: "/images/qr-bride.svg" },
+    { title: "Mừng cưới chú rể", bank: "Tên ngân hàng", accountNumber: "0000000000", accountName: "TEN CHU TAI KHOAN", qr: "/images/qr-groom.svg", bankApp: "" },
+    { title: "Mừng cưới cô dâu", bank: "Tên ngân hàng", accountNumber: "0000000000", accountName: "TEN CHU TAI KHOAN", qr: "/images/qr-bride.svg", bankApp: "" },
   ],
   sections: { music: true, loveStory: true, album: true, guestbook: true, video: true, games: true, gifts: true },
   games: { quizSeconds: 20, memoryPairs: 8 },
@@ -146,9 +165,29 @@ export function rsvpGroups(c: WeddingConfig) {
   return c.venues.map((v) => ({ key: v.id, label: v.rsvpLabel || v.name }));
 }
 
+/** Tất cả ảnh album theo thứ tự chủ đề, bỏ ảnh trùng. */
+export function albumImages(c: WeddingConfig) {
+  return [...new Set(c.album.flatMap((t) => t.images))];
+}
+
 export function memoryImages(c: WeddingConfig) {
-  const pairs = Math.max(2, Math.min(c.games.memoryPairs, c.album.length));
-  return c.album.slice(0, pairs);
+  const all = albumImages(c);
+  const pairs = Math.max(2, Math.min(c.games.memoryPairs, all.length));
+  return all.slice(0, pairs);
+}
+
+/** Dữ liệu cấu hình cũ (album là danh sách ảnh phẳng, hộp mừng chưa có ngân hàng) → cấu trúc hiện tại. */
+export function normalizeConfig(c: WeddingConfig): WeddingConfig {
+  const album = c.album as unknown as (string | AlbumTheme)[];
+  if (album.length && typeof album[0] === "string") {
+    const flat = album as string[];
+    c.album = Array.from({ length: Math.ceil(flat.length / MAX_THEME_PHOTOS) }, (_, t) => ({
+      title: `Chủ đề ${t + 1}`,
+      images: flat.slice(t * MAX_THEME_PHOTOS, (t + 1) * MAX_THEME_PHOTOS),
+    }));
+  }
+  c.gifts = c.gifts.map((g) => ({ ...g, bankApp: g.bankApp ?? "" }));
+  return c;
 }
 
 export function venueQuery(venue: Venue) {

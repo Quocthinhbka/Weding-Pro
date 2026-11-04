@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { saveSettings } from "@/app/admin/actions";
 import type { QuizQuestion } from "@/content/quiz";
-import { dateInfo, SECTION_LABELS, type SectionKey, type WeddingConfig } from "@/content/wedding";
+import { BANK_APPS } from "@/content/banks";
+import { albumImages, dateInfo, MAX_STORY, MAX_THEME_PHOTOS, MAX_THEMES, SECTION_LABELS, type SectionKey, type WeddingConfig } from "@/content/wedding";
 import { lunarText } from "@/lib/lunar";
 import { ConfigPreview } from "./config-preview";
 import { CropDialog, type Aspects } from "./crop-dialog";
@@ -289,7 +290,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
         </div>
       </Card>
 
-      <Card id="chuyen-tinh" title="Câu chuyện tình yêu">
+      <Card id="chuyen-tinh" title="Câu chuyện tình yêu" description={`Thành một sector dài 1,75 màn hình, vuốt lần 2 trượt xuống cuối. Tối đa ${MAX_STORY} kỷ niệm để vừa khung.`}>
         {config.loveStory.map((s, i) => (
           <div key={i} className="grid gap-4 rounded-2xl bg-white/70 p-4 ring-1 ring-line sm:grid-cols-[160px_1fr]">
             <ImageField label="Ảnh (vuông)" value={s.image} ratio={1} outSide={1200} onChange={(v) => edit((d) => void (d.loveStory[i].image = v))} />
@@ -307,14 +308,37 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
             </div>
           </div>
         ))}
-        <AddButton onClick={() => edit((d) => void d.loveStory.push({ title: "Kỷ niệm mới", text: "", image: "/images/story-1.svg" }))}>Thêm kỷ niệm</AddButton>
+        {config.loveStory.length < MAX_STORY && (
+          <AddButton onClick={() => edit((d) => void d.loveStory.push({ title: "Kỷ niệm mới", text: "", image: "/images/story-1.svg" }))}>Thêm kỷ niệm</AddButton>
+        )}
       </Card>
 
-      <Card id="album" title={`Album cưới (${config.album.length} ảnh)`} description="Ảnh số 1, 6, 11… hiển thị khổ to. Các ảnh đầu tiên cũng được dùng cho trò lật hình.">
-        <AlbumEditor album={config.album} onChange={(album) => edit((d) => void (d.album = album))} />
+      <Card
+        id="album"
+        title={`Album cưới (${albumImages(config).length} ảnh, ${config.album.length} chủ đề)`}
+        description={`Mỗi chủ đề là một sector dài 1,75 màn hình, tối đa ${MAX_THEME_PHOTOS} ảnh. Các ảnh đầu tiên cũng được dùng cho trò lật hình.`}
+      >
+        {config.album.map((theme, i) => (
+          <div key={i} className="space-y-3 rounded-2xl bg-white/70 p-4 ring-1 ring-line">
+            <div className="flex items-end gap-3">
+              <TextField label={`Chủ đề ${i + 1}`} value={theme.title} maxLength={60} className="flex-1" onChange={(v) => edit((d) => void (d.album[i].title = v))} />
+              <div className="pb-1">
+                <ItemTools
+                  index={i}
+                  count={config.album.length}
+                  onMove={(to) => edit((d) => void (d.album = move(d.album, i, to)))}
+                  onRemove={() => edit((d) => void d.album.splice(i, 1))}
+                  removeLabel="Xoá chủ đề"
+                />
+              </div>
+            </div>
+            <AlbumEditor album={theme.images} max={MAX_THEME_PHOTOS} onChange={(images) => edit((d) => void (d.album[i].images = images))} />
+          </div>
+        ))}
+        {config.album.length < MAX_THEMES && <AddButton onClick={() => edit((d) => void d.album.push({ title: `Chủ đề ${d.album.length + 1}`, images: [] }))}>Thêm chủ đề</AddButton>}
       </Card>
 
-      <Card id="mung-cuoi" title="Hộp mừng cưới" description="Nên dùng ảnh QR xuất từ ứng dụng ngân hàng (chụp màn hình rồi cắt gọn).">
+      <Card id="mung-cuoi" title="Hộp mừng cưới" description="Khách bấm vào hòm để xem mã QR. Nên dùng ảnh QR xuất từ ứng dụng ngân hàng; chọn ứng dụng ngân hàng để khách bấm vào mã QR là mở thẳng ứng dụng đó.">
         {config.gifts.map((g, i) => (
           <div key={i} className="grid gap-4 rounded-2xl bg-white/70 p-4 ring-1 ring-line sm:grid-cols-[180px_1fr]">
             <ImageField label="Mã QR (vuông)" kind="qr" optional value={g.qr} ratio={1} outSide={1000} onChange={(v) => edit((d) => void (d.gifts[i].qr = v))} />
@@ -329,6 +353,28 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
               </div>
               <TextField label="Tiêu đề" value={g.title} placeholder="Mừng cưới chú rể" onChange={(v) => edit((d) => void (d.gifts[i].title = v))} />
               <TextField label="Ngân hàng" value={g.bank} onChange={(v) => edit((d) => void (d.gifts[i].bank = v))} />
+              <label className="block">
+                <span className="label">Mở ứng dụng ngân hàng khi khách bấm vào mã QR</span>
+                <select
+                  className="field"
+                  value={g.bankApp}
+                  onChange={(e) =>
+                    edit((d) => {
+                      d.gifts[i].bankApp = e.target.value;
+                      const name = BANK_APPS.find((b) => b.id === e.target.value)?.name;
+                      if (name && (!d.gifts[i].bank || d.gifts[i].bank === "Tên ngân hàng")) d.gifts[i].bank = name;
+                    })
+                  }
+                >
+                  <option value="">Không (chỉ hiện mã QR)</option>
+                  {BANK_APPS.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-xs text-ink-soft">Bấm vào QR sẽ mở app ngân hàng và chép sẵn số tài khoản. Chỉ VietinBank, BIDV, OCB, ACB, MB tự điền được số tài khoản.</span>
+              </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <TextField label="Số tài khoản" value={g.accountNumber} onChange={(v) => edit((d) => void (d.gifts[i].accountNumber = v))} />
                 <TextField label="Chủ tài khoản" value={g.accountName} onChange={(v) => edit((d) => void (d.gifts[i].accountName = v.toUpperCase()))} />
@@ -337,7 +383,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
           </div>
         ))}
         {config.gifts.length < 4 && (
-          <AddButton onClick={() => edit((d) => void d.gifts.push({ title: "Mừng cưới", bank: "", accountNumber: "", accountName: "", qr: "" }))}>Thêm tài khoản</AddButton>
+          <AddButton onClick={() => edit((d) => void d.gifts.push({ title: "Mừng cưới", bank: "", accountNumber: "", accountName: "", qr: "", bankApp: "" }))}>Thêm tài khoản</AddButton>
         )}
       </Card>
 
@@ -442,7 +488,7 @@ const ALBUM_ASPECTS: Aspects = [
   ["16:9", 16 / 9],
 ];
 
-function AlbumEditor({ album, onChange }: { album: string[]; onChange: (album: string[]) => void }) {
+function AlbumEditor({ album, max, onChange }: { album: string[]; max: number; onChange: (album: string[]) => void }) {
   const input = useRef<HTMLInputElement>(null);
   const [queue, setQueue] = useState<File[]>([]); // ảnh đang chờ căn chỉnh, ảnh đầu tiên đang mở hộp thoại
   const [over, setOver] = useState(false);
@@ -451,10 +497,13 @@ function AlbumEditor({ album, onChange }: { album: string[]; onChange: (album: s
   const [total, setTotal] = useState(0);
 
   function pickFiles(files: FileList | null) {
-    const images = Array.from(files ?? []).filter((f) => f.type.startsWith("image/")); // đọc trước khi xoá ô chọn tệp (FileList bị rỗng theo)
+    const all = Array.from(files ?? []).filter((f) => f.type.startsWith("image/")); // đọc trước khi xoá ô chọn tệp (FileList bị rỗng theo)
     if (input.current) input.current.value = "";
-    if (!images.length) return;
-    setError("");
+    if (!all.length) return;
+    const room = max - album.length;
+    if (room <= 0) return setError(`Chủ đề này đã đủ ${max} ảnh. Hãy xoá bớt hoặc thêm chủ đề mới.`);
+    const images = all.slice(0, room);
+    setError(images.length < all.length ? `Chỉ nhận thêm ${room} ảnh (tối đa ${max} ảnh mỗi chủ đề).` : "");
     added.current = [];
     setTotal(images.length);
     setQueue(images);
@@ -529,7 +578,7 @@ function AlbumEditor({ album, onChange }: { album: string[]; onChange: (album: s
         ))}
       </div>
       <button type="button" onClick={() => input.current?.click()} className="btn btn-primary !py-2 !text-xs">
-        Tải thêm ảnh (chọn hoặc kéo thả nhiều ảnh)
+        Tải thêm ảnh ({album.length}/{max}, chọn hoặc kéo thả nhiều ảnh)
       </button>
       {error && <p className="text-xs text-[#8a4a3e]">{error}</p>}
       <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => pickFiles(e.target.files)} />

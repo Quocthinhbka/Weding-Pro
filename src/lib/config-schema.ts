@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { SECTION_LABELS, type SectionKey } from "@/content/wedding";
+import { BANK_APPS } from "@/content/banks";
+import { MAX_STORY, MAX_THEME_PHOTOS, MAX_THEMES, SECTION_LABELS, type SectionKey } from "@/content/wedding";
 
 // Kiểm tra dữ liệu cấu hình gửi từ trang quản trị trước khi lưu.
 
@@ -58,8 +59,12 @@ export const configSchema = z
     }),
     heroImage: mediaPath,
     music: z.object({ src: optionalMedia, title: text(80, "Tên bài hát"), artist: text(80, "Ca sĩ") }),
-    loveStory: z.array(z.object({ title: required(60, "Tiêu đề kỷ niệm"), text: text(400, "Nội dung kỷ niệm"), image: mediaPath })).max(12),
-    album: z.array(mediaPath).max(60),
+    loveStory: z
+      .array(z.object({ title: required(60, "Tiêu đề kỷ niệm"), text: text(400, "Nội dung kỷ niệm"), image: mediaPath }))
+      .max(MAX_STORY, `Tối đa ${MAX_STORY} kỷ niệm để vừa trong một sector`),
+    album: z
+      .array(z.object({ title: text(60, "Tên chủ đề album"), images: z.array(mediaPath).max(MAX_THEME_PHOTOS, `Mỗi chủ đề tối đa ${MAX_THEME_PHOTOS} ảnh`) }))
+      .max(MAX_THEMES, `Tối đa ${MAX_THEMES} chủ đề`),
     gifts: z
       .array(
         z.object({
@@ -68,6 +73,7 @@ export const configSchema = z
           accountNumber: text(30, "Số tài khoản"),
           accountName: text(60, "Chủ tài khoản"),
           qr: optionalMedia,
+          bankApp: z.string().max(20).refine((v) => v === "" || BANK_APPS.some((b) => b.id === v), "Ngân hàng chưa hợp lệ"),
         }),
       )
       .max(4),
@@ -88,7 +94,7 @@ export const configSchema = z
     if (!c.events.some((e) => e.id === c.mainEventId)) {
       ctx.addIssue({ code: "custom", message: "Vui lòng chọn sự kiện chính" });
     }
-    if (c.sections.games && c.album.length < 2) {
+    if (c.sections.games && new Set(c.album.flatMap((t) => t.images)).size < 2) {
       ctx.addIssue({ code: "custom", message: "Trò lật hình cần ít nhất 2 ảnh trong album" });
     }
   });

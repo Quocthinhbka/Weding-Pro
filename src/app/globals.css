@@ -205,3 +205,90 @@ body {
     transform: none;
   }
 }
+
+/* ---------- Thiệp chia sector: mỗi lần vuốt trượt tới sector kế tiếp ---------- */
+.snap-scroller {
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  outline: none;
+}
+.snap-scroller::-webkit-scrollbar,
+.sector-body::-webkit-scrollbar {
+  display: none;
+}
+/* Sector cao `--screens` màn hình (mặc định 1). */
+.sector {
+  position: relative;
+  height: calc(var(--screens, 1) * 100dvh);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.sector-body {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem;
+  /* Van an toàn: nội dung dài hơn màn hình (máy nhỏ, chữ dài) thì cuộn bên trong sector. */
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.sector-body > :first-child {
+  margin-top: auto;
+}
+.sector-body > :last-child {
+  margin-bottom: auto;
+}
+.sector-flush > .sector-body {
+  padding: 0;
+}
+/* Sector dài (1,75 màn hình): hai điểm dừng, vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector. */
+.sector[data-tall] {
+  scroll-snap-align: none;
+}
+.sector[data-tall] > .sector-body {
+  overflow: hidden;
+}
+.snap-top,
+.snap-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100dvh;
+  pointer-events: none;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.snap-top {
+  top: 0;
+}
+.snap-bottom {
+  bottom: 0;
+}
+/* Màn hình quá thấp (máy ngang…): bỏ snap, cuộn tự do như trang thường. */
+@media (max-height: 560px) {
+  .snap-scroller {
+    scroll-snap-type: none;
+  }
+  .sector,
+  .sector[data-tall] {
+    height: auto;
+    min-height: 100dvh;
+  }
+  .sector[data-tall] > .sector-body {
+    overflow: visible;
+  }
+  .snap-top,
+  .snap-bottom {
+    display: none;
+  }
+}
+/* Ẩn phần phụ khi màn hình thấp để sector vẫn vừa một màn hình. */
+@media (max-height: 760px) {
+  .hide-short {
+    display: none;
+  }
+}

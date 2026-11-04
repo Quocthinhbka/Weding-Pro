@@ -10,7 +10,7 @@ export function CalendarMonth({ config }: { config: WeddingConfig }) {
   const { day, month, year } = dateInfo(config);
   const cells = monthGrid(year, month);
   return (
-    <section className="px-6 pb-16">
+    <div>
       <Reveal className="rounded-[2rem] bg-cream p-6 shadow-sm ring-1 ring-line">
         <p className="text-center font-serif text-2xl text-ink">
           Tháng {month} <span className="text-ink-soft">/</span> {year}
@@ -38,6 +38,6 @@ export function CalendarMonth({ config }: { config: WeddingConfig }) {
           <RsvpButton />
         </div>
       </Reveal>
-    </section>
+    </div>
   );
 }
