@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { AlbumTheme, WeddingConfig } from "@/content/wedding";
+import type { WeddingConfig } from "@/content/wedding";
 import { Daisy } from "@/components/ui/daisy";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -35,12 +35,12 @@ export function LoveStory({ config }: { config: WeddingConfig }) {
   );
 }
 
-/** Một chủ đề của album: sector dài 1,75 màn hình, ảnh xếp mosaic phủ kín chiều cao. */
-export function AlbumThemeView({ theme, index, total }: { theme: AlbumTheme; index: number; total: number }) {
+/** Album: một sector dài 1,75 màn hình, ảnh xếp mosaic phủ kín chiều cao. Bấm vào ảnh để xem lớn. */
+export function Album({ config }: { config: WeddingConfig }) {
   return (
     <>
-      <SectionTitle compact eyebrow={total > 1 ? `Our Moments ${index + 1}/${total}` : "Our Moments"} title={theme.title || "Album cưới"} />
-      <AlbumGrid images={theme.images} />
+      <SectionTitle compact eyebrow="Our Moments" title="Album cưới" />
+      <AlbumGrid images={config.album} />
     </>
   );
 }

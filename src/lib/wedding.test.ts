@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { bankAppUrl } from "@/content/banks";
-import { albumImages, dateInfo, defaultConfig, memoryImages, normalizeConfig, rsvpGroups } from "@/content/wedding";
+import { albumLayout } from "@/components/sections/album-grid";
+import { dateInfo, defaultConfig, inviteEvent, memoryImages, normalizeConfig, rsvpGroups, sideFromParam } from "@/content/wedding";
 import { configSchema, quizSchema } from "./config-schema";
 import { canChiYear, lunarText, solarToLunar } from "./lunar";
 import { mergeDefaults } from "./merge";
@@ -138,33 +139,49 @@ describe("cấu hình", () => {
   });
 
   it("ghép dữ liệu đã lưu với mặc định (trường mới vẫn có giá trị)", () => {
-    const merged = mergeDefaults(defaultConfig, { groom: { name: "Thịnh" }, album: [{ title: "A", images: ["/api/media/a.webp"] }] });
+    const merged = mergeDefaults(defaultConfig, { groom: { name: "Thịnh" }, album: ["/api/media/a.webp"] });
     expect(merged.groom).toEqual({ ...defaultConfig.groom, name: "Thịnh" });
-    expect(merged.album).toEqual([{ title: "A", images: ["/api/media/a.webp"] }]);
+    expect(merged.album).toEqual(["/api/media/a.webp"]);
     expect(merged.sections).toEqual(defaultConfig.sections);
   });
 
   it("mỗi địa điểm là một lựa chọn khi xác nhận; số cặp lật hình không vượt quá album", () => {
     expect(rsvpGroups(defaultConfig).map((g) => g.key)).toEqual(["nha-gai", "nha-hang"]);
-    expect(memoryImages({ ...defaultConfig, album: [{ title: "A", images: defaultConfig.album[0].images.slice(0, 3) }] })).toHaveLength(3);
+    expect(memoryImages({ ...defaultConfig, album: defaultConfig.album.slice(0, 3) })).toHaveLength(3);
     expect(memoryImages(defaultConfig)).toHaveLength(8);
   });
 
-  it("album chia chủ đề: ảnh trùng chỉ tính một lần, dữ liệu cũ (danh sách phẳng) được chia theo 8 ảnh", () => {
-    expect(albumImages(defaultConfig)).toHaveLength(9);
-    const old = structuredClone(defaultConfig) as unknown as { album: string[]; gifts: Record<string, unknown>[] };
-    old.album = Array.from({ length: 20 }, (_, i) => `/api/media/p${i}.webp`);
+  it("dữ liệu cũ: album chia chủ đề được gộp lại thành một danh sách, hộp mừng có thêm bankApp", () => {
+    const old = structuredClone(defaultConfig) as unknown as { album: unknown; gifts: Record<string, unknown>[] };
+    old.album = [{ title: "A", images: ["/images/a.svg", "/images/b.svg"] }, { title: "B", images: ["/images/b.svg", "/images/c.svg"] }];
     delete old.gifts[0].bankApp;
     const n = normalizeConfig(old as never);
-    expect(n.album.map((t) => t.images.length)).toEqual([8, 8, 4]);
+    expect(n.album).toEqual(["/images/a.svg", "/images/b.svg", "/images/c.svg"]);
     expect(n.gifts[0].bankApp).toBe("");
     expect(configSchema.safeParse(n).success).toBe(true);
-    expect(configSchema.safeParse({ ...defaultConfig, album: [{ title: "x", images: Array(9).fill("/images/a.svg") }] }).success).toBe(false);
+    expect(configSchema.safeParse({ ...defaultConfig, album: Array(49).fill("/images/a.svg") }).success).toBe(false);
+  });
+
+  it("?f=bride là thiệp nhà gái (Lễ Vu Quy), không có hoặc f=groom là nhà trai (Lễ Thành Hôn)", () => {
+    expect(["bride", "groom", undefined, "x"].map(sideFromParam)).toEqual(["bride", "groom", "groom", "groom"]);
+    expect(inviteEvent(defaultConfig, "groom").title).toBe("Lễ Thành Hôn");
+    expect(inviteEvent(defaultConfig, "bride").title).toBe("Lễ Vu Quy");
+    expect(inviteEvent({ ...defaultConfig, brideEventId: "da-xoa" }, "bride").id).toBe(defaultConfig.mainEventId);
   });
 
   it("deeplink ngân hàng chỉ có khi chọn ngân hàng hợp lệ", () => {
     expect(bankAppUrl("vcb")).toBe("https://dl.vietqr.io/pay?app=vcb");
     expect(bankAppUrl("")).toBe("");
     expect(bankAppUrl("khong-co")).toBe("");
+  });
+
+  it("lưới album luôn lấp đầy hàng cuối, ảnh nổi bật chỉ khi đủ ảnh", () => {
+    for (const n of [1, 2, 3, 5, 9, 14, 20, 33, 40, 48]) {
+      const { cols, featured, rows, lastSpan } = albumLayout(n);
+      const cells = n + (featured ? 3 : 0) + (lastSpan - 1);
+      expect(cells).toBe(rows * cols);
+    }
+    expect(albumLayout(9)).toMatchObject({ cols: 2, featured: false });
+    expect(albumLayout(40)).toMatchObject({ cols: 3, featured: true });
   });
 });

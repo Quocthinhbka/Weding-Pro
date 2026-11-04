@@ -112,9 +112,10 @@ Caddy sẽ tự xin chứng chỉ HTTPS. Sau khoảng một phút, mở `https:/
 ## Thiệp chia sector
 
 Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nhấn PageDown) trượt tới sector kế tiếp; có chấm điều hướng ở mép phải.
-- Mỗi sector vừa trọn một màn hình (đã kiểm tra ở 360×640, 390×844, 430×932). Lịch trình tách theo địa điểm.
-- **Chuyện tình** và **mỗi chủ đề album** là sector dài 1,75 màn hình: vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector, lần 3 sang sector sau. Tối đa 4 kỷ niệm, 8 chủ đề album, 8 ảnh mỗi chủ đề.
-- **Hộp mừng cưới** là một hòm, bấm vào mới mở hộp thoại mã QR. Chọn ứng dụng ngân hàng trong trang cấu hình thì bấm vào QR sẽ mở thẳng app đó (qua deeplink VietQR) và chép sẵn số tài khoản.
+- Mỗi sector vừa trọn một màn hình (đã kiểm tra ở 360×640, 390×844, 430×932). Thứ tự: bìa, gia đình, ngôi nhà cô dâu chú rể kèm thẻ nhạc, thẻ mời, đếm ngược + lịch, lịch trình (mỗi địa điểm một sector), chuyện tình, album, sổ lưu bút + video, trò chơi, hộp mừng cưới, cảm ơn.
+- **Chuyện tình** và **Album** là sector dài 1,75 màn hình: vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector, lần 3 sang sector sau. Tối đa 4 kỷ niệm và 48 ảnh album (ảnh đầu tiên được làm nổi bật).
+- **Link nhà trai / nhà gái:** thẻ mời mặc định (hoặc `?f=groom`) là sự kiện chính nhà trai, mặc định Lễ Thành Hôn. Link `?f=bride` đổi thành sự kiện chính nhà gái, mặc định Lễ Vu Quy; giờ, địa điểm và chỉ đường đổi theo. Chọn hai sự kiện chính trong mục "Địa điểm & lịch trình" của trang cấu hình. Có thể ghép với link mời riêng: `https://<tên-miền>/?k=<mã>&f=bride`.
+- **Hộp mừng cưới** là một hòm bấm để mở hộp thoại mã QR. Chọn ứng dụng ngân hàng trong trang cấu hình thì bấm vào QR sẽ mở thẳng app đó (qua deeplink VietQR) và chép sẵn số tài khoản.
 - Màn hình quá thấp (cao dưới 560px, như máy nằm ngang) thì tắt snap, cuộn như trang thường.
 
 ## Quản trị (`https://<tên-miền>/admin`)

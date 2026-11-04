@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { WeddingConfig } from "@/content/wedding";
 import type { PreviewMessage } from "./preview-frame";
 
@@ -10,6 +10,7 @@ import type { PreviewMessage } from "./preview-frame";
  */
 export function ConfigPreview({ config, section, onClose }: { config: WeddingConfig; section: { sec: string; n: number } | null; onClose: () => void }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const [side, setSide] = useState<"groom" | "bride">("groom");
   const ready = useRef(false);
   const latest = useRef(config);
 
@@ -44,10 +45,25 @@ export function ConfigPreview({ config, section, onClose }: { config: WeddingCon
         <button type="button" onClick={onClose} className="rounded-full bg-white px-3 py-1 ring-1 ring-line lg:hidden">
           Đóng ✕
         </button>
-        <span className="hidden lg:inline">Cập nhật ngay khi bạn chỉnh</span>
+        <div className="flex gap-1" role="group" aria-label="Xem thiệp của bên nào">
+          {([["groom", "Nhà trai"], ["bride", "Nhà gái"]] as const).map(([k, label]) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => {
+                if (k === side) return;
+                ready.current = false; // iframe tải lại, chờ nó báo "ready" rồi gửi lại bản nháp
+                setSide(k);
+              }}
+              className={`rounded-full px-3 py-1 ring-1 ring-line ${side === k ? "bg-olive text-white" : "bg-white"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden rounded-[2.2rem] border-[10px] border-ink bg-cream shadow-xl">
-        <iframe ref={frame} src="/admin/preview" title="Xem trước thiệp" className="h-full w-full bg-cream" />
+        <iframe key={side} ref={frame} src={`/admin/preview?f=${side}`} title="Xem trước thiệp" className="h-full w-full bg-cream" />
       </div>
     </div>
   );

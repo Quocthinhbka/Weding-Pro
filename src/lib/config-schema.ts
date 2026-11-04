@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { BANK_APPS } from "@/content/banks";
-import { MAX_STORY, MAX_THEME_PHOTOS, MAX_THEMES, SECTION_LABELS, type SectionKey } from "@/content/wedding";
+import { MAX_ALBUM, MAX_STORY, SECTION_LABELS, type SectionKey } from "@/content/wedding";
 
 // Kiểm tra dữ liệu cấu hình gửi từ trang quản trị trước khi lưu.
 
@@ -52,6 +52,7 @@ export const configSchema = z
       .min(1, "Cần ít nhất 1 sự kiện")
       .max(12),
     mainEventId: id,
+    brideEventId: id,
     texts: z.object({
       invitation: required(300, "Lời mời"),
       thankYou: required(300, "Lời cảm ơn"),
@@ -62,9 +63,7 @@ export const configSchema = z
     loveStory: z
       .array(z.object({ title: required(60, "Tiêu đề kỷ niệm"), text: text(400, "Nội dung kỷ niệm"), image: mediaPath }))
       .max(MAX_STORY, `Tối đa ${MAX_STORY} kỷ niệm để vừa trong một sector`),
-    album: z
-      .array(z.object({ title: text(60, "Tên chủ đề album"), images: z.array(mediaPath).max(MAX_THEME_PHOTOS, `Mỗi chủ đề tối đa ${MAX_THEME_PHOTOS} ảnh`) }))
-      .max(MAX_THEMES, `Tối đa ${MAX_THEMES} chủ đề`),
+    album: z.array(mediaPath).max(MAX_ALBUM, `Album tối đa ${MAX_ALBUM} ảnh`),
     gifts: z
       .array(
         z.object({
@@ -94,7 +93,10 @@ export const configSchema = z
     if (!c.events.some((e) => e.id === c.mainEventId)) {
       ctx.addIssue({ code: "custom", message: "Vui lòng chọn sự kiện chính" });
     }
-    if (c.sections.games && new Set(c.album.flatMap((t) => t.images)).size < 2) {
+    if (!c.events.some((e) => e.id === c.brideEventId)) {
+      ctx.addIssue({ code: "custom", message: "Vui lòng chọn sự kiện chính cho thiệp nhà gái" });
+    }
+    if (c.sections.games && c.album.length < 2) {
       ctx.addIssue({ code: "custom", message: "Trò lật hình cần ít nhất 2 ảnh trong album" });
     }
   });

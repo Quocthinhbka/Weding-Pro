@@ -292,3 +292,68 @@ body {
     display: none;
   }
 }
+
+/* Nốt nhạc nhảy múa: bay từ thẻ nhạc lên trên, lắc qua lại, nhỏ dần rồi tan. Phát nhạc thì bay nhanh hơn. */
+@keyframes note-rise {
+  0% {
+    transform: translate(0, 0) rotate(-12deg) scale(0.6);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+  }
+  30% {
+    transform: translate(var(--sway), -44px) rotate(14deg) scale(1);
+  }
+  55% {
+    transform: translate(calc(var(--sway) * -0.7), -96px) rotate(-14deg) scale(0.95);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translate(calc(var(--sway) * 0.8), -142px) rotate(12deg) scale(0.8);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate(0, -180px) rotate(-8deg) scale(0.6);
+    opacity: 0;
+  }
+}
+.music-note {
+  opacity: 0;
+  animation: note-rise 5s ease-in-out infinite;
+}
+.music-note.is-playing {
+  animation-duration: 3.4s !important;
+}
+
+/* Tia sáng nhấp nháy và trái tim nổi lên quanh hòm mừng cưới */
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0.5) rotate(0deg);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.15) rotate(25deg);
+    opacity: 1;
+  }
+}
+.twinkle {
+  animation: twinkle 2.6s ease-in-out infinite;
+}
+@keyframes float-heart {
+  0% {
+    transform: translateY(8px) scale(0.7);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-26px) scale(1);
+    opacity: 0;
+  }
+}
+.float-heart {
+  animation: float-heart 3.4s ease-out infinite;
+}

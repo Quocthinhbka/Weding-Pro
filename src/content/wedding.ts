@@ -26,13 +26,10 @@ export type Gift = {
   /** Mã ứng dụng ngân hàng (xem content/banks.ts). Có thì bấm vào mã QR sẽ mở thẳng ứng dụng đó. */
   bankApp: string;
 };
-/** Một chủ đề của album: tên và các ảnh, hiển thị thành một sector riêng. */
-export type AlbumTheme = { title: string; images: string[] };
 
 /** Giới hạn để mỗi sector vẫn vừa trong 1,75 màn hình. */
 export const MAX_STORY = 4;
-export const MAX_THEMES = 8;
-export const MAX_THEME_PHOTOS = 8;
+export const MAX_ALBUM = 48;
 
 export const SECTION_LABELS = {
   music: "Giai điệu hạnh phúc (thẻ nhạc)",
@@ -60,11 +57,13 @@ export type WeddingConfig = {
   events: WeddingEvent[];
   /** Sự kiện được làm nổi bật ở phần "Trân trọng kính mời bạn tới dự". */
   mainEventId: string;
+  /** Sự kiện chính khi mở thiệp bằng link nhà gái (?f=bride), VD "Lễ Vu Quy". */
+  brideEventId: string;
   texts: { invitation: string; thankYou: string; guestFallback: string };
   heroImage: string;
   music: { src: string; title: string; artist: string };
   loveStory: StoryItem[];
-  album: AlbumTheme[];
+  album: string[];
   gifts: Gift[];
   sections: Record<SectionKey, boolean>;
   games: { quizSeconds: number; memoryPairs: number };
@@ -101,6 +100,7 @@ export const defaultConfig: WeddingConfig = {
     { id: "thanh-hon", title: "Lễ Thành Hôn", time: "18:00", venueId: "nha-hang" },
   ],
   mainEventId: "thanh-hon",
+  brideEventId: "vu-quy",
   texts: {
     invitation: "Trân trọng kính mời quý khách đến dự buổi lễ thành hôn và chung vui cùng gia đình chúng tôi!",
     thankYou: "Sự hiện diện của bạn sẽ khiến hôn lễ của chúng tôi trở nên ý nghĩa hơn bao giờ hết!",
@@ -114,11 +114,7 @@ export const defaultConfig: WeddingConfig = {
     { title: "Lời cầu hôn", text: "Một câu hỏi, một cái gật đầu, và một lời hứa đi cùng nhau thật lâu.", image: "/images/story-3.svg" },
     { title: "Về chung một nhà", text: "Một ngày để nhớ, một đời để thương.", image: "/images/story-4.svg" },
   ],
-  // Ảnh tạm: 5 chủ đề × 8 ảnh, dùng lại 9 ảnh mẫu. Thay bằng ảnh thật trong trang cấu hình.
-  album: Array.from({ length: 5 }, (_, t) => ({
-    title: `Chủ đề ${t + 1}`,
-    images: Array.from({ length: 8 }, (_, i) => `/images/album-${((t * 8 + i) % 9) + 1}.svg`),
-  })),
+  album: Array.from({ length: 9 }, (_, i) => `/images/album-${i + 1}.svg`),
   gifts: [
     { title: "Mừng cưới chú rể", bank: "Tên ngân hàng", accountNumber: "0000000000", accountName: "TEN CHU TAI KHOAN", qr: "/images/qr-groom.svg", bankApp: "" },
     { title: "Mừng cưới cô dâu", bank: "Tên ngân hàng", accountNumber: "0000000000", accountName: "TEN CHU TAI KHOAN", qr: "/images/qr-bride.svg", bankApp: "" },
@@ -165,26 +161,26 @@ export function rsvpGroups(c: WeddingConfig) {
   return c.venues.map((v) => ({ key: v.id, label: v.rsvpLabel || v.name }));
 }
 
-/** Tất cả ảnh album theo thứ tự chủ đề, bỏ ảnh trùng. */
-export function albumImages(c: WeddingConfig) {
-  return [...new Set(c.album.flatMap((t) => t.images))];
-}
-
 export function memoryImages(c: WeddingConfig) {
-  const all = albumImages(c);
-  const pairs = Math.max(2, Math.min(c.games.memoryPairs, all.length));
-  return all.slice(0, pairs);
+  const pairs = Math.max(2, Math.min(c.games.memoryPairs, c.album.length));
+  return c.album.slice(0, pairs);
 }
 
-/** Dữ liệu cấu hình cũ (album là danh sách ảnh phẳng, hộp mừng chưa có ngân hàng) → cấu trúc hiện tại. */
+/** Link mở thiệp có ?f=bride là thiệp nhà gái, còn lại (kể cả ?f=groom) là thiệp nhà trai. */
+export type Side = "groom" | "bride";
+export const sideFromParam = (f: unknown): Side => (f === "bride" ? "bride" : "groom");
+
+/** Sự kiện chính (thẻ "Trân trọng kính mời") của từng bên: nhà trai Lễ Thành Hôn, nhà gái Lễ Vu Quy. */
+export function inviteEvent(c: WeddingConfig, side: Side) {
+  const id = side === "bride" ? c.brideEventId : c.mainEventId;
+  return c.events.find((e) => e.id === id) ?? mainEvent(c);
+}
+
+/** Dữ liệu cấu hình cũ (album chia chủ đề, hộp mừng chưa có ngân hàng) → cấu trúc hiện tại. */
 export function normalizeConfig(c: WeddingConfig): WeddingConfig {
-  const album = c.album as unknown as (string | AlbumTheme)[];
-  if (album.length && typeof album[0] === "string") {
-    const flat = album as string[];
-    c.album = Array.from({ length: Math.ceil(flat.length / MAX_THEME_PHOTOS) }, (_, t) => ({
-      title: `Chủ đề ${t + 1}`,
-      images: flat.slice(t * MAX_THEME_PHOTOS, (t + 1) * MAX_THEME_PHOTOS),
-    }));
+  const album = c.album as unknown as (string | { images: string[] })[];
+  if (album.some((a) => typeof a !== "string")) {
+    c.album = [...new Set(album.flatMap((a) => (typeof a === "string" ? [a] : a.images)))];
   }
   c.gifts = c.gifts.map((g) => ({ ...g, bankApp: g.bankApp ?? "" }));
   return c;

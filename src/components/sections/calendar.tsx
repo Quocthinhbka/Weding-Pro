@@ -11,30 +11,30 @@ export function CalendarMonth({ config }: { config: WeddingConfig }) {
   const cells = monthGrid(year, month);
   return (
     <div>
-      <Reveal className="rounded-[2rem] bg-cream p-6 shadow-sm ring-1 ring-line">
-        <p className="text-center font-serif text-2xl text-ink">
+      <Reveal className="rounded-[2rem] bg-cream p-4 shadow-sm ring-1 ring-line">
+        <p className="text-center font-serif text-xl text-ink">
           Tháng {month} <span className="text-ink-soft">/</span> {year}
         </p>
-        <div className="mt-5 grid grid-cols-7 gap-y-2 text-center text-sm">
+        <div className="mt-3 grid grid-cols-7 gap-y-1 text-center text-sm">
           {WEEKDAYS.map((d) => (
-            <p key={d} className={`pb-2 text-[11px] font-semibold tracking-wider ${d === "CN" ? "text-rose" : "text-ink-soft"}`}>
+            <p key={d} className={`pb-1 text-[11px] font-semibold tracking-wider ${d === "CN" ? "text-rose" : "text-ink-soft"}`}>
               {d}
             </p>
           ))}
           {cells.map((d, i) =>
             d === day ? (
-              <div key={i} className="relative grid aspect-square place-items-center">
-                <Heart className="absolute h-11 w-11 animate-heartbeat text-rose" />
+              <div key={i} className="relative grid h-9 place-items-center">
+                <Heart className="absolute h-9 w-9 animate-heartbeat text-rose" />
                 <span className="relative font-semibold text-white">{d}</span>
               </div>
             ) : (
-              <p key={i} className={`grid aspect-square place-items-center ${i % 7 === 6 ? "text-rose/80" : "text-ink"}`}>
+              <p key={i} className={`grid h-9 place-items-center ${i % 7 === 6 ? "text-rose/80" : "text-ink"}`}>
                 {d ?? ""}
               </p>
             ),
           )}
         </div>
-        <div className="mt-6 text-center">
+        <div className="mt-3 text-center">
           <RsvpButton />
         </div>
       </Reveal>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { saveSettings } from "@/app/admin/actions";
 import type { QuizQuestion } from "@/content/quiz";
 import { BANK_APPS } from "@/content/banks";
-import { albumImages, dateInfo, MAX_STORY, MAX_THEME_PHOTOS, MAX_THEMES, SECTION_LABELS, type SectionKey, type WeddingConfig } from "@/content/wedding";
+import { dateInfo, MAX_ALBUM, MAX_STORY, SECTION_LABELS, type SectionKey, type WeddingConfig } from "@/content/wedding";
 import { lunarText } from "@/lib/lunar";
 import { ConfigPreview } from "./config-preview";
 import { CropDialog, type Aspects } from "./crop-dialog";
@@ -242,10 +242,16 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
                     ))}
                   </select>
                 </label>
-                <label className="flex items-center gap-2 self-end pb-3 text-sm">
-                  <input type="radio" name="main-event" checked={config.mainEventId === e.id} onChange={() => edit((d) => void (d.mainEventId = e.id))} />
-                  Sự kiện chính
-                </label>
+                <div className="flex flex-col justify-end gap-1 pb-2 text-xs">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="main-event" checked={config.mainEventId === e.id} onChange={() => edit((d) => void (d.mainEventId = e.id))} />
+                    Chính · nhà trai
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="bride-event" checked={config.brideEventId === e.id} onChange={() => edit((d) => void (d.brideEventId = e.id))} />
+                    Chính · nhà gái
+                  </label>
+                </div>
                 <button
                   type="button"
                   className="self-end mb-1 h-10 rounded-lg border border-line bg-white px-2.5 text-xs text-[#8a4a3e]"
@@ -256,7 +262,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-ink-soft">“Sự kiện chính” được làm nổi bật ở phần “Trân trọng kính mời bạn tới dự”. Các mốc giờ tự sắp xếp theo giờ.</p>
+          <p className="mt-2 text-xs text-ink-soft">“Sự kiện chính” hiện ở thẻ “Trân trọng kính mời bạn tới dự”, kèm giờ, địa điểm và chỉ đường của sự kiện đó. Link thường (hoặc <code>?f=groom</code>) hiện sự kiện chính nhà trai; link <code>?f=bride</code> hiện sự kiện chính nhà gái. Các mốc giờ tự sắp xếp theo giờ.</p>
           <div className="mt-2">
             <AddButton
               onClick={() => edit((d) => void d.events.push({ id: newId("sk"), title: "", time: "12:00", venueId: d.venues[0]?.id ?? "" }))}
@@ -315,27 +321,10 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
 
       <Card
         id="album"
-        title={`Album cưới (${albumImages(config).length} ảnh, ${config.album.length} chủ đề)`}
-        description={`Mỗi chủ đề là một sector dài 1,75 màn hình, tối đa ${MAX_THEME_PHOTOS} ảnh. Các ảnh đầu tiên cũng được dùng cho trò lật hình.`}
+        title={`Album cưới (${config.album.length}/${MAX_ALBUM} ảnh)`}
+        description="Toàn bộ ảnh nằm trong một sector dài 1,75 màn hình; ảnh đầu tiên được làm nổi bật. Các ảnh đầu tiên cũng được dùng cho trò lật hình."
       >
-        {config.album.map((theme, i) => (
-          <div key={i} className="space-y-3 rounded-2xl bg-white/70 p-4 ring-1 ring-line">
-            <div className="flex items-end gap-3">
-              <TextField label={`Chủ đề ${i + 1}`} value={theme.title} maxLength={60} className="flex-1" onChange={(v) => edit((d) => void (d.album[i].title = v))} />
-              <div className="pb-1">
-                <ItemTools
-                  index={i}
-                  count={config.album.length}
-                  onMove={(to) => edit((d) => void (d.album = move(d.album, i, to)))}
-                  onRemove={() => edit((d) => void d.album.splice(i, 1))}
-                  removeLabel="Xoá chủ đề"
-                />
-              </div>
-            </div>
-            <AlbumEditor album={theme.images} max={MAX_THEME_PHOTOS} onChange={(images) => edit((d) => void (d.album[i].images = images))} />
-          </div>
-        ))}
-        {config.album.length < MAX_THEMES && <AddButton onClick={() => edit((d) => void d.album.push({ title: `Chủ đề ${d.album.length + 1}`, images: [] }))}>Thêm chủ đề</AddButton>}
+        <AlbumEditor album={config.album} max={MAX_ALBUM} onChange={(album) => edit((d) => void (d.album = album))} />
       </Card>
 
       <Card id="mung-cuoi" title="Hộp mừng cưới" description="Khách bấm vào hòm để xem mã QR. Nên dùng ảnh QR xuất từ ứng dụng ngân hàng; chọn ứng dụng ngân hàng để khách bấm vào mã QR là mở thẳng ứng dụng đó.">

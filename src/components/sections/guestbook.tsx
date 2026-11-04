@@ -56,9 +56,9 @@ export function Guestbook({ initial }: { initial: Wish[] }) {
         title="Sổ lưu bút"
         subtitle="Trân trọng cảm ơn sự yêu mến và những lời chúc phúc ngọt ngào bạn dành cho chúng mình!"
       />
-      <form onSubmit={submit} className="shrink-0 space-y-3 rounded-[2rem] bg-paper/70 p-4 ring-1 ring-line">
+      <form onSubmit={submit} className="shrink-0 space-y-2 rounded-[1.75rem] bg-paper/70 p-3 ring-1 ring-line">
         <input className="field" placeholder="Tên của bạn *" value={displayName} onChange={(e) => setName(e.target.value)} required maxLength={80} />
-        <textarea className="field min-h-20" placeholder="Lời chúc của bạn *" value={message} onChange={(e) => setMessage(e.target.value)} required maxLength={1000} />
+        <textarea className="field !min-h-0" rows={2} placeholder="Lời chúc của bạn *" value={message} onChange={(e) => setMessage(e.target.value)} required maxLength={1000} />
         <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
         {error && <p className="text-sm text-[#8a4a3e]">{error}</p>}
         <button type="submit" className="btn btn-primary w-full" disabled={busy}>
@@ -66,10 +66,17 @@ export function Guestbook({ initial }: { initial: Wish[] }) {
         </button>
       </form>
 
-      <div className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
-        {wishes.length === 0 && <p className="py-6 text-center text-sm text-ink-soft">Hãy là người đầu tiên gửi lời chúc nhé!</p>}
+      <div className="mt-3 min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-1">
+        {wishes.length === 0 && (
+          <div className="grid h-full min-h-24 place-items-center text-center text-sm text-ink-soft">
+            <div>
+              <Daisy size={34} className="mx-auto mb-2 opacity-70" />
+              Hãy là người đầu tiên gửi lời chúc nhé!
+            </div>
+          </div>
+        )}
         {wishes.map((w) => (
-          <article key={w.id} className="rounded-2xl bg-white/80 p-4 shadow-sm ring-1 ring-line">
+          <article key={w.id} className="rounded-2xl bg-white/80 p-3 shadow-sm ring-1 ring-line">
             <div className="flex items-center gap-2">
               <Daisy size={18} />
               <p className="font-semibold text-ink">{w.name}</p>
