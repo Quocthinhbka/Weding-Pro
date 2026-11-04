@@ -375,3 +375,19 @@ body {
 .float-heart {
   animation: float-heart 3.4s ease-out infinite;
 }
+
+/* Chỉ dẫn bấm đĩa than: hiện lên một lần, rồi nhún nhẹ để gây chú ý trong 10 giây đầu */
+@keyframes vinyl-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+@keyframes vinyl-bob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.vinyl-guide {
+  animation: vinyl-in 0.45s ease-out both, vinyl-bob 1.6s ease-in-out 0.45s infinite;
+}

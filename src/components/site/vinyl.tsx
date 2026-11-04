@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMusic } from "./music";
 
 /**
@@ -8,10 +8,24 @@ import { useMusic } from "./music";
  * Đang phát: đĩa quay, cần đọc đặt lên đĩa, có nốt nhạc bay. Đang tắt: đĩa đứng yên, mờ đi, cần nhấc lên.
  */
 export function Vinyl() {
-  const { playing, available, toggle } = useMusic();
+  const { playing, available, opened, toggle } = useMusic();
   const [hint, setHint] = useState(false);
+  const [guide, setGuide] = useState<"idle" | "showing" | "done">("idle");
+
+  // Nhạc tự phát khi mở phong bì: nhắc khách bấm đĩa than để dừng, trong 5 giây đầu rồi tự tắt.
+  useEffect(() => {
+    if (guide === "idle" && opened && playing) {
+      const t = setTimeout(() => setGuide("showing"), 0);
+      return () => clearTimeout(t);
+    }
+    if (guide === "showing") {
+      const t = setTimeout(() => setGuide("done"), 5_000);
+      return () => clearTimeout(t);
+    }
+  }, [guide, opened, playing]);
 
   function press() {
+    setGuide("done");
     if (available) return toggle();
     setHint(true);
     setTimeout(() => setHint(false), 2200);
@@ -20,6 +34,12 @@ export function Vinyl() {
   return (
     <div className="fixed bottom-3 left-[max(0.75rem,calc(50%-240px+0.75rem))] z-40">
       {hint && <p className="absolute bottom-full left-0 mb-2 whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs text-white shadow-lg">Nhạc nền sẽ sớm được cập nhật ♪</p>}
+      {guide === "showing" && playing && (
+        <p role="status" className="vinyl-guide absolute bottom-full left-1 mb-2 w-max max-w-[calc(100vw-1.5rem)] rounded-2xl bg-ink px-3.5 py-2 text-xs leading-snug text-white shadow-lg">
+          Nhấn vào đĩa than để dừng phát nhạc ♪
+          <span className="absolute -bottom-1 left-5 h-2.5 w-2.5 rotate-45 bg-ink" aria-hidden />
+        </p>
+      )}
       <button type="button" onClick={press} aria-label={playing ? "Tắt nhạc nền" : "Bật nhạc nền"} aria-pressed={playing} className="group relative block h-[3.9rem] w-[4.1rem] active:scale-95">
         {/* nốt nhạc bay lên khi đang phát */}
         {playing && (

@@ -28,7 +28,7 @@ function Note({ size, double }: { size: number; double: boolean }) {
 
 /** Thẻ nhạc nền kèm những nốt nhạc nhảy múa bay từ thẻ lên trên rồi tan dần. */
 export function MusicCard() {
-  const { playing, available, toggle } = useMusic();
+  const { playing, available } = useMusic();
   const { music } = useWedding();
   return (
     <div className="relative mx-auto w-full max-w-[400px]">
@@ -57,11 +57,6 @@ export function MusicCard() {
           <p className="truncate font-serif text-base text-ink">{music.title}</p>
           <p className="truncate text-xs text-ink-soft">{available ? music.artist : "Nhạc nền sẽ sớm được cập nhật ♪"}</p>
         </div>
-        {available && (
-          <button type="button" onClick={toggle} className="shrink-0 rounded-full bg-olive px-3.5 py-2 text-xs font-medium text-white">
-            {playing ? "❚❚ Dừng" : "▶ Phát"}
-          </button>
-        )}
       </div>
     </div>
   );

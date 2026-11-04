@@ -7,25 +7,12 @@ import { Daisy, DaisyDivider, DaisySprig, Heart } from "@/components/ui/daisy";
 import { FitText } from "@/components/ui/fit-text";
 import { useMusic } from "./music";
 
-const OPENED_KEY = "thiep-da-mo";
-
-/** Màn hình phong bì "Mở thiệp". Bấm mở thì phát nhạc (trình duyệt chỉ cho phép sau thao tác của khách). */
+/** Màn hình phong bì "Mở thiệp": luôn hiện đầu tiên mỗi lần vào link. Bấm mở thì phát nhạc (trình duyệt chỉ cho phép sau thao tác của khách). */
 export function Envelope({ guestName }: { guestName: string | null }) {
-  const { play } = useMusic();
+  const { play, markOpened } = useMusic();
   const config = useWedding();
   const date = dateInfo(config);
   const [phase, setPhase] = useState<"closed" | "opening" | "gone">("closed");
-
-  useEffect(() => {
-    let opened = false;
-    try {
-      opened = sessionStorage.getItem(OPENED_KEY) === "1";
-    } catch {}
-    if (opened) {
-      const t = setTimeout(() => setPhase("gone"), 0);
-      return () => clearTimeout(t);
-    }
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = phase === "gone" ? "" : "hidden";
@@ -37,10 +24,10 @@ export function Envelope({ guestName }: { guestName: string | null }) {
   function open() {
     play();
     setPhase("opening");
-    try {
-      sessionStorage.setItem(OPENED_KEY, "1");
-    } catch {}
-    setTimeout(() => setPhase("gone"), 1900);
+    setTimeout(() => {
+      setPhase("gone");
+      markOpened();
+    }, 1900);
   }
 
   if (phase === "gone") return null;

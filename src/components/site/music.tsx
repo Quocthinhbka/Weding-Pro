@@ -3,9 +3,17 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import { useWedding } from "./wedding-context";
 
-type Music = { playing: boolean; available: boolean; play: () => void; toggle: () => void };
+type Music = {
+  playing: boolean;
+  available: boolean;
+  /** Khách đã mở phong bì (nhạc tự phát từ lúc đó); đĩa than dùng để hiện chỉ dẫn vài giây đầu. */
+  opened: boolean;
+  markOpened: () => void;
+  play: () => void;
+  toggle: () => void;
+};
 
-const MusicContext = createContext<Music>({ playing: false, available: false, play: () => {}, toggle: () => {} });
+const MusicContext = createContext<Music>({ playing: false, available: false, opened: false, markOpened: () => {}, play: () => {}, toggle: () => {} });
 
 export const useMusic = () => useContext(MusicContext);
 
@@ -15,6 +23,8 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const markOpened = useCallback(() => setOpened(true), []);
   const available = !!music.src && !failed;
 
   const play = useCallback(() => {
@@ -29,7 +39,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <MusicContext.Provider value={{ playing, available, play, toggle }}>
+    <MusicContext.Provider value={{ playing, available, opened, markOpened, play, toggle }}>
       <audio
         ref={audio}
         src={music.src || undefined}
