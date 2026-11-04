@@ -1,0 +1,207 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --cream: #faf6ee;
+  --paper: #f3ebdd;
+  --paper-deep: #e8dcc6;
+  --ink: #3f3326;
+  --ink-soft: #6e5f4d;
+  --olive: #6b7a45;
+  --olive-deep: #4f5c30;
+  --daisy: #f2c14e;
+  --rose: #c9877a;
+  --line: #d9cbb2;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-olive: var(--olive);
+  --color-olive-deep: var(--olive-deep);
+  --color-daisy: var(--daisy);
+  --color-rose: var(--rose);
+  --color-line: var(--line);
+  --font-serif: var(--font-playfair);
+  --font-script: var(--font-dancing);
+  --font-sans: var(--font-be);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Playfair mặc định dùng số kiểu cũ (0 giống chữ o) – đổi sang số thẳng hàng.
+   Đặt qua biến của Tailwind để vẫn kết hợp được với tabular-nums. */
+@layer base {
+  .font-serif {
+    --tw-numeric-figure: lining-nums;
+    font-variant-numeric: lining-nums;
+  }
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-be), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Nền giấy hai bên cột thiệp trên màn hình lớn */
+.paper-bg {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(circle at 20% 15%, rgb(255 255 255 / 0.55) 0, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgb(255 255 255 / 0.4) 0, transparent 45%),
+    repeating-linear-gradient(45deg, rgb(63 51 38 / 0.018) 0 2px, transparent 2px 6px);
+}
+
+.card-frame {
+  background: var(--cream);
+  box-shadow: 0 0 0 1px var(--line), 0 30px 80px -40px rgb(63 51 38 / 0.45);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.btn-primary {
+  background: var(--olive);
+  color: #fff;
+  box-shadow: 0 8px 20px -10px rgb(79 92 48 / 0.8);
+}
+.btn-primary:hover {
+  background: var(--olive-deep);
+}
+.btn-outline {
+  border: 1px solid var(--olive);
+  color: var(--olive-deep);
+  background: rgb(255 255 255 / 0.6);
+}
+.btn-outline:hover {
+  background: #fff;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.7rem 0.9rem;
+  font-size: 1rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field:focus {
+  border-color: var(--olive);
+  box-shadow: 0 0 0 3px rgb(107 122 69 / 0.18);
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* Hiện dần khi cuộn tới */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes petal-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--drift, 40px), 110vh, 0) rotate(var(--spin, 540deg));
+    opacity: 0;
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 6s linear infinite;
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.animate-float {
+  animation: float-soft 3.2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.18);
+  }
+  30% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.12);
+  }
+}
+.animate-heartbeat {
+  animation: heartbeat 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

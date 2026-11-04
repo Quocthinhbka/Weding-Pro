@@ -1,0 +1,2 @@
+# Luôn dùng LF để script và Dockerfile chạy đúng trên VPS Linux, kể cả khi chép từ Windows.
+* text=auto eol=lf

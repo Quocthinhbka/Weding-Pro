@@ -1,0 +1,8 @@
+# Caddy tự xin và gia hạn chứng chỉ HTTPS miễn phí cho tên miền trong biến DOMAIN.
+{$DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 100MB
+	}
+	reverse_proxy app:3000
+}
