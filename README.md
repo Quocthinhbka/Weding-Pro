@@ -111,12 +111,17 @@ Caddy sẽ tự xin chứng chỉ HTTPS. Sau khoảng một phút, mở `https:/
 
 ## Thiệp chia sector
 
-Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nhấn PageDown) trượt tới sector kế tiếp; có chấm điều hướng ở mép phải.
-- Mỗi sector vừa trọn một màn hình (đã kiểm tra ở 360×640, 390×844, 430×932). Thứ tự: bìa, gia đình, ngôi nhà cô dâu chú rể kèm thẻ nhạc, thẻ mời, đếm ngược + lịch, lịch trình (mỗi địa điểm một sector), chuyện tình, album, sổ lưu bút + video, trò chơi, hộp mừng cưới, cảm ơn.
-- **Chuyện tình** và **Album** là sector dài 1,75 màn hình: vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector, lần 3 sang sector sau. Tối đa 4 kỷ niệm và 48 ảnh album (ảnh đầu tiên được làm nổi bật).
-- **Link nhà trai / nhà gái:** thẻ mời mặc định (hoặc `?f=groom`) là sự kiện chính nhà trai, mặc định Lễ Thành Hôn. Link `?f=bride` đổi thành sự kiện chính nhà gái, mặc định Lễ Vu Quy; giờ, địa điểm và chỉ đường đổi theo. Chọn hai sự kiện chính trong mục "Địa điểm & lịch trình" của trang cấu hình. Có thể ghép với link mời riêng: `https://<tên-miền>/?k=<mã>&f=bride`.
+Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nhấn PageDown) trượt tới sector kế tiếp; có chấm điều hướng ở mép phải. Link có `#video`, `#gifts`… mở thẳng tới sector đó.
+- Mỗi sector vừa trọn một màn hình (đã kiểm tra ở 360×640, 390×844, 430×932). Thứ tự: bìa, gia đình (kèm buổi tiệc thân mật), ngôi nhà cô dâu chú rể + thẻ nhạc, thẻ mời, đếm ngược + lịch, lịch trình, chuyện tình, album, sổ lưu bút, video lời chúc, trò chơi, hộp mừng cưới, cảm ơn.
+- **Chuyện tình** và **Album** là sector dài 1,75 màn hình: vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector, lần 3 sang sector sau. Tối đa 4 kỷ niệm và 48 ảnh album; ảnh xếp theo hàng với nhiều cỡ nhưng luôn khít.
+- **Lịch trình** là một dòng thời gian gồm các mốc giờ, tự nhóm theo địa điểm (kèm Chỉ đường và thêm vào lịch). Mốc không gắn địa điểm (VD đoàn nhà trai xuất phát) chọn "Không gắn địa điểm".
+- **Link nhà trai / nhà gái:** link thường (hoặc `?f=groom`) là thiệp nhà trai, `?f=bride` là thiệp nhà gái. Mỗi bên chọn riêng sự kiện và tên hiện ở thẻ mời (mặc định Lễ Thành Hôn / Lễ Vu Quy, kèm giờ, địa điểm, chỉ đường) và buổi tiệc thân mật hiện ở phần gia đình, trong mục "Địa điểm & lịch trình" của trang cấu hình. Ghép được với link mời riêng: `https://<tên-miền>/?k=<mã>&f=bride`.
 - **Hộp mừng cưới** là một hòm bấm để mở hộp thoại mã QR. Chọn ứng dụng ngân hàng trong trang cấu hình thì bấm vào QR sẽ mở thẳng app đó (qua deeplink VietQR) và chép sẵn số tài khoản.
 - Màn hình quá thấp (cao dưới 560px, như máy nằm ngang) thì tắt snap, cuộn như trang thường.
+
+## Sổ lưu bút
+
+Khách để lại lời chúc **công khai** hoặc **riêng tư**. Lời chúc riêng tư vẫn hiện trên thiệp (tên khách và vệt gradient mờ) nhưng nội dung không bao giờ rời khỏi máy chủ; chỉ bạn đọc được ở `/admin/loi-chuc`.
 
 ## Quản trị (`https://<tên-miền>/admin`)
 
@@ -136,20 +141,18 @@ Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nh
   - Mỗi khách xác nhận "có tham dự" được cấp một số.
   - Có thể lọc theo sự kiện. Bấm **Toàn màn hình** khi chiếu.
 
-## Video lời chúc (`/wedmemo`)
+## Video lời chúc
 
-Chuyển từ dự án WedMemo, giữ nguyên giao diện: quay bằng camera, chọn khung trang trí in thẳng vào video, đếm ngược, chọn 15/30/60 giây, đổi camera.
+Sector "Video chúc mừng" trong thiệp (dựng từ dự án WedMemo, mã ở `src/components/video/`): quay bằng camera, chọn 1 trong 10 khung in thẳng vào video (tên và ngày lấy từ trang Cấu hình thiệp), đếm ngược, chọn 15/30/60 giây, đổi camera, xem lại rồi gửi, xem thư viện lời chúc. Không dẫn sang trang khác.
 
-- Khách quét mã QR (`public/wedmemo/qr.svg`, trỏ về `https://thinhtrang.love/wedmemo`) để quay bằng điện thoại.
-- Máy ở sảnh: mở `https://<tên-miền>/wedmemo/kiosk`. Có màn hình chào kèm QR, chống thoát toàn màn hình, tự về màn hình chào sau 90 giây không ai chạm.
+- Clip **công khai** ai cũng xem được. Clip **riêng tư** chỉ xem khi bấm **Mở khoá** trong thư viện và nhập mã `WEDMEMO_CODE` trong `.env`; rời thư viện là tự khoá lại. Sau khi mở khoá có nút xoá (chuyển vào thư mục `trash`).
+- Clip chưa gửi được (mất mạng) nằm trong trình duyệt của máy đã ghi và tự gửi lại khi có mạng.
+- **Máy ở sảnh:** mở `https://<tên-miền>/wedmemo/kiosk` bằng Chrome/Edge chế độ kiosk, cho phép camera + micro một lần. Có màn hình chào kèm mã QR (trỏ về sector video), chống thoát toàn màn hình, tự về màn hình chào sau 90 giây không ai chạm.
   ```
   chrome --kiosk --autoplay-policy=no-user-gesture-required https://<tên-miền>/wedmemo/kiosk
   ```
-- Clip **công khai** ai cũng xem được. Clip **riêng tư** chỉ xem khi bấm **Mở khoá** trong thư viện và nhập mã `WEDMEMO_CODE` trong `.env`. Rời thư viện là tự khoá lại.
-- Clip chưa gửi được (mất mạng) nằm trong trình duyệt của máy đã ghi và tự gửi lại khi có mạng.
-- Xoá trong thư viện (sau khi mở khoá) = chuyển sang `wedmemo/trash/` trong volume dữ liệu.
-- Dữ liệu lưu ở `<DATA_DIR>/uploads/wedmemo/`, nên `scripts/backup.sh` cũng sao lưu luôn.
-- Firefox ghi ra WebM, iPhone có thể không phát được.
+- Link cũ `/wedmemo` tự chuyển về `/#video`.
+- Dữ liệu lưu ở `<DATA_DIR>/uploads/wedmemo/`, nên `scripts/backup.sh` cũng sao lưu luôn. Firefox ghi ra WebM, iPhone có thể không phát được.
 
 ## Sao lưu
 

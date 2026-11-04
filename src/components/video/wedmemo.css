@@ -1,0 +1,634 @@
+/* Ghi và xem video lời chúc: cùng bảng màu, phông chữ và nút bo tròn với phần còn lại của thiệp. Mọi luật nằm trong .wm. */
+.wm {
+  --wm-glass: rgb(63 51 38 / 0.72);
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+.wm button,
+.wm input {
+  font: inherit;
+  color: inherit;
+}
+.wm button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.wm button:focus-visible,
+.wm input:focus-visible {
+  outline: 2px solid var(--olive);
+  outline-offset: 2px;
+}
+.wm-embed {
+  flex: 1 1 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Thanh trên: trạng thái gửi và thư viện */
+.wm-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.1rem;
+  margin-bottom: 0.4rem;
+}
+.wm-gal {
+  margin-left: auto;
+}
+.wm .wm-pill {
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--cream);
+  padding: 0.4em 0.95em;
+  font-size: 0.9em;
+}
+.wm-up {
+  color: var(--olive-deep);
+  font-weight: 500;
+}
+.wm-busy .wm-bar button {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Khung camera */
+.wm-stage {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+}
+.wm-cvwrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  background: var(--ink);
+  box-shadow: 0 14px 40px -18px rgb(63 51 38 / 0.6);
+  outline: 4px solid var(--cream);
+  translate: -50% -50%;
+}
+.wm-cvwrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.wm .wm-flip {
+  position: absolute;
+  right: 0.6em;
+  top: 0.6em;
+  display: grid;
+  width: 2.5em;
+  height: 2.5em;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--wm-glass);
+  color: #fff;
+}
+.wm-busy .wm-flip {
+  display: none;
+}
+.wm-count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-family: var(--font-playfair), serif;
+  font-size: min(30vmin, 180px);
+  text-shadow: 0 4px 30px rgb(0 0 0 / 0.7);
+  pointer-events: none;
+}
+.wm-camerr {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1em;
+  border-radius: 1.4rem;
+  background: var(--paper);
+  padding: 1.5em;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* Màn hình chào (trong khung camera; máy sảnh thì phủ cả màn hình) */
+.wm-start {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  overflow: auto;
+  border-radius: 1.4rem;
+  background: radial-gradient(ellipse at 50% 30%, #fff, var(--paper) 78%);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.wm-eyebrow {
+  font-size: 0.8em;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--olive);
+}
+.wm-names {
+  font-family: var(--font-dancing), cursive;
+  font-size: clamp(2rem, 9vmin, 3.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.wm-names i {
+  font-style: normal;
+  color: var(--rose);
+}
+.wm-date {
+  letter-spacing: 0.35em;
+  color: var(--olive-deep);
+  font-size: 0.9em;
+}
+.wm-lead {
+  max-width: 22em;
+  color: var(--ink-soft);
+}
+.wm-qr {
+  display: none;
+  align-items: center;
+  gap: 1em;
+  margin-top: 0.5rem;
+  text-align: left;
+  color: var(--ink-soft);
+  font-size: 0.9em;
+}
+.wm-qr img {
+  width: clamp(96px, 16vmin, 170px);
+  border-radius: 10px;
+  background: #fff;
+  padding: 6px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.wm-kiosk .wm-qr {
+  display: flex;
+}
+.wm-fsguard {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: rgb(250 246 238 / 0.96);
+  padding: 2em;
+  text-align: center;
+  font-family: var(--font-playfair), serif;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+/* Điều khiển */
+.wm-ctrl {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+}
+.wm-hint {
+  min-height: 1.4em;
+  text-align: center;
+  font-size: 0.88em;
+  color: var(--ink-soft);
+}
+.wm-seg {
+  display: flex;
+  max-width: 100%;
+  gap: 0.2rem;
+  border-radius: 999px;
+  background: var(--cream);
+  padding: 0.2rem;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.wm-seg button {
+  white-space: nowrap;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  padding: 0.4em 0.85em;
+  color: var(--ink-soft);
+}
+.wm-seg button.on {
+  background: var(--olive);
+  color: #fff;
+  font-weight: 600;
+}
+.wm-opts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.wm-busy .wm-opts {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.wm-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.wm-timer::before {
+  content: "";
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: #e5484d;
+  animation: wm-blink 1s infinite;
+}
+@keyframes wm-blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+.wm-rw {
+  --rw: clamp(56px, 9dvh, 76px);
+  position: relative;
+  width: var(--rw);
+  height: var(--rw);
+}
+.wm-rw svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.wm #rec {
+  position: absolute;
+  inset: 14%;
+  border: 0;
+  border-radius: 50%;
+  background: #e5484d;
+  transition: inset 0.2s, border-radius 0.2s;
+  animation: wm-pulse 1.8s infinite;
+}
+.wm-busy #rec {
+  inset: 31%;
+  border-radius: 12%;
+  animation: none;
+}
+@keyframes wm-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(229 72 77 / 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgb(229 72 77 / 0);
+  }
+}
+@media (max-height: 760px) {
+  .wm-hint {
+    display: none;
+  }
+}
+@media (max-height: 640px) {
+  .wm-ctrl {
+    gap: 0.35rem;
+    padding-top: 0.4rem;
+  }
+  .wm-rw {
+    --rw: 52px;
+  }
+}
+
+/* Máy ở sảnh: toàn màn hình, chữ lớn hơn */
+.wm-kiosk {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--cream);
+  padding: max(0.8rem, env(safe-area-inset-top)) 1rem max(0.8rem, env(safe-area-inset-bottom));
+  font-size: clamp(14px, calc(0.8vmin + 9px), 20px);
+  line-height: 1.4;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.wm-kiosk .wm-start {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 2rem 1.2rem;
+}
+.wm-kiosk .wm-names {
+  font-size: clamp(2.6rem, 9vmin, 6.5rem);
+}
+@media (orientation: landscape) {
+  .wm-kiosk .wm-ctrl {
+    flex-direction: row;
+    justify-content: center;
+    gap: 1rem;
+  }
+  .wm-kiosk .wm-hint {
+    display: none;
+  }
+}
+
+/* Nút */
+.wm .wm-btn {
+  border: 0;
+  border-radius: 999px;
+  background: var(--olive);
+  padding: 0.65em 1.4em;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 8px 18px -10px rgb(79 92 48 / 0.8);
+}
+.wm .wm-btn:active {
+  transform: translateY(1px);
+}
+.wm .wm-big {
+  font-size: 1.1em;
+  padding: 0.8em 1.7em;
+}
+.wm .wm-ghost {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  box-shadow: none;
+}
+.wm .wm-danger {
+  margin-right: auto;
+  border: 1px solid rgb(201 135 122 / 0.5);
+  background: transparent;
+  color: #8a4a3e;
+  box-shadow: none;
+}
+
+/* Hộp thoại */
+.wm dialog {
+  margin: auto;
+  width: min(28rem, calc(100% - 1.5rem));
+  max-width: none;
+  max-height: calc(100% - 1.5rem);
+  overflow: auto;
+  border: 0;
+  border-radius: 1.6rem;
+  background: var(--cream);
+  padding: 1.25rem;
+  color: var(--ink);
+  box-shadow: 0 30px 80px -30px rgb(63 51 38 / 0.6), 0 0 0 1px var(--line);
+}
+.wm dialog::backdrop {
+  background: rgb(63 51 38 / 0.55);
+  backdrop-filter: blur(3px);
+}
+.wm dialog h3 {
+  margin-bottom: 0.4rem;
+  font-family: var(--font-playfair), serif;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+.wm-muted {
+  color: var(--ink-soft);
+  font-size: 0.9em;
+}
+.wm label {
+  display: block;
+  margin-top: 0.9rem;
+  font-size: 0.95em;
+}
+.wm-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.7em 0.9em;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.wm-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.wm #review,
+.wm #player {
+  width: min(36rem, calc(100% - 1.5rem));
+}
+.wm #review video,
+.wm #player video {
+  display: block;
+  width: 100%;
+  max-height: 52dvh;
+  border-radius: 1rem;
+  background: var(--ink);
+}
+.wm #player video {
+  max-height: calc(100dvh - 13rem);
+}
+.wm #review .wm-seg {
+  width: fit-content;
+  margin-top: 0.9rem;
+}
+.wm #privNote {
+  margin-top: 0.5rem;
+}
+.wm-prow {
+  margin-top: 0.7rem;
+}
+.wm-code {
+  display: block;
+  width: 100%;
+  margin-top: 0.9rem;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.3em;
+  text-align: center;
+  font-size: 1.9em;
+  letter-spacing: 0.5em;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.wm-err {
+  min-height: 1.4em;
+  margin-top: 0.5rem;
+  font-size: 0.9em;
+  color: #8a4a3e;
+}
+
+/* Thư viện lời chúc */
+.wm dialog.wm-full {
+  width: min(100%, 30rem);
+  height: 100%;
+  max-height: none;
+  margin: 0 auto;
+  border-radius: 0;
+  padding: 0;
+  background: var(--paper);
+}
+.wm dialog.wm-full[open] {
+  display: flex;
+  flex-direction: column;
+}
+.wm-ghead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: max(0.8rem, env(safe-area-inset-top)) 1rem 0.8rem;
+}
+.wm .wm-ghead h3 {
+  margin: 0 auto 0 0;
+  font-family: var(--font-dancing), cursive;
+  font-size: 2em;
+  font-weight: 700;
+  color: var(--olive);
+  white-space: nowrap;
+}
+.wm-flat {
+  padding: 0 0 0.6rem;
+}
+.wm-grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 0.7rem;
+  overflow: auto;
+  padding: 0.25rem 1rem max(1.5rem, env(safe-area-inset-bottom));
+}
+.wm .card {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 0;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg, #e8dcc6, #cdbf9f);
+  text-align: left;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.wm .card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wm .card.lock img {
+  filter: blur(7px);
+  transform: scale(1.15);
+}
+.wm .ico {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  display: grid;
+  width: 3em;
+  height: 3em;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.85);
+  color: var(--ink);
+  translate: -50% -50%;
+}
+.wm .badge {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  border-radius: 999px;
+  background: var(--wm-glass);
+  padding: 0.1em 0.55em;
+  color: #fff;
+  font-size: 0.8em;
+}
+.wm .meta {
+  position: absolute;
+  inset: auto 0 0;
+  background: linear-gradient(transparent, rgb(40 30 20 / 0.82));
+  padding: 1.8em 0.75em 0.6em;
+  color: #fff;
+}
+.wm .meta b,
+.wm .meta small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wm .meta small {
+  font-size: 0.78em;
+  opacity: 0.85;
+}
+.wm-empty {
+  padding: 3em 1em;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* Chọn khung */
+.wm #frames {
+  width: min(34rem, calc(100% - 1.5rem));
+}
+.wm-fgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.wm-fgrid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  border: 2px solid transparent;
+  border-radius: 1rem;
+  background: none;
+  padding: 0.35rem 0.35rem 0.5rem;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
+.wm-fgrid button.on {
+  border-color: var(--olive);
+  color: var(--ink);
+  font-weight: 600;
+}
+.wm-fgrid canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.6rem;
+}
+
+.wm-toast {
+  position: fixed;
+  inset: auto auto max(1.5rem, env(safe-area-inset-bottom)) 50%;
+  z-index: 30;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  margin: 0;
+  translate: -50% 0;
+  border: 0;
+  border-radius: 1rem;
+  background: var(--ink);
+  padding: 0.7em 1.1em;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.5);
+}

@@ -225,16 +225,52 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
         ))}
         <AddButton onClick={() => edit((d) => void d.venues.push({ id: newId("dd"), name: "", address: "", latLng: "", rsvpLabel: "" }))}>Thêm địa điểm</AddButton>
 
+        <div className="space-y-3 rounded-2xl bg-white/70 p-4 ring-1 ring-line">
+          <p className="font-semibold">Thiệp nhà trai và nhà gái</p>
+          <p className="text-xs text-ink-soft">
+            Link thường (hoặc <code>?f=groom</code>) là thiệp nhà trai, link <code>?f=bride</code> là thiệp nhà gái. Mỗi bên chọn sự kiện hiện ở thẻ “Trân trọng kính mời” (kèm giờ, địa điểm, chỉ đường) và buổi tiệc thân mật hiện dưới phần đại diện gia đình.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {(["groom", "bride"] as const).map((k) => (
+              <div key={k} className="space-y-2">
+                <p className="text-sm font-medium">{k === "groom" ? "Nhà trai (?f=groom)" : "Nhà gái (?f=bride)"}</p>
+                <label className="block">
+                  <span className="label">Sự kiện ở thẻ mời</span>
+                  <select className="field" value={config.sides[k].eventId} onChange={(e) => edit((d) => void (d.sides[k].eventId = e.target.value))}>
+                    {config.events.map((ev) => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.time} · {ev.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <TextField label="Tên hiện ở thẻ mời" value={config.sides[k].title} maxLength={40} placeholder={k === "groom" ? "Lễ Thành Hôn" : "Lễ Vu Quy"} onChange={(v) => edit((d) => void (d.sides[k].title = v))} />
+                <label className="block">
+                  <span className="label">Buổi tiệc thân mật</span>
+                  <select className="field" value={config.sides[k].feastEventId} onChange={(e) => edit((d) => void (d.sides[k].feastEventId = e.target.value))}>
+                    {config.events.map((ev) => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.time} · {ev.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="pt-2">
           <p className="mb-2 font-semibold">Các mốc giờ</p>
           <div className="space-y-2">
             {config.events.map((e, i) => (
-              <div key={e.id} className="grid grid-cols-[150px_1fr] gap-2 rounded-2xl bg-white/70 p-3 ring-1 ring-line sm:grid-cols-[150px_1fr_1fr_auto_auto]">
+              <div key={e.id} className="grid grid-cols-[150px_1fr] gap-2 rounded-2xl bg-white/70 p-3 ring-1 ring-line sm:grid-cols-[150px_1fr_1fr_auto]">
                 <TextField label="Giờ" type="time" value={e.time} onChange={(v) => v && edit((d) => void (d.events[i].time = v))} />
                 <TextField label="Tên sự kiện" value={e.title} onChange={(v) => edit((d) => void (d.events[i].title = v))} />
                 <label className="col-span-2 block sm:col-span-1">
                   <span className="label">Địa điểm</span>
                   <select className="field" value={e.venueId} onChange={(ev) => edit((d) => void (d.events[i].venueId = ev.target.value))}>
+                    <option value="">Không gắn địa điểm</option>
                     {config.venues.map((v, j) => (
                       <option key={v.id} value={v.id}>
                         {v.name || `Địa điểm ${j + 1}`}
@@ -242,27 +278,23 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
                     ))}
                   </select>
                 </label>
-                <div className="flex flex-col justify-end gap-1 pb-2 text-xs">
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="main-event" checked={config.mainEventId === e.id} onChange={() => edit((d) => void (d.mainEventId = e.id))} />
-                    Chính · nhà trai
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="bride-event" checked={config.brideEventId === e.id} onChange={() => edit((d) => void (d.brideEventId = e.id))} />
-                    Chính · nhà gái
-                  </label>
-                </div>
                 <button
                   type="button"
                   className="self-end mb-1 h-10 rounded-lg border border-line bg-white px-2.5 text-xs text-[#8a4a3e]"
-                  onClick={() => edit((d) => void d.events.splice(i, 1))}
+                  onClick={() => {
+                    if (Object.values(config.sides).some((sd) => sd.eventId === e.id || sd.feastEventId === e.id)) {
+                      alert("Mốc này đang được dùng ở thẻ mời hoặc buổi tiệc thân mật. Hãy chọn mốc khác ở mục “Thiệp nhà trai và nhà gái” trước.");
+                      return;
+                    }
+                    edit((d) => void d.events.splice(i, 1));
+                  }}
                 >
                   Xoá
                 </button>
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-ink-soft">“Sự kiện chính” hiện ở thẻ “Trân trọng kính mời bạn tới dự”, kèm giờ, địa điểm và chỉ đường của sự kiện đó. Link thường (hoặc <code>?f=groom</code>) hiện sự kiện chính nhà trai; link <code>?f=bride</code> hiện sự kiện chính nhà gái. Các mốc giờ tự sắp xếp theo giờ.</p>
+          <p className="mt-2 text-xs text-ink-soft">Các mốc giờ tự sắp xếp theo giờ và hiện thành một dòng thời gian trong thiệp.</p>
           <div className="mt-2">
             <AddButton
               onClick={() => edit((d) => void d.events.push({ id: newId("sk"), title: "", time: "12:00", venueId: d.venues[0]?.id ?? "" }))}

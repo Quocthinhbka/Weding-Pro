@@ -83,21 +83,27 @@ export function saveRsvp(
 
 /* ---------- Sổ lưu bút ---------- */
 
-export type Wish = { id: number; name: string; message: string; hidden: number; created_at: number };
+export type Wish = { id: number; name: string; message: string; hidden: number; private: number; created_at: number };
+
+/** Lời chúc gửi xuống trình duyệt: lời chúc riêng tư không kèm nội dung (message = null) nên không thể đọc được. */
+export type PublicWish = { id: number; name: string; message: string | null; private: boolean; created_at: number };
+
+const toPublic = (w: Wish): PublicWish => ({ id: w.id, name: w.name, message: w.private ? null : w.message, private: !!w.private, created_at: w.created_at });
 
 export function visibleWishes(limit = 200) {
-  return all<Wish>("SELECT * FROM wishes WHERE hidden = 0 ORDER BY created_at DESC LIMIT ?", limit);
+  return all<Wish>("SELECT * FROM wishes WHERE hidden = 0 ORDER BY created_at DESC LIMIT ?", limit).map(toPublic);
 }
 
-export function addWish(guestId: number | null, name: string, message: string) {
+export function addWish(guestId: number | null, name: string, message: string, isPrivate: boolean) {
   const result = run(
-    "INSERT INTO wishes (guest_id, name, message, created_at) VALUES (?, ?, ?, ?)",
+    "INSERT INTO wishes (guest_id, name, message, private, created_at) VALUES (?, ?, ?, ?, ?)",
     guestId,
     name,
     message,
+    isPrivate ? 1 : 0,
     Date.now(),
   );
-  return get<Wish>("SELECT * FROM wishes WHERE id = ?", Number(result.lastInsertRowid))!;
+  return toPublic(get<Wish>("SELECT * FROM wishes WHERE id = ?", Number(result.lastInsertRowid))!);
 }
 
 /* ---------- Vòng quay ---------- */

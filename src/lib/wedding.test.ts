@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { bankAppUrl } from "@/content/banks";
-import { albumLayout } from "@/components/sections/album-grid";
-import { dateInfo, defaultConfig, inviteEvent, memoryImages, normalizeConfig, rsvpGroups, sideFromParam } from "@/content/wedding";
+import { albumRows } from "@/components/sections/album-grid";
+import { dateInfo, defaultConfig, feastOf, inviteEvent, memoryImages, normalizeConfig, rsvpGroups, sideFromParam } from "@/content/wedding";
 import { configSchema, quizSchema } from "./config-schema";
 import { canChiYear, lunarText, solarToLunar } from "./lunar";
 import { mergeDefaults } from "./merge";
@@ -36,8 +36,8 @@ describe("ngày cưới", () => {
 });
 
 describe("file lịch .ics", () => {
-  it("Lễ Vu Quy 13:00 (+07:00) thành 06:00 UTC", () => {
-    const vuQuy = defaultConfig.events.find((e) => e.id === "vu-quy")!;
+  it("Nghi thức xin dâu 13:00 (+07:00) thành 06:00 UTC", () => {
+    const vuQuy = defaultConfig.events.find((e) => e.id === "xin-dau")!;
     expect(eventRange(defaultConfig, vuQuy).start.toISOString()).toBe("2026-11-29T06:00:00.000Z");
     const ics = buildIcs(defaultConfig, [vuQuy], new Date("2026-11-04T00:00:00Z"));
     expect(ics).toContain("DTSTART:20261129T060000Z");
@@ -56,7 +56,7 @@ describe("file lịch .ics", () => {
 
   it("link Google Calendar chứa khung giờ của địa điểm", () => {
     const url = new URL(googleCalendarUrl(defaultConfig, "nha-hang"));
-    expect(url.searchParams.get("dates")).toBe("20261129T100000Z/20261129T130000Z");
+    expect(url.searchParams.get("dates")).toBe("20261129T090000Z/20261129T130000Z");
   });
 });
 
@@ -166,7 +166,10 @@ describe("cấu hình", () => {
     expect(["bride", "groom", undefined, "x"].map(sideFromParam)).toEqual(["bride", "groom", "groom", "groom"]);
     expect(inviteEvent(defaultConfig, "groom").title).toBe("Lễ Thành Hôn");
     expect(inviteEvent(defaultConfig, "bride").title).toBe("Lễ Vu Quy");
-    expect(inviteEvent({ ...defaultConfig, brideEventId: "da-xoa" }, "bride").id).toBe(defaultConfig.mainEventId);
+    expect(inviteEvent({ ...defaultConfig, sides: { ...defaultConfig.sides, bride: { ...defaultConfig.sides.bride, eventId: "da-xoa" } } }, "bride")?.id).toBe("thanh-hon");
+    expect(inviteEvent(defaultConfig, "bride")).toMatchObject({ id: "xin-dau", time: "13:00", title: "Lễ Vu Quy" });
+    expect(feastOf(defaultConfig, "groom")?.event).toMatchObject({ time: "17:15", venueId: "nha-hang" });
+    expect(feastOf(defaultConfig, "bride")?.venue?.name).toBe("Tư gia nhà gái");
   });
 
   it("deeplink ngân hàng chỉ có khi chọn ngân hàng hợp lệ", () => {
@@ -175,13 +178,13 @@ describe("cấu hình", () => {
     expect(bankAppUrl("khong-co")).toBe("");
   });
 
-  it("lưới album luôn lấp đầy hàng cuối, ảnh nổi bật chỉ khi đủ ảnh", () => {
+  it("album xếp theo hàng: đủ mọi ảnh, mỗi ảnh một ô, nhiều cỡ khác nhau", () => {
     for (const n of [1, 2, 3, 5, 9, 14, 20, 33, 40, 48]) {
-      const { cols, featured, rows, lastSpan } = albumLayout(n);
-      const cells = n + (featured ? 3 : 0) + (lastSpan - 1);
-      expect(cells).toBe(rows * cols);
+      const rows = albumRows(n);
+      expect(rows.reduce((a, r) => a + r.w.length, 0)).toBe(n);
+      expect(rows.every((r) => r.w.length >= 1 && r.h > 0)).toBe(true);
     }
-    expect(albumLayout(9)).toMatchObject({ cols: 2, featured: false });
-    expect(albumLayout(40)).toMatchObject({ cols: 3, featured: true });
+    const sizes = new Set(albumRows(40).map((r) => `${r.h}:${r.w.join("")}`));
+    expect(sizes.size).toBeGreaterThanOrEqual(5);
   });
 });

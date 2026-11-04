@@ -8,12 +8,9 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/**": ["./node_modules/@img/**/*"],
   },
-  // Trang quay video lời chúc là tệp tĩnh public/wedmemo/index.html (chép từ dự án WedMemo).
-  async rewrites() {
-    return [
-      { source: "/wedmemo", destination: "/wedmemo/index.html" },
-      { source: "/wedmemo/kiosk", destination: "/wedmemo/index.html" },
-    ];
+  // Video lời chúc nằm ngay trong thiệp (sector "video"); link /wedmemo cũ dẫn về đó. Máy ở sảnh dùng /wedmemo/kiosk.
+  async redirects() {
+    return [{ source: "/wedmemo", destination: "/#video", permanent: false }];
   },
   images: {
     // Ảnh tạm là SVG; ảnh thật (jpg/webp) vẫn được tối ưu như bình thường.

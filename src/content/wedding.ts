@@ -15,7 +15,10 @@ export type Venue = {
   /** Tên hiển thị trong form xác nhận tham dự, VD "Lễ Vu Quy · Ninh Bình". */
   rsvpLabel: string;
 };
+/** `venueId` để trống = mốc không gắn địa điểm (VD đoàn nhà trai xuất phát từ tư gia). */
 export type WeddingEvent = { id: string; title: string; time: string; venueId: string };
+/** Thiết lập riêng cho từng bên mời: sự kiện và tên hiện ở thẻ mời, buổi tiệc thân mật hiện ở phần gia đình. */
+export type SideInfo = { eventId: string; title: string; feastEventId: string };
 export type StoryItem = { title: string; text: string; image: string };
 export type Gift = {
   title: string;
@@ -55,10 +58,8 @@ export type WeddingConfig = {
   };
   venues: Venue[];
   events: WeddingEvent[];
-  /** Sự kiện được làm nổi bật ở phần "Trân trọng kính mời bạn tới dự". */
-  mainEventId: string;
-  /** Sự kiện chính khi mở thiệp bằng link nhà gái (?f=bride), VD "Lễ Vu Quy". */
-  brideEventId: string;
+  /** Nhà trai (link thường hoặc ?f=groom) và nhà gái (?f=bride). */
+  sides: Record<"groom" | "bride", SideInfo>;
   texts: { invitation: string; thankYou: string; guestFallback: string };
   heroImage: string;
   music: { src: string; title: string; artist: string };
@@ -94,13 +95,21 @@ export const defaultConfig: WeddingConfig = {
     },
   ],
   events: [
+    { id: "xuat-phat", title: "Đoàn nhà trai xuất phát từ tư gia", time: "06:25", venueId: "" },
+    { id: "an-hoi", title: "Trao lễ ăn hỏi", time: "09:00", venueId: "nha-gai" },
+    { id: "huong-nha-gai", title: "Thắp hương gia tiên", time: "09:15", venueId: "nha-gai" },
     { id: "com-nha-gai", title: "Bữa cơm thân mật", time: "10:00", venueId: "nha-gai" },
-    { id: "vu-quy", title: "Lễ Vu Quy", time: "13:00", venueId: "nha-gai" },
-    { id: "com-nha-hang", title: "Bữa cơm thân mật", time: "17:00", venueId: "nha-hang" },
+    { id: "xin-dau", title: "Nghi thức xin dâu", time: "13:00", venueId: "nha-gai" },
+    { id: "don-khach", title: "Đón khách tại nhà hàng", time: "16:00", venueId: "nha-hang" },
+    { id: "don-dau", title: "Đón dâu về nhà chồng", time: "17:00", venueId: "nha-hang" },
+    { id: "huong-nha-hang", title: "Thắp hương gia tiên", time: "17:10", venueId: "nha-hang" },
+    { id: "com-nha-hang", title: "Bữa cơm thân mật", time: "17:15", venueId: "nha-hang" },
     { id: "thanh-hon", title: "Lễ Thành Hôn", time: "18:00", venueId: "nha-hang" },
   ],
-  mainEventId: "thanh-hon",
-  brideEventId: "vu-quy",
+  sides: {
+    groom: { eventId: "thanh-hon", title: "Lễ Thành Hôn", feastEventId: "com-nha-hang" },
+    bride: { eventId: "xin-dau", title: "Lễ Vu Quy", feastEventId: "com-nha-gai" },
+  },
   texts: {
     invitation: "Trân trọng kính mời quý khách đến dự buổi lễ thành hôn và chung vui cùng gia đình chúng tôi!",
     thankYou: "Sự hiện diện của bạn sẽ khiến hôn lễ của chúng tôi trở nên ý nghĩa hơn bao giờ hết!",
@@ -152,9 +161,6 @@ export function eventsAt(c: WeddingConfig, venueId: string) {
   return c.events.filter((e) => e.venueId === venueId).sort((a, b) => a.time.localeCompare(b.time));
 }
 
-export function mainEvent(c: WeddingConfig) {
-  return c.events.find((e) => e.id === c.mainEventId) ?? c.events[c.events.length - 1];
-}
 
 /** Lựa chọn "sẽ dự" trong form xác nhận: mỗi địa điểm là một lựa chọn. */
 export function rsvpGroups(c: WeddingConfig) {
@@ -170,10 +176,17 @@ export function memoryImages(c: WeddingConfig) {
 export type Side = "groom" | "bride";
 export const sideFromParam = (f: unknown): Side => (f === "bride" ? "bride" : "groom");
 
-/** Sự kiện chính (thẻ "Trân trọng kính mời") của từng bên: nhà trai Lễ Thành Hôn, nhà gái Lễ Vu Quy. */
+/** Sự kiện và tên hiện ở thẻ "Trân trọng kính mời": nhà trai Lễ Thành Hôn, nhà gái Lễ Vu Quy. */
 export function inviteEvent(c: WeddingConfig, side: Side) {
-  const id = side === "bride" ? c.brideEventId : c.mainEventId;
-  return c.events.find((e) => e.id === id) ?? mainEvent(c);
+  const info = c.sides[side];
+  const event = c.events.find((e) => e.id === info.eventId) ?? c.events[c.events.length - 1];
+  return event && { ...event, title: info.title || event.title };
+}
+
+/** Buổi tiệc thân mật của từng bên (giờ + địa điểm), hiện ở phần đại diện gia đình. */
+export function feastOf(c: WeddingConfig, side: Side) {
+  const event = c.events.find((e) => e.id === c.sides[side].feastEventId);
+  return event && { event, venue: venueById(c, event.venueId) };
 }
 
 /** Dữ liệu cấu hình cũ (album chia chủ đề, hộp mừng chưa có ngân hàng) → cấu trúc hiện tại. */
@@ -182,6 +195,7 @@ export function normalizeConfig(c: WeddingConfig): WeddingConfig {
   if (album.some((a) => typeof a !== "string")) {
     c.album = [...new Set(album.flatMap((a) => (typeof a === "string" ? [a] : a.images)))];
   }
+  c.sides ??= structuredClone(defaultConfig.sides);
   c.gifts = c.gifts.map((g) => ({ ...g, bankApp: g.bankApp ?? "" }));
   return c;
 }

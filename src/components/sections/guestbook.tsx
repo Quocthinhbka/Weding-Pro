@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import type { Wish } from "@/lib/queries";
+import type { PublicWish } from "@/lib/queries";
 import { relativeTimeVi } from "@/lib/wedding-time";
 import { postJson, useGuest } from "@/components/site/guest";
 import { Daisy } from "@/components/ui/daisy";
 import { SectionTitle } from "@/components/ui/section-title";
 
-export function Guestbook({ initial }: { initial: Wish[] }) {
+export function Guestbook({ initial }: { initial: PublicWish[] }) {
   const { state } = useGuest();
   const [wishes, setWishes] = useState(initial);
   const [name, setName] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
   const [website, setWebsite] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -36,7 +37,7 @@ export function Guestbook({ initial }: { initial: Wish[] }) {
     setBusy(true);
     setError("");
     try {
-      const { wish } = await postJson<{ wish?: Wish }>("/api/wishes", { name: displayName, message, website });
+      const { wish } = await postJson<{ wish?: PublicWish }>("/api/wishes", { name: displayName, message, private: isPrivate, website });
       if (wish) setWishes((w) => [wish, ...w]);
       setMessage("");
       setSent(true);
@@ -59,6 +60,22 @@ export function Guestbook({ initial }: { initial: Wish[] }) {
       <form onSubmit={submit} className="shrink-0 space-y-2 rounded-[1.75rem] bg-paper/70 p-3 ring-1 ring-line">
         <input className="field" placeholder="Tên của bạn *" value={displayName} onChange={(e) => setName(e.target.value)} required maxLength={80} />
         <textarea className="field !min-h-0" rows={2} placeholder="Lời chúc của bạn *" value={message} onChange={(e) => setMessage(e.target.value)} required maxLength={1000} />
+        <div className="grid grid-cols-2 gap-1 rounded-full bg-white/70 p-1 text-xs ring-1 ring-line" role="group" aria-label="Chế độ hiển thị lời chúc">
+          {([[false, "🌐 Công khai"], [true, "🔒 Riêng tư"]] as const).map(([v, label]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setIsPrivate(v)}
+              aria-pressed={isPrivate === v}
+              className={`rounded-full py-1.5 font-medium transition ${isPrivate === v ? "bg-olive text-white shadow" : "text-ink-soft"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] leading-snug text-ink-soft">
+          {isPrivate ? "Lời chúc vẫn hiện trên thiệp nhưng bị làm mờ, chỉ cô dâu chú rể đọc được." : "Mọi người đều đọc được lời chúc này."}
+        </p>
         <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
         {error && <p className="text-sm text-[#8a4a3e]">{error}</p>}
         <button type="submit" className="btn btn-primary w-full" disabled={busy}>
@@ -80,12 +97,25 @@ export function Guestbook({ initial }: { initial: Wish[] }) {
             <div className="flex items-center gap-2">
               <Daisy size={18} />
               <p className="font-semibold text-ink">{w.name}</p>
+              {w.private && <span className="rounded-full bg-rose/20 px-1.5 text-[10px] text-[#8a4a3e]">🔒 Riêng tư</span>}
               <p className="ml-auto text-xs text-ink-soft">{now ? relativeTimeVi(new Date(w.created_at), now) : ""}</p>
             </div>
-            <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-ink">{w.message}</p>
+            {w.message === null ? <BlurredMessage seed={w.id} /> : <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-ink">{w.message}</p>}
           </article>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Lời chúc riêng tư: không có chữ thật, chỉ là vài vệt gradient mờ có độ dài khác nhau. */
+function BlurredMessage({ seed }: { seed: number }) {
+  const widths = [92, 78, 55].map((w, i) => `${Math.max(40, Math.min(96, w - ((seed * (i + 3)) % 18)))}%`);
+  return (
+    <div className="mt-2.5 space-y-1.5" aria-label="Lời chúc riêng tư">
+      {widths.map((w, i) => (
+        <div key={i} className="h-3 rounded-full bg-gradient-to-r from-rose/45 via-olive/35 to-daisy/50 blur-[5px]" style={{ width: w }} />
+      ))}
     </div>
   );
 }

@@ -10,6 +10,7 @@ export async function GET() {
 const schema = z.object({
   name: z.string().trim().min(1, "Vui lòng nhập tên của bạn").max(80, "Tên quá dài"),
   message: z.string().trim().min(2, "Vui lòng nhập lời chúc").max(1000, "Lời chúc tối đa 1000 ký tự"),
+  private: z.boolean().optional(),
   website: z.string().optional(),
 });
 
@@ -19,5 +20,5 @@ export async function POST(req: Request) {
   if (error) return error;
   if (data.website) return Response.json({ ok: true });
   const guest = await currentGuest();
-  return Response.json({ wish: addWish(guest?.id ?? null, data.name, data.message) });
+  return Response.json({ wish: addWish(guest?.id ?? null, data.name, data.message, data.private === true) });
 }

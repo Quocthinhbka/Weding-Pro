@@ -3,7 +3,6 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
-import { getConfig } from "./config";
 import { uploadDir } from "./db";
 import { secret } from "./session";
 
@@ -14,7 +13,6 @@ import { secret } from "./session";
 export const MAX_UPLOAD = 100 * 1024 * 1024; // = client_max_body_size trong nginx
 export const MAX_THUMB = 1024 * 1024;
 const KEY_HOURS = 3;
-const MAX_MINUTES = 5;
 
 export const ID_RE = /^[0-9a-f]{32}$/;
 export const FILE_RE = /^([0-9a-f]{32})\.(tiny\.jpg|jpg|mp4|webm)$/;
@@ -26,13 +24,6 @@ export const dataDir = () => join(uploadDir(), "wedmemo");
 export const trashDir = () => join(dataDir(), "trash");
 
 export type ClipMeta = { id: string; name: string; private: boolean; secs: number; ts: number; ext: "mp4" | "webm"; kiosk: boolean };
-
-/** Cấu hình gửi cho trình duyệt: tên và ngày lấy từ trang Cấu hình thiệp, không kèm mã mở khoá. */
-export function publicConfig() {
-  const c = getConfig();
-  const [y, m, d] = c.date.iso.split("-");
-  return { groom: c.groom.name, bride: c.bride.name, frame: "gold", date: `${d} · ${m} · ${y}`, title: "Gửi lời chúc đến", max_minutes: MAX_MINUTES };
-}
 
 /* ---------- Khoá tạm để xem clip riêng tư ---------- */
 

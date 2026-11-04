@@ -11,6 +11,9 @@ export function SnapScroller({ ids, children }: { ids: string[]; children: React
   useEffect(() => {
     const el = root.current;
     if (!el) return;
+    // Link có #video, #gifts… thì mở thẳng tới sector đó.
+    const target = decodeURIComponent(window.location.hash.slice(1));
+    if (target) el.querySelector(`:scope > [data-sec="${CSS.escape(target)}"]`)?.scrollIntoView({ block: "start" });
     const sectors = Array.from(el.querySelectorAll<HTMLElement>(":scope > [data-sec]"));
     // Sector nào đang cắt qua đường giữa màn hình thì là sector hiện tại (sector dài cũng đúng).
     const io = new IntersectionObserver(

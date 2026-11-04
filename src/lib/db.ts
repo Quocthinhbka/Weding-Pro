@@ -111,6 +111,8 @@ const MIGRATIONS: string[] = [
   UPDATE rsvps SET events = REPLACE(REPLACE(events, '"vu-quy"', '"nha-gai"'), '"thanh-hon"', '"nha-hang"');
   UPDATE draws SET grp = CASE grp WHEN 'vu-quy' THEN 'nha-gai' WHEN 'thanh-hon' THEN 'nha-hang' ELSE grp END;
   `,
+  // Lời chúc riêng tư: vẫn hiện trên thiệp nhưng nội dung bị làm mờ, chỉ cô dâu chú rể đọc được trong trang quản trị.
+  `ALTER TABLE wishes ADD COLUMN private INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 const globalForDb = globalThis as unknown as { weddingDb?: DatabaseSync };

@@ -6,43 +6,56 @@ import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 
 /**
- * Số cột để ô ảnh gần vuông trong khung cao ~1,75 màn hình (khổ hẹp ~ 1:4):
- * ít ảnh thì ảnh to (2 cột), nhiều ảnh thì chia nhỏ dần (tối đa 4 cột).
+ * Mẫu các hàng, lặp lại: `h` là chiều cao tương đối của hàng, `w` là độ rộng tương đối của từng ảnh trong hàng.
+ * Mỗi hàng luôn lấp đủ chiều ngang và các hàng lấp đủ chiều cao sector, nên ảnh to nhỏ khác nhau mà vẫn khít, không có ô trống.
  */
-export function albumColumns(n: number) {
-  return Math.min(4, Math.max(2, Math.round(Math.sqrt(n * 0.28))));
-}
+const PATTERN: { h: number; w: number[] }[] = [
+  { h: 1.7, w: [1] },
+  { h: 1, w: [1, 1, 1] },
+  { h: 1.25, w: [2, 1] },
+  { h: 1.25, w: [1, 2] },
+  { h: 0.9, w: [1, 1, 1, 1] },
+  { h: 1.5, w: [1, 1] },
+];
 
-/** Ảnh đầu tiên là ảnh nổi bật chiếm 2×2 ô khi đủ ảnh. Trả về số hàng của lưới. */
-export function albumLayout(n: number) {
-  const cols = albumColumns(n);
-  const featured = n >= 5 && cols >= 3;
-  const cells = n + (featured ? 3 : 0); // ô 2×2 chiếm thêm 3 ô
-  const leftover = cells % cols;
-  // Hàng cuối lẻ thì ảnh cuối kéo dài ra cho đủ hàng, không để ô trống.
-  return { cols, featured, rows: Math.ceil(cells / cols), lastSpan: leftover ? cols - leftover + 1 : 1 };
+export type AlbumRow = { h: number; w: number[] };
+
+/** Chia n ảnh thành các hàng theo mẫu; hàng cuối thiếu ảnh thì chia đều (vẫn lấp đủ ngang). */
+export function albumRows(n: number): AlbumRow[] {
+  const rows: AlbumRow[] = [];
+  for (let left = n, i = 0; left > 0; i++) {
+    const p = PATTERN[i % PATTERN.length];
+    rows.push(p.w.length <= left ? p : { h: p.h, w: Array(left).fill(1) });
+    left -= p.w.length;
+  }
+  return rows;
 }
 
 export function AlbumGrid({ images }: { images: string[] }) {
   const [index, setIndex] = useState(-1);
-  const { cols, featured, rows, lastSpan } = albumLayout(images.length);
+  const rows = albumRows(images.length);
+  let next = 0;
   return (
     <>
-      <div
-        className="grid min-h-0 flex-1 grid-flow-dense gap-1.5"
-        style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}
-      >
-        {images.map((src, i) => (
-          <button
-            key={`${i}-${src}`}
-            type="button"
-            onClick={() => setIndex(i)}
-            style={i === images.length - 1 && lastSpan > 1 && !(featured && i === 0) ? { gridColumn: `span ${lastSpan}` } : undefined}
-            className={`relative min-h-0 overflow-hidden rounded-xl ring-1 ring-line ${featured && i === 0 ? "col-span-2 row-span-2" : ""}`}
-            aria-label={`Xem ảnh ${i + 1}`}
-          >
-            <Image src={src} alt={`Ảnh cưới ${i + 1}`} fill sizes="(max-width: 480px) 60vw, 280px" className="object-cover transition duration-500 hover:scale-105" />
-          </button>
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+        {rows.map((row, r) => (
+          <div key={r} className="flex min-h-0 gap-1.5" style={{ flex: `${row.h} 1 0` }}>
+            {row.w.map((weight) => {
+              const i = next++;
+              return (
+                <button
+                  key={`${i}-${images[i]}`}
+                  type="button"
+                  onClick={() => setIndex(i)}
+                  style={{ flex: `${weight} 1 0` }}
+                  className="relative min-w-0 overflow-hidden rounded-xl ring-1 ring-line"
+                  aria-label={`Xem ảnh ${i + 1}`}
+                >
+                  <Image src={images[i]} alt={`Ảnh cưới ${i + 1}`} fill sizes="(max-width: 480px) 80vw, 380px" className="object-cover transition duration-500 hover:scale-105" />
+                </button>
+              );
+            })}
+          </div>
         ))}
       </div>
       <Lightbox open={index >= 0} index={index} close={() => setIndex(-1)} slides={images.map((src) => ({ src }))} />

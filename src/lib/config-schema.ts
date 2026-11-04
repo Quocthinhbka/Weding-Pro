@@ -48,11 +48,14 @@ export const configSchema = z
       .min(1, "Cần ít nhất 1 địa điểm")
       .max(6),
     events: z
-      .array(z.object({ id, title: required(60, "Tên sự kiện"), time, venueId: id }))
+      .array(z.object({ id, title: required(60, "Tên sự kiện"), time, venueId: z.union([z.literal(""), id]) }))
       .min(1, "Cần ít nhất 1 sự kiện")
       .max(12),
-    mainEventId: id,
-    brideEventId: id,
+    sides: z.object(
+      Object.fromEntries(
+        (["groom", "bride"] as const).map((k) => [k, z.object({ eventId: id, title: required(40, "Tên sự kiện ở thẻ mời"), feastEventId: id })]),
+      ) as Record<"groom" | "bride", z.ZodObject<{ eventId: z.ZodString; title: z.ZodString; feastEventId: z.ZodString }>>,
+    ),
     texts: z.object({
       invitation: required(300, "Lời mời"),
       thankYou: required(300, "Lời cảm ơn"),
@@ -88,13 +91,13 @@ export const configSchema = z
     const venueIds = new Set(c.venues.map((v) => v.id));
     if (venueIds.size !== c.venues.length) ctx.addIssue({ code: "custom", message: "Mã địa điểm bị trùng" });
     for (const e of c.events) {
-      if (!venueIds.has(e.venueId)) ctx.addIssue({ code: "custom", message: `Sự kiện "${e.title}" chưa chọn địa điểm hợp lệ` });
+      if (e.venueId && !venueIds.has(e.venueId)) ctx.addIssue({ code: "custom", message: `Sự kiện "${e.title}" chưa chọn địa điểm hợp lệ` });
     }
-    if (!c.events.some((e) => e.id === c.mainEventId)) {
-      ctx.addIssue({ code: "custom", message: "Vui lòng chọn sự kiện chính" });
-    }
-    if (!c.events.some((e) => e.id === c.brideEventId)) {
-      ctx.addIssue({ code: "custom", message: "Vui lòng chọn sự kiện chính cho thiệp nhà gái" });
+    const eventIds = new Set(c.events.map((e) => e.id));
+    if (eventIds.size !== c.events.length) ctx.addIssue({ code: "custom", message: "Mã sự kiện bị trùng" });
+    for (const [k, label] of [["groom", "nhà trai"], ["bride", "nhà gái"]] as const) {
+      if (!eventIds.has(c.sides[k].eventId)) ctx.addIssue({ code: "custom", message: `Vui lòng chọn sự kiện chính cho thiệp ${label}` });
+      if (!eventIds.has(c.sides[k].feastEventId)) ctx.addIssue({ code: "custom", message: `Vui lòng chọn buổi tiệc thân mật cho thiệp ${label}` });
     }
     if (c.sections.games && c.album.length < 2) {
       ctx.addIssue({ code: "custom", message: "Trò lật hình cần ít nhất 2 ảnh trong album" });

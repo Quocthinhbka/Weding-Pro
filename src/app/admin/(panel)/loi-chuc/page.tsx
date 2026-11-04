@@ -11,12 +11,13 @@ export default async function WishesPage() {
   return (
     <div className="space-y-4">
       <h1 className="font-serif text-2xl font-semibold">Lời chúc ({wishes.length})</h1>
-      <p className="text-sm text-ink-soft">Lời chúc hiện ngay trên thiệp. Bấm “Ẩn” nếu không muốn hiển thị công khai.</p>
+      <p className="text-sm text-ink-soft">Lời chúc công khai hiện ngay trên thiệp. Lời chúc 🔒 riêng tư vẫn hiện trên thiệp nhưng bị làm mờ, chỉ bạn đọc được ở đây. Bấm “Ẩn” nếu không muốn hiện lên thiệp.</p>
       <div className="grid gap-3 md:grid-cols-2">
         {wishes.map((w) => (
           <article key={w.id} className={`rounded-2xl p-4 ring-1 ring-line ${w.hidden ? "bg-paper-deep/40 opacity-70" : "bg-cream"}`}>
             <div className="flex items-center gap-2">
               <p className="font-semibold">{w.name}</p>
+              {w.private ? <span className="rounded-full bg-rose/20 px-2 text-xs">🔒 Riêng tư</span> : null}
               {w.hidden ? <span className="rounded-full bg-ink/10 px-2 text-xs">Đang ẩn</span> : null}
               <p className="ml-auto text-xs text-ink-soft">{formatDateTime(w.created_at)}</p>
             </div>

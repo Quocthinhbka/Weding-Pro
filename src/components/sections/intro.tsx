@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { dateInfo, directionsUrl, inviteEvent, venueById, type Side, type WeddingConfig } from "@/content/wedding";
+import { dateInfo, directionsUrl, feastOf, inviteEvent, venueById, type Side, type WeddingConfig } from "@/content/wedding";
 import { Daisy, DaisySprig, Heart } from "@/components/ui/daisy";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -10,15 +10,17 @@ export function Hero({ config }: { config: WeddingConfig }) {
     <div className="relative h-full w-full overflow-hidden">
       <Image src={config.heroImage} alt={`${groom.name} và ${bride.name}`} fill priority sizes="480px" className="object-cover" />
       {/* Hai lớp tối: đầu ảnh cho tên nổi bật, đáy ảnh cho ngày và dòng giới thiệu */}
-      <div className="absolute inset-0 bg-gradient-to-b from-ink/60 via-transparent via-45% to-ink/75" />
-      <div className="absolute inset-x-0 top-9 px-7 text-white [text-shadow:0_2px_14px_rgb(0_0_0/0.5)]">
-        <h2 className="font-script text-6xl leading-none">{groom.name}</h2>
+      <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-transparent via-48% to-ink/75" />
+      {/* Tên đặt trên lớp tối mờ dạng vệt sáng-tối + bóng chữ 2 lớp + viền mảnh để không lẫn với ảnh nền */}
+      <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_50%_35%,rgb(26_20_16/0.5),transparent_72%)]" aria-hidden />
+      <div className="absolute inset-x-0 top-9 px-7 text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.7),0_3px_18px_rgb(0_0_0/0.6)]">
+        <h2 className="font-script text-6xl leading-none [-webkit-text-stroke:0.6px_rgb(0_0_0/0.25)]">{groom.name}</h2>
         <p className="my-0.5 text-center font-script text-3xl text-daisy">&</p>
-        <h2 className="text-right font-script text-6xl leading-none">{bride.name}</h2>
+        <h2 className="text-right font-script text-6xl leading-none [-webkit-text-stroke:0.6px_rgb(0_0_0/0.25)]">{bride.name}</h2>
       </div>
       <div className="absolute inset-x-0 bottom-14 flex flex-col items-center gap-3 px-6 text-center text-white">
         <p className="rounded-full border border-daisy/70 bg-ink/55 px-5 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-daisy shadow-lg backdrop-blur-sm">
-          Tiệc cưới của chúng tôi
+          Ngày vui của chúng tôi
         </p>
         <p className="font-serif text-xl tracking-[0.3em] [text-shadow:0_2px_10px_rgb(0_0_0/0.55)]">{dateInfo(config).dots}</p>
       </div>
@@ -27,9 +29,11 @@ export function Hero({ config }: { config: WeddingConfig }) {
   );
 }
 
-export function Family({ config }: { config: WeddingConfig }) {
+export function Family({ config, side }: { config: WeddingConfig; side: Side }) {
   const { groom, bride } = config;
   const sides = [config.families.trai, config.families.gai];
+  const feast = feastOf(config, side);
+  const date = dateInfo(config);
   return (
     <div className="relative flex flex-1 flex-col justify-center overflow-hidden px-1 py-14 text-center">
       <FamilyOrnaments />
@@ -61,6 +65,21 @@ export function Family({ config }: { config: WeddingConfig }) {
             {bride.born && <p className="text-xs tracking-widest text-ink-soft">{bride.born}</p>}
           </div>
         </div>
+        {feast && (
+          <div className="mx-auto mt-7 max-w-[19rem] rounded-2xl border border-olive/30 bg-white/60 px-4 py-3 text-center shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-olive">Buổi tiệc thân mật</p>
+            <p className="mt-1 font-serif text-lg text-ink">
+              vào lúc {feast.event.time.replace(":", "h")} · {date.weekday}, {date.dots}
+            </p>
+            {feast.venue && (
+              <p className="mt-0.5 text-sm leading-snug text-ink-soft">
+                <b className="font-medium text-ink">{feast.venue.name}</b>
+                <br />
+                {feast.venue.address}
+              </p>
+            )}
+          </div>
+        )}
       </Reveal>
     </div>
   );

@@ -75,14 +75,14 @@ export function Envelope({ guestName }: { guestName: string | null }) {
           <div className="absolute inset-0 rounded-md bg-[#e6d6b8] shadow-[0_25px_50px_-25px_rgba(63,51,38,0.55)]" />
           {/* Lá thư bên trong */}
           <div
-            className="absolute inset-x-[7%] top-[8%] bottom-[6%] rounded-sm bg-cream p-4 shadow-md transition-transform duration-1000 ease-out"
+            className="absolute inset-x-[7%] top-[8%] bottom-[6%] z-[1] rounded-sm bg-cream p-4 shadow-md transition-transform duration-1000 ease-out"
             style={{ transform: opening ? "translateY(-62%)" : "translateY(0)", transitionDelay: opening ? "0.35s" : "0s" }}
           >
             <Daisy size={30} className="mx-auto" />
             <p className="mt-1 font-script text-2xl text-olive">Thiệp mời cưới</p>
           </div>
           {/* Mặt trước túi phong bì */}
-          <svg viewBox="0 0 400 300" className="absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden>
+          <svg viewBox="0 0 400 300" className="absolute inset-0 z-[2] h-full w-full" preserveAspectRatio="none" aria-hidden>
             <path d="M0 0 L200 165 L0 300 Z" fill="#efe2c8" />
             <path d="M400 0 L200 165 L400 300 Z" fill="#ecdec2" />
             <path d="M0 300 L200 150 L400 300 Z" fill="#f4e9d3" />
@@ -93,7 +93,7 @@ export function Envelope({ guestName }: { guestName: string | null }) {
             className="absolute inset-x-0 top-0 h-[58%] origin-top transition-transform duration-700 ease-in-out"
             style={{
               transform: opening ? "rotateX(180deg)" : "rotateX(0deg)",
-              zIndex: opening ? 0 : 3,
+              zIndex: opening ? 0 : 3, // mở xong: nắp gập lên nằm dưới giấy mời (z-1), khi đóng nằm trên cùng
               transitionProperty: "transform, z-index",
               transitionDelay: opening ? "0s, 0.35s" : "0s",
             }}

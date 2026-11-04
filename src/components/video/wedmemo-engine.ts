@@ -1,20 +1,34 @@
-// WedMemo – ghi video lời chúc. Khung (tên, ngày) được vẽ lên canvas nên nằm luôn trong video đã ghi.
-const $ = s => document.querySelector(s);
-const KIOSK = /\/kiosk$/.test(location.pathname) || new URLSearchParams(location.search).has('kiosk');
+/* eslint-disable */
+// @ts-nocheck
+// Chuyển từ dự án WedMemo (ghi video lời chúc). Logic giữ nguyên; khác biệt: gắn vào một phần tử gốc của thiệp
+// thay vì cả trang, gọi máy chủ ở /wedmemo/api, lấy tên và ngày từ cấu hình thiệp, và có hàm destroy() để dọn dẹp.
+// Khung (tên, ngày) được vẽ lên canvas nên nằm luôn trong video đã ghi.
+
+export type WedMemoConfig = { groom: string; bride: string; date: string; title: string; frame: string; max_minutes: number };
+
+export function startWedMemo(root: HTMLElement, opts: { kiosk: boolean; cfg: WedMemoConfig }) {
+const $ = s => root.querySelector(s);
+const BASE = '/wedmemo/';   // máy chủ nhận và phát clip ở /wedmemo/api và /wedmemo/data
+const dead = { v: false };
+const offs = [];   // việc dọn dẹp khi gỡ khỏi trang
+const listen = (t, ev, fn, o) => { t.addEventListener(ev, fn, o); offs.push(() => t.removeEventListener(ev, fn, o)); };
+const KIOSK = opts.kiosk;
 const C = 238.76;   // chu vi vòng tiến trình (r=38)
 // MP4 (H.264/AAC) phát được trên mọi máy kể cả iPhone; WebM chỉ dùng khi trình duyệt không ghi được MP4 (Firefox)
 const MIME = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
   .find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
 const HINTS = ['Bạn quen cô dâu chú rể thế nào?', 'Kể một kỷ niệm vui với hai bạn nhé!', 'Lời khuyên cho cuộc sống hôn nhân?',
   'Chúc hai bạn điều gì cho tương lai?', 'Cứ nói tự nhiên như đang trò chuyện 😊'];
-let CFG = { groom: 'Chú Rể', bride: 'Cô Dâu', date: '', title: 'Gửi lời chúc đến', max_minutes: 5 };
+let CFG = opts.cfg;
+// Canvas cần đúng tên font mà next/font đã nạp: đọc từ chính trang.
+const probe = cls => { const e = document.createElement('span'); e.className = cls; e.style.cssText = 'position:absolute;visibility:hidden'; root.append(e); const f = getComputedStyle(e).fontFamily; e.remove(); return f; };
+const SANS = probe(''), SCRIPT = probe('font-script');
 
 const cv = $('#cv'), ctx = cv.getContext('2d'), ov = document.createElement('canvas'), pv = $('#pv');
 const video = Object.assign(document.createElement('video'), { muted: true, playsInline: true, autoplay: true });
 video.setAttribute('playsinline', '');
 video.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
-document.body.append(video);   // iPhone chỉ cập nhật khung hình khi video nằm trong trang
-document.body.classList.toggle('kiosk', KIOSK);
+root.append(video);   // iPhone chỉ cập nhật khung hình khi video nằm trong trang
 
 let cam = null, facing = 'user', dur = 30, priv = false, state = 'idle', drawing = false;
 let rec, chunks, t0, secs, thumbs, tickIv, pending, key = null, list = [], cur = -1;
@@ -53,14 +67,14 @@ function frameHole(g, W, H, side, bot, rad, color) {   // viền đặc, chừa 
   g.fill('evenodd');
 }
 function label(g, text, x, y, size, color, spacing, align = 'center') {
-  g.font = `600 ${size}px "Be Vietnam Pro", sans-serif`; g.fillStyle = color; g.textAlign = align;
+  g.font = `600 ${size}px ${SANS}`; g.fillStyle = color; g.textAlign = align;
   track(g, spacing); g.fillText(text, x, y); track(g, 0);
 }
 function fitNames(g, maxW, size) {   // thu nhỏ chữ tới khi tên vừa chỗ
   const parts = [CFG.groom, ' & ', CFG.bride];
   let w;
   do {
-    g.font = `700 ${size}px "Dancing Script", cursive`;
+    g.font = `700 ${size}px ${SCRIPT}`;
     w = parts.reduce((a, p) => a + g.measureText(p).width, 0);
     size *= .94;
   } while (w > maxW && size > 10);
@@ -72,7 +86,7 @@ function paintNames(g, f, x, y, ink, amp, align = 'center') {
   f.parts.forEach((p, i) => { g.fillStyle = i === 1 ? amp : ink; g.fillText(p, x, y); x += g.measureText(p).width; });
 }
 function pill(g, text, cx, cy, s, fill, color) {
-  g.font = `600 ${14 * s}px "Be Vietnam Pro", sans-serif`; track(g, 4 * s);
+  g.font = `600 ${14 * s}px ${SANS}`; track(g, 4 * s);
   const w = g.measureText(text).width + 40 * s; track(g, 0);
   g.fillStyle = fill; rr(g, cx - w / 2, cy - 17 * s, w, 34 * s, 17 * s); g.fill();
   g.textBaseline = 'middle'; label(g, text, cx, cy + s, 14 * s, color, 4 * s); g.textBaseline = 'alphabetic';
@@ -173,7 +187,7 @@ const LAYOUTS = {
     paintNames(g, f, b + 40 * s, ty + 72 * s, t.ink, t.amp, 'left');
     label(g, CFG.date, b + 40 * s, ty + 100 * s, 14 * s, t.line, 5 * s, 'left');
     const ttl = CFG.title.toUpperCase();
-    g.font = `600 ${13 * s}px "Be Vietnam Pro", sans-serif`; track(g, 4 * s);
+    g.font = `600 ${13 * s}px ${SANS}`; track(g, 4 * s);
     const ww = g.measureText(ttl).width + 50 * s; track(g, 0);
     g.fillStyle = t.paper; g.fillRect(W - b - ww, b, ww, 46 * s);
     label(g, ttl, W - b - ww / 2, b + 29 * s, 13 * s, t.line, 4 * s);
@@ -193,13 +207,15 @@ function renderOverlay() {
 
 function sizeCanvas() {
   if (state === 'idle') {   // đang ghi thì giữ nguyên kích thước video
-    const [W, H] = innerHeight > innerWidth ? [720, 960] : [1280, 720];
+    const sr = $('#stage').getBoundingClientRect();
+    const [W, H] = sr.height > sr.width ? [720, 960] : [1280, 720];
     if (ov.width !== W || ov.height !== H) { cv.width = ov.width = W; cv.height = ov.height = H; renderOverlay(); }
   }
   const r = $('#stage').getBoundingClientRect(), k = Math.min(r.width / cv.width, r.height / cv.height);
   Object.assign($('#cvwrap').style, { width: cv.width * k + 'px', height: cv.height * k + 'px' });
 }
-new ResizeObserver(sizeCanvas).observe($('#stage'));
+const ro = new ResizeObserver(sizeCanvas);
+ro.observe($('#stage'));
 
 function drawVideo(g, W, H) {
   const vw = video.videoWidth, vh = video.videoHeight;
@@ -212,6 +228,7 @@ function drawVideo(g, W, H) {
   return true;
 }
 function draw() {
+  if (dead.v) return;
   requestAnimationFrame(draw);
   if (drawVideo(ctx, cv.width, cv.height)) ctx.drawImage(ov, 0, 0);
 }
@@ -245,11 +262,10 @@ function applyNames() {
   $('#sTitle').textContent = CFG.title;
   $('#sDate').textContent = CFG.date;
   $('#sNames').replaceChildren(CFG.groom + ' ', Object.assign(document.createElement('i'), { textContent: '&' }), ' ' + CFG.bride);
-  document.title = `Lời chúc · ${CFG.groom} & ${CFG.bride}`;
   renderOverlay();
   if (document.fonts) Promise.all([
-    document.fonts.load('700 40px "Dancing Script"', CFG.groom + CFG.bride + '&'),
-    document.fonts.load('600 16px "Be Vietnam Pro"', CFG.title.toUpperCase() + CFG.date),
+    document.fonts.load(`700 40px ${SCRIPT}`, CFG.groom + CFG.bride + '&'),
+    document.fonts.load(`600 16px ${SANS}`, CFG.title.toUpperCase() + CFG.date),
     document.fonts.load('700 54px "Noto Serif SC"', '囍'),
   ]).catch(() => {}).then(renderOverlay);
 }
@@ -290,19 +306,19 @@ function mark(el, attr, val) { el.querySelectorAll('button').forEach(b => b.clas
 seg($('#durs'), d => { dur = +d.d; mark($('#durs'), 'd', dur); });
 function setPriv(v) {
   priv = v;
-  document.querySelectorAll('.privs').forEach(el => mark(el, 'p', +v));
+  root.querySelectorAll('.privs').forEach(el => mark(el, 'p', +v));
   $('#privNote').textContent = v ? '🔒 Riêng tư: chỉ cô dâu chú rể (người có mã) xem được.' : '🌐 Công khai: mọi người đều xem được lời chúc này.';
 }
-document.querySelectorAll('.privs').forEach(el => seg(el, d => setPriv(d.p === '1')));
+root.querySelectorAll('.privs').forEach(el => seg(el, d => setPriv(d.p === '1')));
 setPriv(false);
 
 let hi = 0;
 const showHint = () => { $('#hint').textContent = '💡 ' + HINTS[hi++ % HINTS.length]; };
 showHint();
-setInterval(showHint, 7000);
+const hintIv = setInterval(showHint, 7000);
 
 /* ---------- Ghi hình ---------- */
-const busy = on => document.body.classList.toggle('busy', on);
+const busy = on => root.classList.toggle('wm-busy', on);
 const limit = () => dur || CFG.max_minutes * 60;   // "Không giới hạn" vẫn dừng ở max_minutes để file không quá lớn
 $('#rec').onclick = () => state === 'idle' ? countdown() : state === 'rec' && stopRec();
 
@@ -413,7 +429,7 @@ async function enqueue(item) { await store(s => s.put(item, item.id)); queue.pus
 async function pump() {
   if (pumping) return;
   pumping = true;
-  while (queue.length) {
+  while (queue.length && !dead.v) {
     const it = queue[0];
     pct = 0; showUp();
     try {
@@ -432,7 +448,7 @@ async function pump() {
 function upload(it) {
   return new Promise((res, rej) => {
     const x = new XMLHttpRequest();
-    x.open('POST', 'api/clips');
+    x.open('POST', BASE + 'api/clips');
     const h = { 'X-Clip': it.id, 'X-Parts': `${it.thumb.size},${it.tiny.size}`, 'X-Video-Type': it.type, 'X-Name': encodeURIComponent(it.name),
       'X-Private': it.priv ? '1' : '0', 'X-Secs': it.secs.toFixed(1), 'X-Kiosk': it.kiosk ? '1' : '0' };
     for (const k in h) x.setRequestHeader(k, h[k]);
@@ -456,7 +472,7 @@ function showUp() {
 }
 
 async function refreshCount() {
-  try { const r = await fetch('api/clips'); if (r.ok) $('#gcount').textContent = (await r.json()).length || ''; } catch (e) {}
+  try { const r = await fetch(BASE + 'api/clips'); if (r.ok) $('#gcount').textContent = (await r.json()).length || ''; } catch (e) {}
 }
 
 /* ---------- Thư viện ---------- */
@@ -470,7 +486,7 @@ $('#gallery').onclose = () => { key = null; };   // rời thư viện là khoá 
 
 async function refresh() {
   try {
-    const r = await fetch('api/clips' + (key ? '?k=' + encodeURIComponent(key) : ''));
+    const r = await fetch(BASE + 'api/clips' + (key ? '?k=' + encodeURIComponent(key) : ''));
     if (r.ok) list = await r.json();
   } catch (e) { toast('Không tải được danh sách, hãy kiểm tra mạng.'); }
   $('#grid').replaceChildren(...list.map(card));
@@ -485,7 +501,7 @@ function card(c, i) {
   b.innerHTML = '<img alt="" loading="lazy"><span class="ico"></span><span class="badge"></span><span class="meta"><b></b><small></small></span>';
   const img = b.querySelector('img');
   img.onerror = () => img.remove();
-  img.src = c.thumb;
+  img.src = BASE + c.thumb;
   b.querySelector('.ico').textContent = c.video ? '▶' : '🔒';
   b.querySelector('.badge').textContent = mmss(c.secs);
   b.querySelector('b').textContent = c.name || 'Khách mời';
@@ -497,7 +513,7 @@ function card(c, i) {
 function play(i) {
   cur = i;
   const c = list[i];
-  pv.src = c.video;
+  pv.src = BASE + c.video;
   pv.play().catch(() => {});
   $('#pname').textContent = c.name || 'Khách mời';
   $('#pmeta').textContent = `${c.private ? '🔒 Riêng tư' : '🌐 Công khai'} · ${when(c.ts)} · ${mmss(c.secs)}`;
@@ -510,42 +526,43 @@ $('#next').onclick = () => step(1);
 pv.onended = () => step(1);   // tự phát lời chúc tiếp theo
 $('#player').onclose = () => { pv.pause(); pv.removeAttribute('src'); pv.load(); };
 $('#del').onclick = async () => {
-  if (!confirm('Xoá lời chúc này? (vẫn khôi phục được trong thư mục Data/trash trên máy chủ)')) return;
-  const r = await fetch(`api/clips/${list[cur].id}/delete?k=${encodeURIComponent(key)}`, { method: 'POST' }).catch(() => null);
+  if (!confirm('Xoá lời chúc này? (vẫn khôi phục được từ thư mục trash trên máy chủ)')) return;
+  const r = await fetch(BASE + `api/clips/${list[cur].id}/delete?k=${encodeURIComponent(key)}`, { method: 'POST' }).catch(() => null);
   if (r && r.ok) { $('#player').close(); refresh(); } else toast('Không xoá được, hãy mở khoá lại.');
 };
 
 function askCode() { $('#code').value = ''; $('#err').textContent = ''; $('#pin').showModal(); $('#code').focus(); }
 $('#lockBtn').onclick = () => { if (key) { key = null; refresh(); } else askCode(); };
 $('#unlock').onclick = async () => {
-  const r = await fetch('api/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+  const r = await fetch(BASE + 'api/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code: $('#code').value.trim() }) }).catch(() => null);
   const j = r ? await r.json().catch(() => ({})) : {};
   if (r && r.ok) { key = j.k; $('#pin').close(); refresh(); }
   else $('#err').textContent = j.error || 'Lỗi mạng, hãy thử lại.';
 };
 $('#code').onkeydown = e => { if (e.key === 'Enter') $('#unlock').click(); };
-document.querySelectorAll('[data-close]').forEach(b => { b.onclick = () => b.closest('dialog').close(); });
+root.querySelectorAll('[data-close]').forEach(b => { b.onclick = () => b.closest('dialog').close(); });
 
 /* ---------- Toàn màn hình, máy ở sảnh (kiosk) ---------- */
+let idle;
 async function enterFs() {
   try { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); } catch (e) { return; }   // iPhone không hỗ trợ
   if (KIOSK) try { await navigator.keyboard.lock(['Escape']); } catch (e) {}   // Chrome/Edge: phải giữ Esc 2 giây mới thoát được
 }
 let wl = null;
 async function wake() { try { wl = await navigator.wakeLock.request('screen'); } catch (e) {} }   // không cho màn hình tắt
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (KIOSK || $('#start').hidden)) wake(); });
+listen(document, 'visibilitychange', () => { if (document.visibilityState === 'visible' && (KIOSK || $('#start').hidden)) wake(); });
 
-$('#startBtn').onclick = () => { enterFs(); $('#start').hidden = true; wake(); if (!cam) openCam(); };
-$('#fs').hidden = KIOSK || !document.fullscreenEnabled;
+$('#startBtn').onclick = () => { if (KIOSK) enterFs(); $('#start').hidden = true; wake(); if (!cam) openCam(); };
+$('#fs').hidden = true;   // trong thiệp không cần nút toàn màn hình
 $('#fs').onclick = () => document.fullscreenElement ? document.exitFullscreen() : enterFs();
 
 if (KIOSK) {
-  document.addEventListener('fullscreenchange', () => { $('#fsguard').hidden = !!document.fullscreenElement || !$('#start').hidden; });
+  listen(document, 'fullscreenchange', () => { $('#fsguard').hidden = !!document.fullscreenElement || !$('#start').hidden; });
   $('#fsguard').onclick = () => { $('#fsguard').hidden = true; enterFs(); };
-  addEventListener('contextmenu', e => e.preventDefault());
+  listen(window, 'contextmenu', e => e.preventDefault());
   // 90 giây không ai chạm: tự gửi clip đang xem lại (khách sau không thấy được), đóng thư viện (khoá lại), về màn hình chào có mã QR
-  let idle;
+  idle = undefined;
   const onIdle = () => {
     if (!pv.paused || state === 'rec' || state === 'count' || state === 'stopping') return bump();
     if ($('#review').open) $('#send').click();
@@ -553,10 +570,10 @@ if (KIOSK) {
     $('#start').hidden = false;
   };
   const bump = () => { clearTimeout(idle); idle = setTimeout(onIdle, 90e3); };
-  ['pointerdown', 'keydown'].forEach(e => addEventListener(e, bump, { capture: true, passive: true }));
+  ['pointerdown', 'keydown'].forEach(e => listen(window, e, bump, { capture: true, passive: true }));
   bump();
 }
-addEventListener('beforeunload', e => {
+listen(window, 'beforeunload', e => {
   if (KIOSK || queue.length || pending || state === 'rec') { e.preventDefault(); e.returnValue = ''; }
 });
 
@@ -574,10 +591,22 @@ try { savedFrame = localStorage.getItem('wm-frame'); } catch (e) {}
 sizeCanvas();
 setTheme(savedFrame);
 applyNames();
-fetch('api/config').then(r => r.json()).then(c => {
-  CFG = c;
-  if (!savedFrame && c.frame) setTheme(c.frame);
-  applyNames();
-}).catch(() => {});
+if (!savedFrame && CFG.frame) setTheme(CFG.frame);
 refreshCount();
 store(s => s.getAll(), 'readonly').then(items => { if (items && items.length) { queue.push(...items); pump(); } });
+
+return {
+  setCfg(c) { CFG = c; if (!savedFrame && c.frame) setTheme(c.frame); applyNames(); },
+  destroy() {
+    dead.v = true;
+    clearInterval(hintIv); clearInterval(tickIv); clearTimeout(idle);
+    ro.disconnect();
+    offs.forEach(f => f());
+    if (cam) cam.getTracks().forEach(t => t.stop());
+    try { if (rec && rec.state === 'recording') { rec.onstop = null; rec.stop(); } } catch (e) {}
+    try { wl && wl.release(); } catch (e) {}
+    root.querySelectorAll('dialog[open]').forEach(d => d.close());
+    video.remove();
+  },
+};
+}
