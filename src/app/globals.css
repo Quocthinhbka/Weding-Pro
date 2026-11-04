@@ -231,7 +231,8 @@ body {
   display: flex;
   height: 100%;
   flex-direction: column;
-  padding: 1.25rem 1.5rem;
+  /* Đáy chừa chỗ cho đĩa than (nút nhạc) luôn hiện ở góc dưới bên trái */
+  padding: 1.25rem 1.5rem 3.9rem;
   /* Van an toàn: nội dung dài hơn màn hình (máy nhỏ, chữ dài) thì cuộn bên trong sector. */
   overflow-y: auto;
   scrollbar-width: none;
@@ -244,6 +245,23 @@ body {
 }
 .sector-flush > .sector-body {
   padding: 0;
+}
+/* Màn hình thấp: thu nhỏ cỡ chữ gốc (mọi kích thước rem co theo) và bớt đệm để mỗi sector vẫn vừa một màn hình */
+@media (max-height: 700px) {
+  html {
+    font-size: 14.5px;
+  }
+}
+@media (max-height: 620px) {
+  html {
+    font-size: 13.5px;
+  }
+}
+/* Màn hình thấp: bớt đệm để nội dung vẫn vừa */
+@media (max-height: 620px) {
+  .sector-body {
+    padding: 0.9rem 1.25rem 3.4rem;
+  }
 }
 /* Sector dài (1,75 màn hình): hai điểm dừng, vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector. */
 .sector[data-tall] {

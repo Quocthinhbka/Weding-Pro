@@ -117,6 +117,10 @@ Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nh
 - **Lịch trình** là một dòng thời gian gồm các mốc giờ, tự nhóm theo địa điểm (kèm Chỉ đường và thêm vào lịch). Mốc không gắn địa điểm (VD đoàn nhà trai xuất phát) chọn "Không gắn địa điểm".
 - **Link nhà trai / nhà gái:** link thường (hoặc `?f=groom`) là thiệp nhà trai, `?f=bride` là thiệp nhà gái. Mỗi bên chọn riêng sự kiện và tên hiện ở thẻ mời (mặc định Lễ Thành Hôn / Lễ Vu Quy, kèm giờ, địa điểm, chỉ đường) và buổi tiệc thân mật hiện ở phần gia đình, trong mục "Địa điểm & lịch trình" của trang cấu hình. Ghép được với link mời riêng: `https://<tên-miền>/?k=<mã>&f=bride`.
 - **Hộp mừng cưới** là một hòm bấm để mở hộp thoại mã QR. Chọn ứng dụng ngân hàng trong trang cấu hình thì bấm vào QR sẽ mở thẳng app đó (qua deeplink VietQR) và chép sẵn số tài khoản.
+- **Phong bì:** bấm vào phong bì hoặc nút "Mở thiệp" đều mở được; nắp mở trước, 0,3 giây sau giấy mời mới trượt lên và nằm trên nắp đã gập.
+- **Đĩa than** luôn hiện ở góc dưới bên trái để bật / tắt nhạc nền: đang phát thì đĩa quay, cần đọc đặt lên đĩa và có nốt nhạc bay; tắt thì đĩa đứng yên, cần nhấc lên.
+- **Trò chơi** (vòng quay, đố vui, lật hình) chơi ngay trong sector, có nút "‹ Trò chơi" để quay lại danh sách; link `/tro-choi/...` cũ chuyển về `/#games`.
+- **Chữ và khoảng cách:** tên cô dâu chú rể luôn nằm một dòng (tự co chữ theo chiều ngang). Màn hình thấp (cao dưới 700px) thì cỡ chữ gốc nhỏ lại để mọi sector vẫn vừa một màn hình.
 - Màn hình quá thấp (cao dưới 560px, như máy nằm ngang) thì tắt snap, cuộn như trang thường.
 
 ## Sổ lưu bút

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { GuestProvider } from "@/components/site/guest";
-import { MusicButton, MusicProvider } from "@/components/site/music";
+import { MusicProvider } from "@/components/site/music";
+import { Vinyl } from "@/components/site/vinyl";
 import { WeddingProvider } from "@/components/site/wedding-context";
 import { DaisySprig } from "@/components/ui/daisy";
 import { FallingPetals } from "@/components/ui/falling-petals";
@@ -39,9 +40,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
             <DaisySprig className="pointer-events-none fixed right-[max(0px,calc(50%-560px))] top-10 hidden w-52 opacity-50 lg:block" flip />
             <main className="card-frame relative mx-auto min-h-dvh max-w-[480px] overflow-x-hidden">{children}</main>
             <FallingPetals />
-            <div className="fixed bottom-5 right-[max(1rem,calc(50%-240px+1rem))] z-40">
-              <MusicButton />
-            </div>
+            <Vinyl />
           </div>
         </GuestProvider>
       </MusicProvider>

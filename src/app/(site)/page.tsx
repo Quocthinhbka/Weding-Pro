@@ -1,7 +1,7 @@
 import { Envelope } from "@/components/site/envelope";
 import { SiteSections } from "@/components/site/sections";
 import { sideFromParam } from "@/content/wedding";
-import { getConfig } from "@/lib/config";
+import { getConfig, getQuiz } from "@/lib/config";
 import { findInvite } from "@/lib/guest";
 import { visibleWishes } from "@/lib/queries";
 
@@ -15,7 +15,7 @@ export default async function Home(props: PageProps<"/">) {
   return (
     <>
       <Envelope guestName={guestName} />
-      <SiteSections config={config} wishes={visibleWishes()} side={sideFromParam(sp.f)} />
+      <SiteSections config={config} wishes={visibleWishes()} side={sideFromParam(sp.f)} quizTotal={getQuiz().length} />
     </>
   );
 }

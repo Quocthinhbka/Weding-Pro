@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { CalendarMonth } from "@/components/sections/calendar";
 import { Countdown } from "@/components/sections/countdown";
-import { GamesTeaser } from "@/components/sections/games-teaser";
+import { GamesSector } from "@/components/sections/games-sector";
 import { GiftBox, ThankYou } from "@/components/sections/gift-thanks";
 import { Guestbook } from "@/components/sections/guestbook";
 import { Family, Hero, HouseOfCouple, InviteCard } from "@/components/sections/intro";
@@ -21,7 +21,7 @@ type Item = { id: string; node: ReactNode; tone?: "paper"; screens?: number; flu
  * Mỗi sector trọn một màn hình; câu chuyện tình yêu và album dài 1,75 màn hình.
  * `side` là bên mời (?f=groom | bride): đổi sự kiện, giờ, địa điểm và chỉ đường ở thẻ mời.
  */
-export function SiteSections({ config, wishes, side = "groom" }: { config: WeddingConfig; wishes: PublicWish[]; side?: Side }) {
+export function SiteSections({ config, wishes, side = "groom", quizTotal }: { config: WeddingConfig; wishes: PublicWish[]; side?: Side; quizTotal: number }) {
   const show = config.sections;
 
   const items: Item[] = [
@@ -55,7 +55,7 @@ export function SiteSections({ config, wishes, side = "groom" }: { config: Weddi
     ...(show.album && config.album.length > 0 ? [{ id: "album", node: <Album config={config} />, tone: "paper" as const, screens: 1.75 }] : []),
     ...(show.guestbook ? [{ id: "guestbook", node: <Guestbook initial={wishes} /> }] : []),
     ...(show.video ? [{ id: "video", node: <VideoWishes />, tone: "paper" as const }] : []),
-    ...(show.games ? [{ id: "games", node: <GamesTeaser />, tone: "paper" as const }] : []),
+    ...(show.games ? [{ id: "games", node: <GamesSector quizTotal={quizTotal} />, tone: "paper" as const }] : []),
     ...(show.gifts && config.gifts.length > 0 ? [{ id: "gifts", node: <GiftBox /> }] : []),
     { id: "thanks", node: <ThankYou />, tone: "paper" },
   ];

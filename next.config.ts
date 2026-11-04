@@ -10,7 +10,10 @@ const nextConfig: NextConfig = {
   },
   // Video lời chúc nằm ngay trong thiệp (sector "video"); link /wedmemo cũ dẫn về đó. Máy ở sảnh dùng /wedmemo/kiosk.
   async redirects() {
-    return [{ source: "/wedmemo", destination: "/#video", permanent: false }];
+    return [
+      { source: "/wedmemo", destination: "/#video", permanent: false },
+      { source: "/tro-choi/:path*", destination: "/#games", permanent: false }, // trò chơi giờ chơi ngay trong thiệp
+    ];
   },
   images: {
     // Ảnh tạm là SVG; ảnh thật (jpg/webp) vẫn được tối ưu như bình thường.

@@ -214,7 +214,7 @@ function sizeCanvas() {
   const r = $('#stage').getBoundingClientRect(), k = Math.min(r.width / cv.width, r.height / cv.height);
   Object.assign($('#cvwrap').style, { width: cv.width * k + 'px', height: cv.height * k + 'px' });
 }
-const ro = new ResizeObserver(sizeCanvas);
+const ro = new ResizeObserver(() => { sizeCanvas(); fitNamesEl(); });
 ro.observe($('#stage'));
 
 function drawVideo(g, W, H) {
@@ -258,16 +258,24 @@ $('#frameBtn').onclick = () => {   // xem trước cả 10 khung trên hình cam
   $('#frames').showModal();
 };
 
+function fitNamesEl() {   // tên cô dâu chú rể luôn một dòng: co chữ cho vừa chiều ngang
+  const el = $('#sNames');
+  if (!el) return;
+  el.style.fontSize = '';
+  let size = parseFloat(getComputedStyle(el).fontSize);
+  while (el.scrollWidth > el.clientWidth && size > 14) { size -= 1.5; el.style.fontSize = size + 'px'; }
+}
 function applyNames() {
   $('#sTitle').textContent = CFG.title;
   $('#sDate').textContent = CFG.date;
   $('#sNames').replaceChildren(CFG.groom + ' ', Object.assign(document.createElement('i'), { textContent: '&' }), ' ' + CFG.bride);
+  fitNamesEl();
   renderOverlay();
   if (document.fonts) Promise.all([
     document.fonts.load(`700 40px ${SCRIPT}`, CFG.groom + CFG.bride + '&'),
     document.fonts.load(`600 16px ${SANS}`, CFG.title.toUpperCase() + CFG.date),
     document.fonts.load('700 54px "Noto Serif SC"', '囍'),
-  ]).catch(() => {}).then(renderOverlay);
+  ]).catch(() => {}).then(() => { renderOverlay(); fitNamesEl(); });
 }
 
 /* ---------- Camera ---------- */

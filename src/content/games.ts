@@ -7,7 +7,8 @@ export const quizMinMsPerQuestion = 800;
 export const memoryMinMsPerPair = 1000;
 
 export const gamesList = [
-  { href: "/tro-choi/vong-quay", icon: "🎡", title: "Vòng quay may mắn", text: "Xác nhận tham dự để nhận 1 lượt quay trúng quà." },
-  { href: "/tro-choi/do-vui", icon: "💡", title: "Đố vui về dâu rể", text: "Top 3 điểm cao nhất nhận quà tại tiệc." },
-  { href: "/tro-choi/lat-hinh", icon: "🃏", title: "Lật hình ghép cặp", text: "Ai nhanh tay nhất sẽ có quà!" },
+  { id: "wheel", icon: "🎡", title: "Vòng quay may mắn", subtitle: "Mỗi khách đã xác nhận tham dự có 1 lượt quay. Chúc bạn may mắn!", text: "Xác nhận tham dự để nhận 1 lượt quay trúng quà." },
+  { id: "quiz", icon: "💡", title: "Đố vui về dâu rể", subtitle: "", text: "Top 3 điểm cao nhất nhận quà tại tiệc." },
+  { id: "memory", icon: "🃏", title: "Lật hình ghép cặp", subtitle: "Tìm các cặp ảnh giống nhau nhanh nhất có thể!", text: "Ai nhanh tay nhất sẽ có quà!" },
 ] as const;
+export type GameId = (typeof gamesList)[number]["id"];

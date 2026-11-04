@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { dateInfo } from "@/content/wedding";
 import { useWedding } from "./wedding-context";
 import { Daisy, DaisyDivider, DaisySprig, Heart } from "@/components/ui/daisy";
+import { FitText } from "@/components/ui/fit-text";
 import { useMusic } from "./music";
 
 const OPENED_KEY = "thiep-da-mo";
@@ -60,10 +61,14 @@ export function Envelope({ guestName }: { guestName: string | null }) {
           ))}
         </div>
         <p className="mt-5 text-xs font-medium uppercase tracking-[0.45em] text-ink-soft">Save the date</p>
-        <h1 className="mt-3 font-script text-5xl leading-tight text-ink">
-          {config.groom.name}
+        <h1 className="mt-3 w-full font-script leading-tight text-ink">
+          <span className="block">
+            <FitText max={48}>{config.groom.name}</FitText>
+          </span>
           <span className="block text-3xl leading-none text-olive">&</span>
-          {config.bride.name}
+          <span className="block">
+            <FitText max={48}>{config.bride.name}</FitText>
+          </span>
         </h1>
         <DaisyDivider className="mt-3" />
         <p className="mt-3 font-serif text-lg tracking-wide text-ink">
@@ -71,12 +76,20 @@ export function Envelope({ guestName }: { guestName: string | null }) {
         </p>
 
         {/* Phong bì */}
-        <div className="relative mt-8 aspect-[4/3] w-full max-w-[340px]" style={{ perspective: "1200px" }}>
+        <div
+          className={`relative mt-8 aspect-[4/3] w-full max-w-[340px] ${opening ? "" : "cursor-pointer"}`}
+          style={{ perspective: "1200px" }}
+          role="button"
+          tabIndex={opening ? -1 : 0}
+          aria-label="Mở thiệp"
+          onClick={() => !opening && open()}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && !opening && open()}
+        >
           <div className="absolute inset-0 rounded-md bg-[#e6d6b8] shadow-[0_25px_50px_-25px_rgba(63,51,38,0.55)]" />
           {/* Lá thư bên trong */}
           <div
             className="absolute inset-x-[7%] top-[8%] bottom-[6%] z-[1] rounded-sm bg-cream p-4 shadow-md transition-transform duration-1000 ease-out"
-            style={{ transform: opening ? "translateY(-62%)" : "translateY(0)", transitionDelay: opening ? "0.35s" : "0s" }}
+            style={{ transform: opening ? "translateY(-62%)" : "translateY(0)", transitionDelay: opening ? "0.3s" : "0s" }}
           >
             <Daisy size={30} className="mx-auto" />
             <p className="mt-1 font-script text-2xl text-olive">Thiệp mời cưới</p>
@@ -95,7 +108,7 @@ export function Envelope({ guestName }: { guestName: string | null }) {
               transform: opening ? "rotateX(180deg)" : "rotateX(0deg)",
               zIndex: opening ? 0 : 3, // mở xong: nắp gập lên nằm dưới giấy mời (z-1), khi đóng nằm trên cùng
               transitionProperty: "transform, z-index",
-              transitionDelay: opening ? "0s, 0.35s" : "0s",
+              transitionDelay: opening ? "0s, 0.3s" : "0s",
             }}
           >
             <svg viewBox="0 0 400 174" className="h-full w-full drop-shadow-[0_6px_6px_rgba(63,51,38,0.15)]" preserveAspectRatio="none" aria-hidden>

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { dateInfo, directionsUrl, feastOf, inviteEvent, venueById, type Side, type WeddingConfig } from "@/content/wedding";
 import { Daisy, DaisySprig, Heart } from "@/components/ui/daisy";
+import { FitText } from "@/components/ui/fit-text";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionTitle } from "@/components/ui/section-title";
 
@@ -14,9 +15,13 @@ export function Hero({ config }: { config: WeddingConfig }) {
       {/* Tên đặt trên lớp tối mờ dạng vệt sáng-tối + bóng chữ 2 lớp + viền mảnh để không lẫn với ảnh nền */}
       <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_50%_35%,rgb(26_20_16/0.5),transparent_72%)]" aria-hidden />
       <div className="absolute inset-x-0 top-9 px-7 text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.7),0_3px_18px_rgb(0_0_0/0.6)]">
-        <h2 className="font-script text-6xl leading-none [-webkit-text-stroke:0.6px_rgb(0_0_0/0.25)]">{groom.name}</h2>
+        <h2 className="font-script leading-none [-webkit-text-stroke:0.6px_rgb(0_0_0/0.25)]">
+          <FitText max={60}>{groom.name}</FitText>
+        </h2>
         <p className="my-0.5 text-center font-script text-3xl text-daisy">&</p>
-        <h2 className="text-right font-script text-6xl leading-none [-webkit-text-stroke:0.6px_rgb(0_0_0/0.25)]">{bride.name}</h2>
+        <h2 className="text-right font-script leading-none [-webkit-text-stroke:0.6px_rgb(0_0_0/0.25)]">
+          <FitText max={60}>{bride.name}</FitText>
+        </h2>
       </div>
       <div className="absolute inset-x-0 bottom-14 flex flex-col items-center gap-3 px-6 text-center text-white">
         <p className="rounded-full border border-daisy/70 bg-ink/55 px-5 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-daisy shadow-lg backdrop-blur-sm">
@@ -54,14 +59,18 @@ export function Family({ config, side }: { config: WeddingConfig; side: Side }) 
           ))}
         </div>
         <p className="mx-auto mt-10 max-w-xs whitespace-pre-line font-serif text-[17px] italic leading-relaxed text-ink">{config.texts.invitation}</p>
-        <div className="mt-8 flex items-end justify-center gap-4">
-          <div>
-            <p className="font-script text-4xl text-ink">{groom.name}</p>
+        <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
+          <div className="min-w-0">
+            <p className="font-script text-ink">
+              <FitText max={36}>{groom.name}</FitText>
+            </p>
             {groom.born && <p className="text-xs tracking-widest text-ink-soft">{groom.born}</p>}
           </div>
           <Heart className="mb-3 h-5 w-5 animate-heartbeat text-rose" />
-          <div>
-            <p className="font-script text-4xl text-ink">{bride.name}</p>
+          <div className="min-w-0">
+            <p className="font-script text-ink">
+              <FitText max={36}>{bride.name}</FitText>
+            </p>
             {bride.born && <p className="text-xs tracking-widest text-ink-soft">{bride.born}</p>}
           </div>
         </div>
@@ -125,7 +134,9 @@ function Portrait({ src, name, role }: { src: string; name: string; role: string
       </div>
       <figcaption className="mt-3">
         <p className="text-[11px] uppercase tracking-[0.3em] text-ink-soft">{role}</p>
-        <p className="font-script text-3xl text-ink">{name}</p>
+        <p className="font-script text-ink">
+          <FitText max={30}>{name}</FitText>
+        </p>
       </figcaption>
     </figure>
   );

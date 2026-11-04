@@ -144,6 +144,8 @@
   color: var(--olive);
 }
 .wm-names {
+  max-width: 100%;
+  white-space: nowrap;
   font-family: var(--font-dancing), cursive;
   font-size: clamp(2rem, 9vmin, 3.2rem);
   font-weight: 700;

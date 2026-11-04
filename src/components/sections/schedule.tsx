@@ -25,8 +25,9 @@ export function Schedule({ config }: { config: WeddingConfig }) {
   return (
     <>
       <SectionTitle compact eyebrow="Lịch trình" title="Sự kiện cưới" subtitle={`${date.weekday}, ${date.day}.${date.month}.${date.year} · Tức ngày ${date.lunar}`} />
-      <Reveal className="min-h-0 shrink overflow-y-auto rounded-[2rem] bg-cream px-4 py-4 shadow-sm ring-1 ring-line">
-        <ol className="relative ml-3 border-l border-dashed border-olive/50">
+      <Reveal className="flex min-h-0 max-h-[46rem] flex-1 flex-col overflow-y-auto rounded-[2rem] bg-cream px-4 py-4 shadow-sm ring-1 ring-line">
+        {/* justify-between: các mốc giãn đều theo chiều cao khung, màn hình cao thì thưa ra, màn hình thấp thì khít lại */}
+        <ol className="relative ml-3 flex flex-1 flex-col justify-between border-l border-dashed border-olive/50">
           {rows.map((row, i) =>
             row.kind === "venue" ? (
               <li key={`v-${i}`} className="relative -ml-px flex flex-wrap items-center gap-x-2 gap-y-1 pb-1.5 pl-5 pt-3 first:pt-0">

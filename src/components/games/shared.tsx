@@ -1,27 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { GuestState } from "@/lib/queries";
 import { formatDuration } from "@/lib/wedding-time";
 import { postJson, useGuest } from "@/components/site/guest";
-import { Daisy } from "@/components/ui/daisy";
-
-export function GameShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
-  return (
-    <div className="min-h-dvh px-5 pb-28 pt-6">
-      <Link href="/tro-choi" className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-ink">
-        ‹ Trò chơi
-      </Link>
-      <div className="mt-6 text-center">
-        <Daisy size={34} className="mx-auto" />
-        <h1 className="mt-2 font-serif text-2xl font-semibold uppercase tracking-[0.12em] text-ink">{title}</h1>
-        {subtitle && <p className="mx-auto mt-2 max-w-xs text-sm text-ink-soft">{subtitle}</p>}
-      </div>
-      <div className="mt-8">{children}</div>
-    </div>
-  );
-}
 
 /** Yêu cầu khách nhập tên + số điện thoại trước khi chơi (để trao quà đúng người). */
 export function JoinGate({ children }: { children: ReactNode }) {

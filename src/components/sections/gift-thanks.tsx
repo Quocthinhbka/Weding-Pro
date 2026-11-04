@@ -7,6 +7,7 @@ import { coupleNames, type Gift } from "@/content/wedding";
 import { useWedding } from "@/components/site/wedding-context";
 import { CopyButton, copyText } from "@/components/ui/copy-button";
 import { Daisy, Heart } from "@/components/ui/daisy";
+import { FitText } from "@/components/ui/fit-text";
 import { Modal } from "@/components/ui/modal";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -154,8 +155,10 @@ export function ThankYou() {
         <Daisy size={44} className="mx-auto" />
         <p className="mt-3 font-script text-6xl text-olive">Thank you!</p>
         <p className="mx-auto mt-4 max-w-xs font-serif text-[17px] italic leading-relaxed text-ink">{config.texts.thankYou}</p>
-        <div className="mt-6 flex items-center justify-center gap-2 font-script text-3xl text-ink">
-          {config.groom.name} <Heart className="h-5 w-5 text-rose" /> {config.bride.name}
+        <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-2 font-script text-ink">
+          <FitText max={30}>{config.groom.name}</FitText>
+          <Heart className="h-5 w-5 text-rose" />
+          <FitText max={30}>{config.bride.name}</FitText>
         </div>
         <div className="mx-auto mt-10 max-w-xs">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-ink-soft">Chia sẻ thiệp</p>
