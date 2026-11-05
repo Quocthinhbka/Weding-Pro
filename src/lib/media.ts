@@ -129,3 +129,18 @@ export async function albumRatios(srcs: string[]) {
   }
   return out;
 }
+
+/** Ảnh đã tải lên (mới nhất trước), để chọn lại từ thư viện mà không phải tải lại. Không gồm nhạc. */
+export function listImages() {
+  let names: string[] = [];
+  try {
+    names = fs.readdirSync(mediaDir());
+  } catch {}
+  return names
+    .filter((n) => MEDIA_NAME.test(n) && /\.(webp|png)$/.test(n))
+    .map((n) => {
+      const st = fs.statSync(path.join(/*turbopackIgnore: true*/ mediaDir(), n));
+      return { url: `/api/media/${n}`, size: st.size, at: st.mtimeMs };
+    })
+    .sort((a, b) => b.at - a.at);
+}

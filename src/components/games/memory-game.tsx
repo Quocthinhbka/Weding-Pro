@@ -27,7 +27,7 @@ export function MemoryGame() {
   const config = useWedding();
   const [level, setLevel] = useState<number>(1);
   const spec = memoryLevel(level)!;
-  const images = memoryImages(config, spec.pairs);
+  const images = memoryImages(config, level);
   const [deck, setDeck] = useState<Card[]>([]);
   const [open, setOpen] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -135,7 +135,7 @@ export function MemoryGame() {
         <div className="rounded-[2rem] bg-paper/70 p-6 text-center text-sm leading-relaxed text-ink-soft ring-1 ring-line">
           <p>Lật 2 thẻ mỗi lượt để tìm {spec.pairs} cặp ảnh giống nhau (bàn chơi {spec.cols} cột × {spec.rows} hàng).</p>
           <p className="mt-1">Hoàn thành nhanh nhất để lên bảng xếp hạng của level – chơi lại bao nhiêu lần cũng được!</p>
-          {!enough && <p className="mt-3 text-[#8a4a3e]">Level này cần ít nhất {spec.pairs} ảnh trong album (hiện có {config.album.length}).</p>}
+          {!enough && <p className="mt-3 text-[#8a4a3e]">Level này cần {spec.pairs} ảnh nhưng mới có {images.length}. Quản trị viên cần chọn thêm ảnh cho trò chơi hoặc thêm ảnh vào album.</p>}
           {error && <p className="mt-3 text-[#8a4a3e]">{error}</p>}
           <button type="button" onClick={start} disabled={!enough} className="btn btn-primary mt-5 w-full">
             Bắt đầu level {level}

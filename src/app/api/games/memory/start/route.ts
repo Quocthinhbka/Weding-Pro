@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MEMORY_LEVELS, memoryLevel } from "@/content/games";
+import { memoryImages } from "@/content/wedding";
 import { getConfig } from "@/lib/config";
 import { currentGuest } from "@/lib/guest";
 import { jsonError, parseJson, rateLimit, TOO_MANY } from "@/lib/http";
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
   const { data, error } = await parseJson(req, schema);
   if (error) return error;
   const level = memoryLevel(data.level)!;
-  if (getConfig().album.length < level.pairs) return jsonError(`Level ${level.level} cần ít nhất ${level.pairs} ảnh trong album`);
+  if (memoryImages(getConfig(), level.level).length < level.pairs) return jsonError(`Level ${level.level} cần ${level.pairs} ảnh (chọn ảnh cho level trong trang cấu hình hoặc thêm ảnh vào album)`);
   const best = memoryBestOf(guest.id, level.level);
   return Response.json({
     attemptId: startMemory(guest.id, level.level),

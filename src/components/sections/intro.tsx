@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { coupleOrder, dateInfo, directionsUrl, feastOf, inviteEvent, venueById, type Side, type WeddingConfig } from "@/content/wedding";
+import { couplePhotos, coupleOrder, dateInfo, directionsUrl, feastOf, inviteEvent, venueById, type Side, type WeddingConfig } from "@/content/wedding";
 import { Daisy, DaisySprig, Heart } from "@/components/ui/daisy";
 import { FitText } from "@/components/ui/fit-text";
 import { Reveal } from "@/components/ui/reveal";
@@ -50,9 +50,9 @@ export function Family({ config, side }: { config: WeddingConfig; side: Side }) 
             <div key={family.label}>
               <p className="whitespace-pre-line text-xs font-semibold uppercase tracking-[0.3em] text-olive">{family.label}</p>
               <div className="mt-3 space-y-1.5">
-                {family.members.map((m) => (
-                  <p key={`${m.role}-${m.name}`} className="text-[15px] text-ink">
-                    <span className="text-ink-soft">{m.role}:</span> <b className="font-medium">{m.name}</b>
+                {family.members.map((m, i) => (
+                  <p key={`${i}-${m.name}`} className="text-[15px] font-medium text-ink">
+                    {m.name}
                   </p>
                 ))}
               </div>
@@ -166,14 +166,15 @@ function Roof() {
 /** Ngôi nhà bao lấy ảnh cô dâu chú rể: mái ở trên, thân nhà ôm hai bức chân dung, nền cỏ hoa ở dưới. Thiệp nhà gái: cô dâu bên trái. */
 export function HouseOfCouple({ config, side }: { config: WeddingConfig; side: Side }) {
   const [left, right] = coupleOrder(config, side);
+  const photos = couplePhotos(config, side);
   return (
     <div className="shrink-0">
       <p className="mb-2 text-center font-script text-4xl leading-none text-olive">Về chung một nhà</p>
       <Reveal className="mx-auto w-full max-w-[400px]">
         <Roof />
         <div className="mx-[4.5%] grid grid-cols-2 gap-4 rounded-b-[1.5rem] border-x-[5px] border-b-[5px] border-olive-deep bg-cream px-4 pb-4 pt-4 shadow-lg">
-          <Portrait src={left.person.photo} name={left.person.name} role={left.role} />
-          <Portrait src={right.person.photo} name={right.person.name} role={right.role} />
+          <Portrait src={photos[left.key]} name={left.person.name} role={left.role} />
+          <Portrait src={photos[right.key]} name={right.person.name} role={right.role} />
         </div>
         <div className="mx-[1%] -mt-1 flex items-end justify-between" aria-hidden>
           <Daisy size={22} />

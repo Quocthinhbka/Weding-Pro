@@ -12,14 +12,15 @@ export function RsvpButton() {
         💌 {rsvp ? "Sửa xác nhận tham dự" : "Xác nhận tham dự"}
       </button>
       {rsvp && (
-        <p className="mt-3 text-sm text-ink-soft">
-          {rsvp.attending ? `Bạn đã xác nhận tham dự (${rsvp.partySize} người).` : "Bạn đã báo không tham dự được."}
+        <div className="mt-3 space-y-0.5 text-sm text-ink-soft">
+          {/* Hai hàng riêng: trạng thái xác nhận, rồi số may mắn */}
+          <p>{rsvp.attending ? `Bạn đã xác nhận tham dự (${rsvp.partySize} người).` : "Bạn đã báo không tham dự được."}</p>
           {rsvp.luckyNumber && (
-            <>
-              {" "}Số may mắn: <b className="text-olive-deep">{formatLucky(rsvp.luckyNumber)}</b>
-            </>
+            <p>
+              Số may mắn: <b className="text-olive-deep">{formatLucky(rsvp.luckyNumber)}</b>
+            </p>
           )}
-        </p>
+        </div>
       )}
     </div>
   );

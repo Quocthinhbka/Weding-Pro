@@ -4,10 +4,12 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { saveSettings } from "@/app/admin/actions";
 import type { QuizQuestion } from "@/content/quiz";
 import { BANK_APPS } from "@/content/banks";
-import { dateInfo, MAX_ALBUM, MAX_STORY, SECTION_LABELS, type SectionKey, type WeddingConfig } from "@/content/wedding";
+import { MEMORY_LEVELS } from "@/content/games";
+import { dateInfo, MAX_ALBUM, MAX_STORY, memoryImages, SECTION_LABELS, type SectionKey, type WeddingConfig } from "@/content/wedding";
 import { lunarText } from "@/lib/lunar";
 import { ConfigPreview } from "./config-preview";
 import { CropDialog, type Aspects } from "./crop-dialog";
+import { MediaPicker } from "./media-picker";
 import { AddButton, AudioField, Card, ImageField, ItemTools, move, newId, NumberField, TextArea, TextField, uploadFile } from "./fields";
 
 const NAV = [
@@ -139,9 +141,41 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
               <p className="font-semibold">{who === "groom" ? "Chú rể" : "Cô dâu"}</p>
               <TextField label="Tên hiển thị" value={config[who].name} maxLength={40} onChange={(v) => edit((d) => void (d[who].name = v))} />
               <TextField label="Năm sinh (không bắt buộc)" value={config[who].born} maxLength={20} onChange={(v) => edit((d) => void (d[who].born = v))} />
-              <ImageField label="Ảnh chân dung (dọc, tỉ lệ 3:4)" value={config[who].photo} ratio={3 / 4} outSide={1600} onChange={(v) => edit((d) => void (d[who].photo = v))} className="max-w-[220px]" />
             </div>
           ))}
+        </div>
+
+        <div className="space-y-5 rounded-2xl bg-white/70 p-4 ring-1 ring-line">
+          <div>
+            <p className="font-semibold">Ảnh trong ngôi nhà “Về chung một nhà”</p>
+            <p className="mt-1 text-xs text-ink-soft">Mỗi bên mời có bộ ảnh riêng: thiệp nhà trai (link thường hoặc <code>?f=groom</code>) và thiệp nhà gái (<code>?f=bride</code>). Ảnh dọc tỉ lệ 3:4, tải lên hoặc chọn từ thư viện.</p>
+          </div>
+          <div>
+            <p className="mb-2 text-sm font-medium">Ảnh ở thiệp nhà trai</p>
+            <div className="grid grid-cols-2 gap-4">
+              {(["groom", "bride"] as const).map((who) => (
+                <ImageField key={who} label={who === "groom" ? "Chú rể" : "Cô dâu"} value={config[who].photo} ratio={3 / 4} outSide={1600} onChange={(v) => edit((d) => void (d[who].photo = v))} className="max-w-[200px]" />
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="mb-1 text-sm font-medium">Ảnh ở thiệp nhà gái</p>
+            <p className="mb-2 text-xs text-ink-soft">Ô nào để trống thì thiệp nhà gái dùng lại ảnh của thiệp nhà trai.</p>
+            <div className="grid grid-cols-2 gap-4">
+              {(["groom", "bride"] as const).map((who) => (
+                <ImageField
+                  key={who}
+                  label={who === "groom" ? "Chú rể" : "Cô dâu"}
+                  value={config.bridePhotos[who]}
+                  optional
+                  ratio={3 / 4}
+                  outSide={1600}
+                  onChange={(v) => edit((d) => void (d.bridePhotos[who] = v))}
+                  className="max-w-[200px]"
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -152,8 +186,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
               <TextField multiline label="Tiêu đề" value={config.families[side].label} onChange={(v) => edit((d) => void (d.families[side].label = v))} />
               {config.families[side].members.map((m, i) => (
                 <div key={i} className="flex items-end gap-2">
-                  <TextField label="Vai trò" value={m.role} placeholder="Bố / Mẹ / Ông…" className="w-24" onChange={(v) => edit((d) => void (d.families[side].members[i].role = v))} />
-                  <TextField label="Họ tên" value={m.name} className="flex-1" onChange={(v) => edit((d) => void (d.families[side].members[i].name = v))} />
+                  <TextField label="Họ tên (không ghi Bố / Mẹ, thiệp chỉ hiện tên)" value={m.name} className="flex-1" onChange={(v) => edit((d) => void (d.families[side].members[i].name = v))} />
                   <button
                     type="button"
                     className="mb-1 h-10 rounded-lg border border-line bg-white px-2.5 text-xs text-[#8a4a3e]"
@@ -413,9 +446,42 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
       <Card id="tro-choi" title="Trò chơi" description="Giải thưởng vòng quay chỉnh ở trang Trò chơi. Đáp án đố vui chỉ lưu trên máy chủ, khách không xem trước được. Đúng từ 8 câu trở lên được tặng thêm 1 lượt quay.">
         <div className="grid gap-4 sm:grid-cols-2">
           <NumberField label="Số giây cho mỗi câu đố" value={config.games.quizSeconds} min={5} max={120} onChange={(v) => edit((d) => void (d.games.quizSeconds = v))} />
-          <p className="self-end rounded-xl bg-paper px-3 py-2 text-xs text-ink-soft">
-            Lật hình có 3 level (6, 8 và 10 cặp) lấy ảnh từ các ảnh đầu của album; album hiện có {config.album.length} ảnh (cần ít nhất 10 ảnh để chơi đủ 3 level).
-          </p>
+          <p className="self-end rounded-xl bg-paper px-3 py-2 text-xs text-ink-soft">Lật hình có 3 level: 6, 8 và 10 cặp ảnh (cần đủ 10 ảnh để chơi hết 3 level).</p>
+        </div>
+        <div className="space-y-4 rounded-2xl bg-white/70 p-4 ring-1 ring-line">
+          <div>
+            <p className="font-semibold">Ảnh cho trò lật hình theo level</p>
+            <p className="mt-1 text-xs text-ink-soft">
+              Mỗi level chọn riêng ảnh làm thẻ (tải lên hoặc chọn từ thư viện): level 1 chọn 6 ảnh, level 2 chọn 8 ảnh, level 3 chọn 10 ảnh. Chưa chọn đủ thì bù bằng các ảnh đầu của album (album đang có {config.album.length} ảnh).
+            </p>
+          </div>
+          {MEMORY_LEVELS.map((l, i) => {
+            const chosen = config.games.memoryLevelPhotos[i] ?? [];
+            const ready = memoryImages(config, l.level).length;
+            return (
+              <div key={l.level} className="space-y-2 rounded-xl bg-paper/60 p-3">
+                <p className="text-sm font-medium">
+                  Level {l.level} – {l.pairs} ảnh ({chosen.length}/{l.pairs}){" "}
+                  <span className={ready >= l.pairs ? "text-olive-deep" : "text-[#8a4a3e]"}>{ready >= l.pairs ? "✓ đủ ảnh" : `mới có ${ready}/${l.pairs} ảnh`}</span>
+                </p>
+                <AlbumEditor
+                  album={chosen}
+                  max={l.pairs}
+                  ratio={3 / 4}
+                  onChange={(photos) =>
+                    edit((d) => {
+                      d.games.memoryLevelPhotos[i] = photos;
+                    })
+                  }
+                />
+                {config.album.length > 0 && (
+                  <button type="button" className="text-xs text-olive-deep underline" onClick={() => edit((d) => void (d.games.memoryLevelPhotos[i] = d.album.slice(0, l.pairs)))}>
+                    Dùng {Math.min(l.pairs, config.album.length)} ảnh đầu của album
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
         <p className="pt-2 font-semibold">Câu đố ({quiz.length} câu)</p>
         {quiz.map((q, i) => (
@@ -506,8 +572,13 @@ const ALBUM_ASPECTS: Aspects = [
   ["16:9", 16 / 9],
 ];
 
-function AlbumEditor({ album, max, onChange }: { album: string[]; max: number; onChange: (album: string[]) => void }) {
+/**
+ * Danh sách ảnh có thể tải lên (kéo thả, căn chỉnh), chọn từ thư viện ảnh đã tải lên, sắp xếp và xoá.
+ * `ratio` cố định thì bắt cắt đúng tỉ lệ đó (VD thẻ lật hình 3:4), không thì cho chọn tỉ lệ từng ảnh.
+ */
+function AlbumEditor({ album, max, ratio, onChange }: { album: string[]; max: number; ratio?: number; onChange: (album: string[]) => void }) {
   const input = useRef<HTMLInputElement>(null);
+  const [library, setLibrary] = useState(false);
   const [queue, setQueue] = useState<File[]>([]); // ảnh đang chờ căn chỉnh, ảnh đầu tiên đang mở hộp thoại
   const [over, setOver] = useState(false);
   const [error, setError] = useState("");
@@ -595,16 +666,33 @@ function AlbumEditor({ album, max, onChange }: { album: string[]; max: number; o
           </div>
         ))}
       </div>
-      <button type="button" onClick={() => input.current?.click()} className="btn btn-primary !py-2 !text-xs">
-        Tải thêm ảnh ({album.length}/{max}, chọn hoặc kéo thả nhiều ảnh)
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => input.current?.click()} className="btn btn-primary !py-2 !text-xs">
+          Tải thêm ảnh ({album.length}/{max}, chọn hoặc kéo thả nhiều ảnh)
+        </button>
+        <button type="button" onClick={() => setLibrary(true)} disabled={album.length >= max} className="btn btn-outline !py-2 !text-xs">
+          Chọn từ thư viện
+        </button>
+      </div>
+      {library && (
+        <MediaPicker
+          title="Chọn ảnh từ thư viện"
+          max={Math.max(1, max - album.length)}
+          exclude={album}
+          onClose={() => setLibrary(false)}
+          onPick={(urls) => {
+            setLibrary(false);
+            onChange([...album, ...urls.filter((u) => !album.includes(u))].slice(0, max));
+          }}
+        />
+      )}
       {error && <p className="text-xs text-[#8a4a3e]">{error}</p>}
       <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => pickFiles(e.target.files)} />
       {current && (
         <CropDialog
           key={`${n}-${current.name}`}
           file={current}
-          spec={{ aspects: ALBUM_ASPECTS, outSide: 2000 }}
+          spec={ratio ? { aspect: ratio, outSide: 1400 } : { aspects: ALBUM_ASPECTS, outSide: 2000 }}
           title={total > 1 ? `Căn chỉnh ảnh ${n}/${total}` : "Căn chỉnh ảnh"}
           onCancel={finish}
           onDone={addUploaded}

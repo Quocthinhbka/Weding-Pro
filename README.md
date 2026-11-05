@@ -27,7 +27,7 @@ Bên phải có khung **Xem trước** là thiệp thật, đổi theo từng th
 
 | Mục | Chỉnh được |
 |---|---|
-| Cô dâu & chú rể | Tên, năm sinh, ảnh chân dung (tải lên) |
+| Cô dâu & chú rể | Tên, năm sinh; ảnh trong ngôi nhà "Về chung một nhà" chia làm hai bộ: **ảnh ở thiệp nhà trai** và **ảnh ở thiệp nhà gái** (cô dâu, chú rể riêng từng bộ; ô nhà gái để trống thì dùng lại ảnh nhà trai). Tải lên hoặc **chọn từ thư viện** ảnh đã tải, rồi căn chỉnh tỉ lệ 3:4 |
 | Gia đình | Tiêu đề hai bên; thêm, bớt người (vai trò + họ tên) |
 | Ngày cưới | Ngày dương lịch, giờ đếm ngược. Thứ và **ngày âm lịch tự tính** (sửa tay được) |
 | Địa điểm & lịch trình | Thêm, bớt địa điểm, toạ độ Google Maps, tên lựa chọn khi xác nhận; các mốc giờ, sự kiện chính |
@@ -36,7 +36,7 @@ Bên phải có khung **Xem trước** là thiệp thật, đổi theo từng th
 | Chuyện tình | Thêm, bớt, sắp xếp kỷ niệm (ảnh + chữ) |
 | Album | Tải nhiều ảnh cùng lúc, sắp xếp, xoá |
 | Mừng cưới | Ảnh QR, ngân hàng, số tài khoản, chủ tài khoản |
-| Trò chơi | Số giây mỗi câu đố, số cặp lật hình, toàn bộ câu đố và đáp án |
+| Trò chơi | Số giây mỗi câu đố, **ảnh cho trò lật hình theo từng level** (level 1 chọn 6 ảnh, level 2 chọn 8, level 3 chọn 10; tải lên hoặc chọn từ thư viện; thiếu thì bù bằng ảnh album), toàn bộ câu đố và đáp án |
 | Hiển thị | Bật / tắt từng phần của thiệp |
 
 Tên cô dâu chú rể và ngày cưới trên khung video ở `/wedmemo` lấy từ trang này.
@@ -118,6 +118,7 @@ Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nh
 - **Lịch trình** là một dòng thời gian gồm các mốc giờ, tự nhóm theo địa điểm (kèm Chỉ đường và thêm vào lịch). Mốc không gắn địa điểm (VD đoàn nhà trai xuất phát) chọn "Không gắn địa điểm".
 - **Link nhà trai / nhà gái:** link thường (hoặc `?f=groom`) là thiệp nhà trai, `?f=bride` là thiệp từ nhà gái: cô dâu đứng trước (bên trái) ở bìa, phong bì, gia đình, ngôi nhà, lời cảm ơn và khung video; phần Đại diện gia đình đưa nhà gái lên trước, lời mời đổi sang "lễ vu quy", thẻ "Buổi tiệc thân mật" (thời gian hẹn khách) nổi bật. Mỗi bên chọn riêng sự kiện và tên hiện ở thẻ mời (mặc định Lễ Thành Hôn / Lễ Vu Quy, kèm giờ, địa điểm, chỉ đường) và buổi tiệc thân mật hiện ở phần gia đình, trong mục "Địa điểm & lịch trình" của trang cấu hình. Ghép được với link mời riêng: `https://<tên-miền>/?k=<mã>&f=bride`.
 - **Hộp mừng cưới** là một hòm bấm để mở hộp thoại mã QR. Chọn ứng dụng ngân hàng trong trang cấu hình thì bấm vào QR sẽ mở thẳng app đó (qua deeplink VietQR) và chép sẵn số tài khoản.
+- **Toàn màn hình:** bấm mở thiệp là chuyển sang toàn màn hình (và khoá hướng dọc nếu trình duyệt cho phép). iPhone Safari không hỗ trợ toàn màn hình cho trang web nên bỏ qua.
 - **Phong bì:** bấm vào phong bì hoặc nút "Mở thiệp" đều mở được; nắp mở trước, 0,3 giây sau giấy mời mới trượt lên và nằm trên nắp đã gập.
 - **Đĩa than** luôn hiện ở góc dưới bên trái để bật / tắt nhạc nền: đang phát thì đĩa quay, cần đọc đặt lên đĩa và có nốt nhạc bay; tắt thì đĩa đứng yên, cần nhấc lên.
 - **Trò chơi** chơi ngay trong sector, có nút "‹ Trò chơi" để quay lại danh sách; link `/tro-choi/...` cũ chuyển về `/#games`.
@@ -133,7 +134,7 @@ Các ô nội dung trong trang Cấu hình (lời mời, lời cảm ơn, lời 
 
 ## Sổ lưu bút
 
-Khách để lại lời chúc **công khai** hoặc **riêng tư**. Lời chúc riêng tư vẫn hiện trên thiệp (tên khách và vệt gradient mờ) nhưng nội dung không bao giờ rời khỏi máy chủ; chỉ bạn đọc được ở `/admin/loi-chuc`.
+Khách để lại lời chúc **công khai** hoặc **riêng tư**. Danh sách hiện 5 lời chúc mới nhất, nút **Xem thêm** mở thêm 5 lời nữa ở dưới; cuộn hết danh sách rồi vuốt tiếp thì sang sector kế tiếp. Lời chúc riêng tư vẫn hiện trên thiệp (tên khách và vệt gradient mờ) nhưng nội dung không bao giờ rời khỏi máy chủ; chỉ bạn đọc được ở `/admin/loi-chuc`.
 
 ## Quản trị (`https://<tên-miền>/admin`)
 

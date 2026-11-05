@@ -1,6 +1,12 @@
 import { isAdmin } from "@/lib/auth";
 import { jsonError } from "@/lib/http";
-import { saveMedia, type MediaKind } from "@/lib/media";
+import { listImages, saveMedia, type MediaKind } from "@/lib/media";
+
+// Thư viện ảnh đã tải lên (trang cấu hình dùng để chọn lại ảnh).
+export async function GET() {
+  if (!(await isAdmin())) return jsonError("Chưa đăng nhập quản trị", 401);
+  return Response.json({ items: listImages() });
+}
 
 // Tải ảnh / nhạc lên từ trang cấu hình. Nội dung gửi dạng thô, loại tệp nằm trên URL (?kind=photo|qr|audio).
 export async function POST(req: Request) {

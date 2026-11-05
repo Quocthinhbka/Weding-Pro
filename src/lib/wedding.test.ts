@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bankAppUrl } from "@/content/banks";
-import { dateInfo, defaultConfig, feastOf, venueQuery, inviteEvent, memoryImages, normalizeConfig, rsvpGroups, sideFromParam } from "@/content/wedding";
+import { couplePhotos, dateInfo, defaultConfig, feastOf, venueQuery, inviteEvent, memoryImages, normalizeConfig, rsvpGroups, sideFromParam } from "@/content/wedding";
 import { configSchema, quizSchema } from "./config-schema";
 import { canChiYear, lunarText, solarToLunar } from "./lunar";
 import { mergeDefaults } from "./merge";
@@ -147,8 +147,27 @@ describe("cấu hình", () => {
 
   it("mỗi địa điểm là một lựa chọn khi xác nhận; số cặp lật hình không vượt quá album", () => {
     expect(rsvpGroups(defaultConfig).map((g) => g.key)).toEqual(["nha-gai", "nha-hang"]);
-    expect(memoryImages({ ...defaultConfig, album: defaultConfig.album.slice(0, 3) }, 6)).toHaveLength(3);
-    expect(memoryImages(defaultConfig, 8)).toHaveLength(8);
+    expect(memoryImages({ ...defaultConfig, album: defaultConfig.album.slice(0, 3) }, 1)).toHaveLength(3);
+    expect(memoryImages(defaultConfig, 2)).toHaveLength(8);
+    // ảnh chọn riêng cho từng level được ưu tiên, bù bằng album, không trùng; mỗi level đúng số cặp
+    const photos = (n: number) => Array.from({ length: n }, (_, i) => `/api/media/p${n}-${i}.webp`);
+    const cfg = { ...defaultConfig, games: { ...defaultConfig.games, memoryLevelPhotos: [photos(2), photos(8), []] } };
+    const l1 = memoryImages(cfg, 1);
+    expect(l1.slice(0, 2)).toEqual(photos(2));
+    expect(new Set(l1).size).toBe(6);
+    expect(memoryImages(cfg, 2)).toEqual(photos(8));
+    expect(memoryImages(cfg, 3)).toEqual(defaultConfig.album.slice(0, 9)); // chưa chọn: dùng album (mặc định chỉ có 9 ảnh)
+    expect(configSchema.safeParse(cfg).success).toBe(true);
+    expect(configSchema.safeParse({ ...cfg, games: { ...cfg.games, memoryLevelPhotos: [photos(7), [], []] } }).success).toBe(false); // level 1 tối đa 6 ảnh
+    expect(configSchema.safeParse({ ...cfg, games: { ...cfg.games, memoryLevelPhotos: [[], []] } }).success).toBe(false);
+  });
+
+  it("ảnh trong ngôi nhà: thiệp nhà trai dùng ảnh chính, thiệp nhà gái dùng ảnh riêng, ô trống thì dùng lại ảnh nhà trai", () => {
+    const c = { ...defaultConfig, bridePhotos: { groom: "/api/media/g.webp", bride: "" } };
+    expect(couplePhotos(c, "groom")).toEqual({ groom: c.groom.photo, bride: c.bride.photo });
+    expect(couplePhotos(c, "bride")).toEqual({ groom: "/api/media/g.webp", bride: c.bride.photo });
+    expect(configSchema.safeParse(c).success).toBe(true);
+    expect(configSchema.safeParse({ ...c, bridePhotos: { groom: "http://x/y.jpg", bride: "" } }).success).toBe(false);
   });
 
   it("dữ liệu cũ: album chia chủ đề được gộp lại thành một danh sách, hộp mừng có thêm bankApp", () => {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BANK_APPS } from "@/content/banks";
+import { MEMORY_LEVELS } from "@/content/games";
 import { MAX_ALBUM, MAX_STORY, SECTION_LABELS, type SectionKey } from "@/content/wedding";
 
 // Kiểm tra dữ liệu cấu hình gửi từ trang quản trị trước khi lưu.
@@ -19,7 +20,8 @@ const person = (label: string) =>
 
 const family = z.object({
   label: required(30, "Tên bên gia đình"),
-  members: z.array(z.object({ role: required(20, "Vai trò"), name: required(60, "Tên thành viên") })).max(8),
+  // `role` (Bố / Mẹ…) không còn hiển thị trên thiệp; giữ trong dữ liệu để tương thích với cấu hình cũ.
+  members: z.array(z.object({ role: text(20, "Vai trò"), name: required(60, "Tên thành viên") })).max(8),
 });
 
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Giờ phải có dạng HH:mm, VD 18:00");
@@ -51,6 +53,7 @@ export const configSchema = z
       .array(z.object({ id, title: required(60, "Tên sự kiện"), time, venueId: z.union([z.literal(""), id]) }))
       .min(1, "Cần ít nhất 1 sự kiện")
       .max(12),
+    bridePhotos: z.object({ groom: optionalMedia, bride: optionalMedia }),
     sides: z.object(
       Object.fromEntries(
         (["groom", "bride"] as const).map((k) => [k, z.object({ eventId: id, title: required(40, "Tên sự kiện ở thẻ mời"), feastEventId: id })]),
@@ -85,6 +88,10 @@ export const configSchema = z
     ),
     games: z.object({
       quizSeconds: z.number().int().min(5, "Mỗi câu đố tối thiểu 5 giây").max(120),
+      memoryLevelPhotos: z
+        .array(z.array(mediaPath))
+        .length(3)
+        .refine((l) => l.every((photos, i) => photos.length <= MEMORY_LEVELS[i].pairs), "Mỗi level chỉ chọn tối đa số ảnh của level đó (6, 8, 10)"),
     }),
   })
   .superRefine((c, ctx) => {

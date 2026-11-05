@@ -7,9 +7,12 @@ import { postJson, useGuest } from "@/components/site/guest";
 import { Daisy } from "@/components/ui/daisy";
 import { SectionTitle } from "@/components/ui/section-title";
 
+const PAGE = 5;
+
 export function Guestbook({ initial }: { initial: PublicWish[] }) {
   const { state } = useGuest();
   const [wishes, setWishes] = useState(initial);
+  const [shown, setShown] = useState(PAGE); // hiện 5 lời chúc mới nhất, "Xem thêm" mở thêm 5 lời chúc nữa
   const [name, setName] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
@@ -80,7 +83,8 @@ export function Guestbook({ initial }: { initial: PublicWish[] }) {
         </button>
       </form>
 
-      <div className="mt-3 min-h-0 flex-1 touch-pan-y space-y-2.5 overflow-y-auto overscroll-y-contain pr-1" tabIndex={0} aria-label="Danh sách lời chúc">
+      {/* Cuộn hết danh sách rồi vuốt tiếp thì sang sector kế tiếp (không chặn cuộn lan) */}
+      <div className="mt-3 min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-1" tabIndex={0} aria-label="Danh sách lời chúc">
         {wishes.length === 0 && (
           <div className="grid h-full min-h-24 place-items-center text-center text-sm text-ink-soft">
             <div>
@@ -89,7 +93,7 @@ export function Guestbook({ initial }: { initial: PublicWish[] }) {
             </div>
           </div>
         )}
-        {wishes.map((w) => (
+        {wishes.slice(0, shown).map((w) => (
           <article key={w.id} className="rounded-2xl bg-white/80 p-3 shadow-sm ring-1 ring-line">
             <div className="flex items-center gap-2">
               <Daisy size={18} />
@@ -100,6 +104,11 @@ export function Guestbook({ initial }: { initial: PublicWish[] }) {
             {w.message === null ? <BlurredMessage seed={w.id} /> : <p className="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-ink">{w.message}</p>}
           </article>
         ))}
+        {wishes.length > shown && (
+          <button type="button" onClick={() => setShown((n) => n + PAGE)} className="btn btn-outline w-full !py-2.5 !text-sm">
+            Xem thêm {Math.min(PAGE, wishes.length - shown)} lời chúc ({wishes.length - shown} còn lại)
+          </button>
+        )}
       </div>
     </div>
   );

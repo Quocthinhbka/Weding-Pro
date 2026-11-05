@@ -24,6 +24,15 @@ export function Envelope({ guestName, side }: { guestName: string | null; side: 
 
   function open() {
     play();
+    // Toàn màn hình ngay khi mở thiệp (cần thao tác của khách). Trình duyệt không hỗ trợ (iPhone Safari) thì bỏ qua;
+    // vào được toàn màn hình thì thử khoá hướng dọc luôn.
+    const root = document.documentElement;
+    if (root.requestFullscreen && !document.fullscreenElement) {
+      root
+        .requestFullscreen({ navigationUI: "hide" })
+        .then(() => (screen.orientation as ScreenOrientation & { lock?: (t: string) => Promise<void> })?.lock?.("portrait").catch(() => {}))
+        .catch(() => {});
+    }
     setPhase("opening");
     setTimeout(() => {
       setPhase("gone");

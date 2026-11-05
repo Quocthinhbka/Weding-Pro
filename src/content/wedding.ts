@@ -1,6 +1,7 @@
 // Cấu trúc nội dung thiệp cưới và giá trị mặc định.
 // Nội dung thật được chỉnh trong trang /admin/cau-hinh và lưu vào cơ sở dữ liệu;
 // giá trị ở đây chỉ dùng khi chưa cấu hình (hoặc khi thêm trường mới).
+import { memoryLevel } from "@/content/games";
 import { lunarText } from "@/lib/lunar";
 
 export type Person = { name: string; born: string; photo: string };
@@ -58,6 +59,8 @@ export type WeddingConfig = {
   };
   venues: Venue[];
   events: WeddingEvent[];
+  /** Ảnh riêng cho thiệp nhà gái (?f=bride); để trống thì dùng ảnh của thiệp nhà trai. */
+  bridePhotos: { groom: string; bride: string };
   /** Nhà trai (link thường hoặc ?f=groom) và nhà gái (?f=bride). */
   sides: Record<"groom" | "bride", SideInfo>;
   texts: { invitation: string; invitationBride: string; thankYou: string; guestFallback: string };
@@ -67,7 +70,8 @@ export type WeddingConfig = {
   album: string[];
   gifts: Gift[];
   sections: Record<SectionKey, boolean>;
-  games: { quizSeconds: number };
+  /** `memoryLevelPhotos[i]`: ảnh chọn riêng cho level i+1 của trò lật hình (6, 8, 10 ảnh); thiếu thì bù bằng ảnh album. */
+  games: { quizSeconds: number; memoryLevelPhotos: string[][] };
 };
 
 export const defaultConfig: WeddingConfig = {
@@ -106,6 +110,7 @@ export const defaultConfig: WeddingConfig = {
     { id: "com-nha-hang", title: "Bữa cơm thân mật", time: "17:15", venueId: "nha-hang" },
     { id: "thanh-hon", title: "Lễ Thành Hôn", time: "18:00", venueId: "nha-hang" },
   ],
+  bridePhotos: { groom: "", bride: "" },
   sides: {
     groom: { eventId: "thanh-hon", title: "Lễ Thành Hôn", feastEventId: "com-nha-hang" },
     bride: { eventId: "xin-dau", title: "Lễ Vu Quy", feastEventId: "com-nha-gai" },
@@ -130,7 +135,7 @@ export const defaultConfig: WeddingConfig = {
     { title: "Mừng cưới cô dâu", bank: "Tên ngân hàng", accountNumber: "0000000000", accountName: "TEN CHU TAI KHOAN", qr: "/images/qr-bride.svg", bankApp: "" },
   ],
   sections: { music: true, loveStory: true, album: true, guestbook: true, video: true, games: true, gifts: true },
-  games: { quizSeconds: 20 },
+  games: { quizSeconds: 20, memoryLevelPhotos: [[], [], []] },
 };
 
 /* ---------- Giá trị suy ra từ cấu hình ---------- */
@@ -168,9 +173,23 @@ export function rsvpGroups(c: WeddingConfig) {
   return c.venues.map((v) => ({ key: v.id, label: v.rsvpLabel || v.name }));
 }
 
-/** Ảnh cho một level lật hình: lấy các ảnh đầu của album. Album chưa đủ ảnh thì level đó chưa chơi được (trả về mảng ngắn hơn). */
-export function memoryImages(c: WeddingConfig, pairs: number) {
-  return c.album.slice(0, pairs);
+/**
+ * Ảnh cho một level lật hình (level 1: 6 ảnh, level 2: 8, level 3: 10): các ảnh chọn riêng cho level đó trước,
+ * thiếu thì bù bằng các ảnh đầu của album (không trùng). Chưa đủ ảnh thì level đó chưa chơi được (trả về mảng ngắn hơn số cặp).
+ */
+export function memoryImages(c: WeddingConfig, level: number) {
+  const pairs = memoryLevel(level)?.pairs ?? 0;
+  const chosen = [...new Set(c.games.memoryLevelPhotos[level - 1] ?? [])].slice(0, pairs);
+  return [...chosen, ...c.album.filter((a) => !chosen.includes(a))].slice(0, pairs);
+}
+
+/**
+ * Ảnh cô dâu / chú rể hiện trong ngôi nhà: thiệp nhà trai dùng `groom.photo` / `bride.photo`;
+ * thiệp nhà gái dùng ảnh riêng `bridePhotos`, ô nào để trống thì dùng lại ảnh của thiệp nhà trai.
+ */
+export function couplePhotos(c: WeddingConfig, side: Side) {
+  const own = side === "bride" ? c.bridePhotos : { groom: "", bride: "" };
+  return { groom: own.groom || c.groom.photo, bride: own.bride || c.bride.photo };
 }
 
 /** Link mở thiệp có ?f=bride là thiệp nhà gái, còn lại (kể cả ?f=groom) là thiệp nhà trai. */

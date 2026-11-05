@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { CropDialog } from "./crop-dialog";
+import { MediaPicker } from "./media-picker";
 
 // Các ô nhập dùng trong trang cấu hình thiệp.
 
@@ -133,8 +134,21 @@ export function ImageField({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [library, setLibrary] = useState(false);
   const [over, setOver] = useState(false);
   const [error, setError] = useState("");
+
+  /** Chọn ảnh có sẵn trong thư viện: tải về rồi đưa vào hộp căn chỉnh như ảnh vừa chọn từ máy. */
+  async function fromLibrary(url: string) {
+    setLibrary(false);
+    setError("");
+    try {
+      const blob = await (await fetch(url)).blob();
+      setFile(new File([blob], url.split("/").pop() ?? "anh", { type: blob.type || "image/webp" }));
+    } catch {
+      setError("Không mở được ảnh này từ thư viện.");
+    }
+  }
 
   function pick(f: File | undefined) {
     if (input.current) input.current.value = "";
@@ -173,12 +187,18 @@ export function ImageField({
         <button type="button" className="rounded-lg bg-olive px-3 py-1.5 text-xs text-white hover:bg-olive-deep" onClick={() => input.current?.click()}>
           {value ? "Đổi ảnh" : "Tải ảnh lên"}
         </button>
+        {kind === "photo" && (
+          <button type="button" className="rounded-lg border border-line bg-white px-3 py-1.5 text-xs hover:bg-paper" onClick={() => setLibrary(true)}>
+            Chọn từ thư viện
+          </button>
+        )}
         {optional && value && (
           <button type="button" className="rounded-lg border border-line bg-white px-3 py-1.5 text-xs hover:bg-paper" onClick={() => onChange("")}>
             Bỏ ảnh
           </button>
         )}
       </div>
+      {library && <MediaPicker title={`Chọn ảnh: ${label}`} exclude={[value]} onPick={([url]) => void fromLibrary(url)} onClose={() => setLibrary(false)} />}
       {error && <p className="mt-1 text-xs text-[#8a4a3e]">{error}</p>}
       <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
       {file && (
