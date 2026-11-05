@@ -43,3 +43,7 @@ export function formatLucky(n: number) {
 export function accrueCredits(credits: number, days: number, max: number) {
   return credits >= max ? credits : Math.min(max, credits + Math.max(0, days));
 }
+
+/** Thưởng lượt quay khi hoàn thành level lật hình: mỗi level chỉ nhận một lần, ghi nhớ bằng bit (level 1 = bit 0…). */
+export const levelBonusGiven = (mask: number, level: number) => (mask & (1 << (level - 1))) !== 0;
+export const withLevelBonus = (mask: number, level: number) => mask | (1 << (level - 1));

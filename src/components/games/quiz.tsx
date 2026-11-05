@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatDuration } from "@/lib/wedding-time";
 import { postJson, useGuest } from "@/components/site/guest";
 import { QUIZ_BONUS_SCORE } from "@/content/games";
+import { Modal } from "@/components/ui/modal";
 import { Leaderboard } from "./shared";
 
 type Question = { question: string; options: string[] };
@@ -89,62 +90,79 @@ export function Quiz({ total, seconds }: { total: number; seconds: number }) {
   }, [now, deadline, phase]);
   const left = Math.max(0, Math.ceil((deadline - now) / 1000));
 
-  if (phase === "intro") {
+  // Màn hướng dẫn kèm bảng xếp hạng. Xong bài thì kết quả + bảng xếp hạng hiện trong hộp thoại phía trên màn này.
+  if (phase === "intro" || phase === "result") {
     return (
-      <div className="space-y-6">
-        <div className="rounded-[2rem] bg-paper/70 p-6 text-center text-sm leading-relaxed text-ink-soft ring-1 ring-line">
-          <p>Gồm <b className="text-ink">{total} câu hỏi</b>, mỗi câu có {perQuestion} giây.</p>
-          <p className="mt-1">Chơi lại bao nhiêu lần cũng được, bảng xếp hạng lấy <b className="text-ink">lượt tốt nhất</b> (nhiều điểm hơn, rồi nhanh hơn).</p>
-          <p className="mt-1">Đúng từ <b className="text-ink">{Math.min(QUIZ_BONUS_SCORE, total)} câu</b> được tặng thêm <b className="text-ink">1 lượt quay</b> (nhận một lần duy nhất) 🎡</p>
-          <p className="mt-1">Top 3 nhận quà tại tiệc cưới 🎁</p>
-          {error && <p className="mt-3 text-[#8a4a3e]">{error}</p>}
-          <button type="button" onClick={start} className="btn btn-primary mt-5 w-full">
+      <div className="space-y-5">
+        <div className="space-y-1.5 rounded-[2rem] bg-paper/70 p-5 text-center text-sm leading-relaxed text-ink-soft ring-1 ring-line">
+          <p>
+            <b className="text-ink">{total} câu hỏi</b> · mỗi câu {perQuestion} giây
+          </p>
+          <p>
+            Đúng từ <b className="text-ink">{Math.min(QUIZ_BONUS_SCORE, total)}/{total}</b> câu: +1 lượt quay 🎡
+            <br />
+            <span className="text-xs">(nhận một lần duy nhất)</span>
+          </p>
+          <p>
+            Xếp hạng: nhiều câu đúng nhất,
+            <br />
+            rồi nhanh nhất. Top 3 nhận quà 🎁
+          </p>
+          {error && <p className="text-[#8a4a3e]">{error}</p>}
+          <button type="button" onClick={start} className="btn btn-primary mt-3 w-full">
             Bắt đầu
           </button>
         </div>
         <Leaderboard game="quiz" version={version} />
-      </div>
-    );
-  }
 
-  if (phase === "result" && result) {
-    return (
-      <div className="space-y-6">
-        <div className="rounded-[2rem] bg-cream p-6 text-center shadow-sm ring-1 ring-line">
-          <p className="text-xs uppercase tracking-[0.3em] text-ink-soft">Kết quả của bạn</p>
-          <p className="mt-2 font-serif text-6xl text-olive-deep">
-            {result.score}
-            <span className="text-2xl text-ink-soft">/{result.total}</span>
-          </p>
-          <p className="mt-1 text-sm text-ink-soft">Thời gian: {formatDuration(result.durationMs)}</p>
-          <p className="mt-3 font-script text-3xl text-olive">
-            {result.score === result.total ? "Bạn hiểu dâu rể nhất rồi!" : result.score >= result.total / 2 ? "Giỏi quá!" : "Cảm ơn bạn đã chơi!"}
-          </p>
-          {result.bonus === "granted" && <p className="mt-3 rounded-xl bg-olive/10 px-3 py-2 text-sm font-medium text-olive-deep">🎡 Bạn được tặng thêm 1 lượt quay! Sang Vòng quay may mắn để quay nhé.</p>}
-          {result.bonus === "already" && <p className="mt-3 text-sm text-ink-soft">Bạn đã nhận lượt quay thưởng từ đố vui rồi (chỉ nhận một lần).</p>}
-          {result.bonus === "none" && result.score < Math.min(QUIZ_BONUS_SCORE, result.total) && (
-            <p className="mt-3 text-sm text-ink-soft">Đúng từ {Math.min(QUIZ_BONUS_SCORE, result.total)} câu sẽ được tặng thêm 1 lượt quay – chơi lại để thử nhé!</p>
+        <Modal open={phase === "result" && !!result} onClose={() => setPhase("intro")} title="Kết quả của bạn">
+          {result && (
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-white/80 p-4 text-center ring-1 ring-line">
+                <p className="font-serif text-6xl text-olive-deep">
+                  {result.score}
+                  <span className="text-2xl text-ink-soft">/{result.total}</span>
+                </p>
+                <p className="mt-1 text-sm text-ink-soft">Thời gian: {formatDuration(result.durationMs)}</p>
+                <p className="mt-2 font-script text-3xl text-olive">
+                  {result.score === result.total ? "Bạn hiểu dâu rể nhất rồi!" : result.score >= result.total / 2 ? "Giỏi quá!" : "Cảm ơn bạn đã chơi!"}
+                </p>
+                {result.bonus === "granted" && <p className="mt-3 rounded-xl bg-olive/10 px-3 py-2 text-sm font-medium text-olive-deep">🎡 Bạn được tặng thêm 1 lượt quay! Sang Vòng quay may mắn để quay nhé.</p>}
+                {result.bonus === "already" && <p className="mt-3 text-sm text-ink-soft">Bạn đã nhận lượt quay thưởng từ đố vui rồi (chỉ nhận một lần).</p>}
+                {result.bonus === "none" && result.score < Math.min(QUIZ_BONUS_SCORE, result.total) && (
+                  <p className="mt-3 text-sm text-ink-soft">Đúng từ {Math.min(QUIZ_BONUS_SCORE, result.total)}/{result.total} câu sẽ được tặng thêm 1 lượt quay – chơi lại để thử nhé!</p>
+                )}
+              </div>
+              <Leaderboard game="quiz" version={version} />
+              {result.correct.length > 0 && (
+                <details className="rounded-2xl bg-white/80 p-3 text-sm ring-1 ring-line">
+                  <summary className="cursor-pointer font-medium text-ink">Xem đáp án</summary>
+                  <div className="mt-2 space-y-2">
+                    {questions.map((q, i) => {
+                      const ok = answers[i] === result.correct[i];
+                      return (
+                        <div key={i}>
+                          <p className="whitespace-pre-line font-medium text-ink">
+                            {ok ? "✅" : "❌"} {q.question}
+                          </p>
+                          <p className="text-ink-soft">Đáp án: <b className="text-olive-deep">{q.options[result.correct[i]]}</b></p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setPhase("intro")} className="btn btn-outline">
+                  Quay về
+                </button>
+                <button type="button" onClick={start} className="btn btn-primary">
+                  Chơi lại
+                </button>
+              </div>
+            </div>
           )}
-          <button type="button" onClick={() => setPhase("intro")} className="btn btn-primary mt-4">
-            Chơi lại
-          </button>
-        </div>
-        {result.correct.length > 0 && (
-          <div className="space-y-2">
-            {questions.map((q, i) => {
-              const ok = answers[i] === result.correct[i];
-              return (
-                <div key={i} className="rounded-2xl bg-white/80 p-4 text-sm ring-1 ring-line">
-                  <p className="whitespace-pre-line font-medium text-ink">
-                    {ok ? "✅" : "❌"} {q.question}
-                  </p>
-                  <p className="mt-1 text-ink-soft">Đáp án: <b className="text-olive-deep">{q.options[result.correct[i]]}</b></p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        <Leaderboard game="quiz" version={version} />
+        </Modal>
       </div>
     );
   }

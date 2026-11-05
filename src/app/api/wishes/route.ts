@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { currentGuest } from "@/lib/guest";
 import { jsonError, parseJson, rateLimit, TOO_MANY } from "@/lib/http";
-import { addWish, visibleWishes } from "@/lib/queries";
-
-export async function GET() {
-  return Response.json({ wishes: visibleWishes() });
-}
+import { addWish } from "@/lib/queries";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Vui lòng nhập tên của bạn").max(80, "Tên quá dài"),

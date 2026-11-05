@@ -64,13 +64,6 @@ export async function createInvites(text: string, side: string) {
   return names.length;
 }
 
-export async function updateInvite(id: number, displayName: string) {
-  await requireAdmin();
-  const name = displayName.trim().slice(0, 80);
-  if (name) run("UPDATE invites SET display_name = ? WHERE id = ?", name, id);
-  refresh();
-}
-
 export async function deleteInvite(id: number) {
   await requireAdmin();
   run("DELETE FROM invites WHERE id = ?", id);

@@ -7,9 +7,9 @@ export const quizMinMsPerQuestion = 800;
 export const memoryMinMsPerPair = 1000;
 
 export const gamesList = [
-  { id: "wheel", icon: "🎡", title: "Vòng quay may mắn", subtitle: "Mỗi ngày bạn được tặng thêm 1 lượt quay. Chúc bạn may mắn!", text: "Mỗi ngày +1 lượt quay (dồn tối đa 3), xem lại lịch sử quay." },
-  { id: "quiz", icon: "💡", title: "Đố vui về dâu rể", subtitle: "", text: "Đúng từ 8 câu tặng thêm 1 lượt quay. Top 3 nhận quà." },
-  { id: "memory", icon: "🃏", title: "Lật hình ghép cặp", subtitle: "Tìm các cặp ảnh giống nhau nhanh nhất có thể!", text: "3 level: 6, 8 và 10 cặp. Ai nhanh nhất sẽ có quà!" },
+  { id: "wheel", icon: "🎡", title: "Vòng quay may mắn", subtitle: "Quay trúng quà, mỗi ngày +1 lượt.", text: "Mỗi ngày +1 lượt quay" },
+  { id: "quiz", icon: "💡", title: "Đố vui về dâu rể", subtitle: "", text: "Đúng 8/10 câu: +1 lượt quay" },
+  { id: "memory", icon: "🃏", title: "Lật hình ghép cặp", subtitle: "Ghép hết các cặp ảnh trước khi hết giờ.", text: "3 level · xong mỗi level +1 lượt" },
 ] as const;
 export type GameId = (typeof gamesList)[number]["id"];
 
@@ -18,11 +18,12 @@ export const MAX_SPIN_CREDITS = 3;
 /** Đố vui: đúng từ chừng này câu trở lên được tặng thêm 1 lượt quay (nhận một lần duy nhất). */
 export const QUIZ_BONUS_SCORE = 8;
 
-/** Các level trò lật hình: số cặp và bàn chơi `cols` cột × `rows` hàng (ngang/dọc). */
+/** Các level trò lật hình: số cặp, bàn chơi `cols` cột × `rows` hàng (ngang/dọc) và thời gian tối đa `seconds` (đếm ngược). */
 export const MEMORY_LEVELS = [
-  { level: 1, pairs: 6, cols: 4, rows: 3 },
-  { level: 2, pairs: 8, cols: 4, rows: 4 },
-  { level: 3, pairs: 10, cols: 4, rows: 5 },
+  { level: 1, pairs: 6, cols: 4, rows: 3, seconds: 45 },
+  { level: 2, pairs: 8, cols: 4, rows: 4, seconds: 60 },
+  { level: 3, pairs: 10, cols: 4, rows: 5, seconds: 75 },
 ] as const;
-export type MemoryLevel = (typeof MEMORY_LEVELS)[number]["level"];
+/** Chờ thêm chừng này giây (trễ mạng) khi máy chủ kiểm tra thời gian hoàn thành. */
+export const MEMORY_GRACE_SECONDS = 5;
 export const memoryLevel = (n: number) => MEMORY_LEVELS.find((l) => l.level === n);

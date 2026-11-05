@@ -50,18 +50,18 @@ export function GamesSector({ quizTotal }: { quizTotal: number }) {
 
   return (
     <div>
-      <SectionTitle compact eyebrow="Mini Games" title="Trò chơi có thưởng" subtitle="Vừa chơi vừa chờ ngày vui – quà được trao tận tay tại tiệc cưới!" />
+      <SectionTitle compact eyebrow="Mini Games" title="Trò chơi có thưởng" subtitle="Vừa chơi vừa chờ ngày vui, quà trao tận tay tại tiệc!" />
 
       <div className="mb-4 rounded-[2rem] bg-olive px-6 py-5 text-center text-white shadow-md">
         <p className="text-xs uppercase tracking-[0.3em] text-white/80">Bốc số may mắn tại tiệc</p>
         {lucky ? (
           <>
             <p className="mt-2 font-serif text-5xl tracking-widest">{formatLucky(lucky)}</p>
-            <p className="mt-2 text-sm text-white/85">Đây là số may mắn của bạn – nhớ có mặt lúc MC quay số nhé!</p>
+            <p className="mt-2 text-sm text-white/85">Số may mắn của bạn.<br />Nhớ có mặt lúc MC quay số nhé!</p>
           </>
         ) : (
           <>
-            <p className="mt-2 text-sm text-white/90">Xác nhận tham dự để nhận một con số may mắn và cơ hội trúng quà tại tiệc.</p>
+            <p className="mt-2 text-sm text-white/90">Xác nhận tham dự để nhận<br />số may mắn và cơ hội trúng quà.</p>
             <button type="button" onClick={openRsvp} className="btn mt-4 bg-white text-olive-deep">
               Nhận số may mắn
             </button>

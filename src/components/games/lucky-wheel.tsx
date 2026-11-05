@@ -9,6 +9,7 @@ import { Daisy } from "@/components/ui/daisy";
 
 type Prize = { id: number; label: string; color: string };
 type SpinResult = NonNullable<GuestState["spin"]>;
+type Winner = { name: string; label: string; at: number };
 
 const R = 150;
 const SPIN_MS = 5200;
@@ -34,8 +35,10 @@ function angleFor(index: number, count: number) {
 }
 
 export function LuckyWheel() {
-  const { state, setState, openRsvp } = useGuest();
+  const { state, setState } = useGuest();
   const [prizes, setPrizes] = useState<Prize[] | null>(null);
+  const [winners, setWinners] = useState<Winner[]>([]);
+  const [tab, setTab] = useState<"winners" | "history">("winners");
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<SpinResult | null>(null);
@@ -44,7 +47,10 @@ export function LuckyWheel() {
   useEffect(() => {
     fetch("/api/games/wheel", { cache: "no-store" })
       .then((r) => r.json())
-      .then((d: { prizes: Prize[] }) => setPrizes(d.prizes))
+      .then((d: { prizes: Prize[]; winners: Winner[] }) => {
+        setPrizes(d.prizes);
+        setWinners(d.winners);
+      })
       .catch(() => setError("Không tải được vòng quay"));
   }, []);
 
@@ -68,6 +74,7 @@ export function LuckyWheel() {
         setResult(data.spin);
         // Cập nhật lượt còn lại và lịch sử sau khi vòng quay dừng (không lộ kết quả sớm).
         setState({ ...state, credits: data.credits, spin: data.spin, spins: [data.spin, ...state.spins] });
+        if (data.spin.isWin) setWinners((w) => [{ name: state.guest?.name ?? "Bạn", label: data.spin.label, at: data.spin.at }, ...w]);
       }, SPIN_MS);
     } catch (err) {
       setSpinning(false);
@@ -78,7 +85,6 @@ export function LuckyWheel() {
   if (!prizes) return <p className="py-10 text-center text-sm text-ink-soft">{error || "Đang tải…"}</p>;
 
   const seg = 360 / prizes.length;
-  const attending = state?.rsvp?.attending;
   // Lượt đang quay đã bị trừ ở máy chủ nhưng chưa hiện ra: hiển thị cộng thêm 1 cho đến khi vòng quay dừng.
   const shownCredits = credits;
 
@@ -127,10 +133,10 @@ export function LuckyWheel() {
         <button
           type="button"
           onClick={spin}
-          disabled={spinning || !attending || shownCredits <= 0}
-          className="absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-cream text-sm font-bold uppercase tracking-wider text-olive-deep shadow-lg ring-4 ring-white disabled:opacity-100"
+          disabled={spinning || shownCredits <= 0}
+          className="absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-cream text-sm font-semibold uppercase tracking-wider text-olive-deep shadow-lg ring-4 ring-white disabled:opacity-100"
         >
-          {spinning ? "…" : shownCredits <= 0 && attending ? <Daisy size={44} /> : "Quay"}
+          {spinning ? "…" : shownCredits <= 0 ? <Daisy size={44} /> : "Quay"}
         </button>
       </div>
 
@@ -138,22 +144,18 @@ export function LuckyWheel() {
       <div className="mx-auto mt-4 max-w-[340px] rounded-2xl bg-white/80 px-4 py-3 text-sm ring-1 ring-line">
         <p className="text-ink">
           Lượt quay còn lại: <b className="text-lg text-olive-deep">{shownCredits}</b>
-          <span className="text-ink-soft"> / {MAX_SPIN_CREDITS}+</span>
         </p>
-        <p className="mt-0.5 text-xs text-ink-soft">Mỗi ngày bạn được tặng thêm 1 lượt (dồn tối đa {MAX_SPIN_CREDITS} lượt). Đố vui đúng từ {QUIZ_BONUS_SCORE} câu tặng thêm 1 lượt.</p>
-        {attending && shownCredits <= 0 && !spinning && <p className="mt-1 text-xs font-medium text-[#8a4a3e]">Hết lượt rồi, mai quay tiếp nhé!</p>}
+        <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+          Mỗi ngày +1 lượt, dồn tối đa {MAX_SPIN_CREDITS}.
+          <br />
+          Thưởng thêm: đố vui đúng {QUIZ_BONUS_SCORE}/10 câu,
+          <br />
+          xong mỗi level lật hình.
+        </p>
+        {shownCredits <= 0 && !spinning && <p className="mt-1 text-xs font-medium text-[#8a4a3e]">Hết lượt rồi, mai quay tiếp nhé!</p>}
       </div>
 
       {error && <p className="mt-4 text-sm text-[#8a4a3e]">{error}</p>}
-
-      {!attending && (
-        <div className="mt-4 rounded-2xl bg-paper p-5 text-sm text-ink-soft">
-          Xác nhận tham dự để được quay.
-          <button type="button" onClick={openRsvp} className="btn btn-primary mt-3 w-full">
-            Xác nhận tham dự để quay
-          </button>
-        </div>
-      )}
 
       {result && !spinning && (
         <div className="mt-4 rounded-[2rem] bg-cream p-6 shadow-sm ring-1 ring-line">
@@ -176,15 +178,42 @@ export function LuckyWheel() {
         </div>
       )}
 
-      {/* Lịch sử quay */}
-      <div className="mt-5 rounded-[1.75rem] bg-white/80 p-4 text-left ring-1 ring-line">
-        <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] text-olive">Lịch sử quay ({history.length})</p>
-        {history.length === 0 ? (
-          <p className="py-3 text-center text-sm text-ink-soft">Bạn chưa quay lần nào.</p>
+      {/* Hai tab: người trúng quà (mặc định) và lịch sử quay của bạn */}
+      <div className="mt-5 rounded-[1.75rem] bg-white/80 p-3 text-left ring-1 ring-line">
+        <div className="grid grid-cols-2 gap-1 rounded-full bg-paper p-1 text-xs font-medium" role="tablist" aria-label="Danh sách">
+          {([["winners", `🏆 Người may mắn (${winners.length})`], ["history", `🕘 Lịch sử quay (${history.length})`]] as const).map(([k, label]) => (
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`rounded-full px-2 py-2 transition ${tab === k ? "bg-olive text-white shadow" : "text-ink-soft"}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "winners" ? (
+          winners.length === 0 ? (
+            <p className="py-4 text-center text-sm text-ink-soft">
+              Chưa ai trúng quà.
+              <br />
+              Bạn có thể là người đầu tiên!
+            </p>
+          ) : (
+            <ol className="mt-2 max-h-56 divide-y divide-line/70 overflow-y-auto text-sm">
+              {winners.map((w, i) => (
+                <li key={`${w.at}-${i}`} className="flex items-start gap-3 px-1 py-2">
+                  <span className="w-24 shrink-0 text-xs tabular-nums text-ink-soft">{formatVnTime(w.at)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-ink">{w.name}</span>
+                    <span className="block text-xs text-olive-deep">🎁 {w.label}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )
+        ) : history.length === 0 ? (
+          <p className="py-4 text-center text-sm text-ink-soft">Bạn chưa quay lần nào.</p>
         ) : (
-          <ol className="mt-2 max-h-52 divide-y divide-line/70 overflow-y-auto overscroll-y-contain text-sm">
+          <ol className="mt-2 max-h-56 divide-y divide-line/70 overflow-y-auto text-sm">
             {history.map((h, i) => (
-              <li key={`${h.at}-${i}`} className="flex items-start gap-3 py-2">
+              <li key={`${h.at}-${i}`} className="flex items-start gap-3 px-1 py-2">
                 <span className="w-24 shrink-0 text-xs tabular-nums text-ink-soft">{formatVnTime(h.at)}</span>
                 <span className="min-w-0 flex-1">
                   <span className={h.isWin ? "font-semibold text-olive-deep" : "text-ink-soft"}>{h.isWin ? `🎁 ${h.label}` : h.label}</span>

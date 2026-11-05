@@ -33,7 +33,7 @@ export function JoinGate({ children }: { children: ReactNode }) {
 
   return (
     <form onSubmit={submit} className="space-y-3 rounded-[2rem] bg-paper/70 p-6 ring-1 ring-line">
-      <p className="text-center text-sm text-ink-soft">Cho chúng mình biết bạn là ai để trao quà đúng người nhé!</p>
+      <p className="text-center text-sm text-ink-soft">Để lại tên và số điện thoại<br />là chơi và nhận giải được ngay.</p>
       <input className="field" placeholder="Tên của bạn *" value={displayName} onChange={(e) => setName(e.target.value)} required maxLength={80} />
       <input className="field" placeholder="Số điện thoại *" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required maxLength={20} />
       {error && <p className="text-sm text-[#8a4a3e]">{error}</p>}

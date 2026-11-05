@@ -4,9 +4,9 @@
 import { memoryLevel } from "@/content/games";
 import { lunarText } from "@/lib/lunar";
 
-export type Person = { name: string; born: string; photo: string };
-export type FamilyMember = { role: string; name: string };
-export type Family = { label: string; members: FamilyMember[] };
+type Person = { name: string; born: string; photo: string };
+type FamilyMember = { role: string; name: string };
+type Family = { label: string; members: FamilyMember[] };
 export type Venue = {
   id: string;
   name: string;
@@ -19,8 +19,8 @@ export type Venue = {
 /** `venueId` để trống = mốc không gắn địa điểm (VD đoàn nhà trai xuất phát từ tư gia). */
 export type WeddingEvent = { id: string; title: string; time: string; venueId: string };
 /** Thiết lập riêng cho từng bên mời: sự kiện và tên hiện ở thẻ mời, buổi tiệc thân mật hiện ở phần gia đình. */
-export type SideInfo = { eventId: string; title: string; feastEventId: string };
-export type StoryItem = { title: string; text: string; image: string };
+type SideInfo = { eventId: string; title: string; feastEventId: string };
+type StoryItem = { title: string; text: string; image: string };
 export type Gift = {
   title: string;
   bank: string;
@@ -233,14 +233,6 @@ export function venueQuery(venue: Venue) {
   return venue.latLng.trim() || `${venue.name}, ${venue.address}`.replace(/\s+/g, " ");
 }
 
-export function mapEmbedUrl(venue: Venue) {
-  return `https://maps.google.com/maps?q=${encodeURIComponent(venueQuery(venue))}&z=16&output=embed`;
-}
-
 export function directionsUrl(venue: Venue) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(venueQuery(venue))}`;
-}
-
-export function mapsSearchUrl(venue: Venue) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueQuery(venue))}`;
 }

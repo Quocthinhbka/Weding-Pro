@@ -5,7 +5,7 @@ Trang thiệp cưới online, phong cách hoa cúc:
 - Phong bì "Mở thiệp" kèm nhạc nền.
 - Lịch trình hai địa điểm, bản đồ, chỉ đường, thêm vào lịch.
 - Xác nhận tham dự (RSVP).
-- Sổ lưu bút và video lời chúc (trang riêng `/wedmemo`, chuyển từ dự án WedMemo).
+- Sổ lưu bút và video lời chúc (ngay trong thiệp, dựng từ dự án WedMemo).
 - Bốn trò chơi có thưởng.
 - Hộp mừng cưới.
 - Trang quản trị `/admin`.
@@ -65,7 +65,6 @@ npm run lint
 
 - Mã vào `/admin` đặt trong file `.env.local` (không đưa lên git): `ADMIN_PASSWORD=...`.
 - Dữ liệu được lưu trong thư mục `data/`.
-- Nếu máy chưa cài `ffmpeg`, video lời chúc giữ nguyên định dạng gốc.
 
 ## Triển khai lên VPS (Docker)
 
@@ -122,9 +121,10 @@ Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nh
 - **Phong bì:** bấm vào phong bì hoặc nút "Mở thiệp" đều mở được; nắp mở trước, 0,3 giây sau giấy mời mới trượt lên và nằm trên nắp đã gập.
 - **Đĩa than** luôn hiện ở góc dưới bên trái để bật / tắt nhạc nền: đang phát thì đĩa quay, cần đọc đặt lên đĩa và có nốt nhạc bay; tắt thì đĩa đứng yên, cần nhấc lên.
 - **Trò chơi** chơi ngay trong sector, có nút "‹ Trò chơi" để quay lại danh sách; link `/tro-choi/...` cũ chuyển về `/#games`.
-  - **Vòng quay:** mỗi tài khoản (số điện thoại) có 1 lượt khi tạo; mỗi ngày (giờ Việt Nam, GMT+7) được tặng thêm 1 lượt, dồn tối đa 3. Quay cần xác nhận tham dự. Có lịch sử quay (giờ, giải, mã đổi quà).
-  - **Đố vui:** chơi lại nhiều lần, bảng xếp hạng lấy lượt tốt nhất. Đúng từ 8 câu được tặng thêm 1 lượt quay, chỉ nhận một lần cho mỗi tài khoản.
-  - **Lật hình:** 3 level, bảng xếp hạng riêng cho từng level: Level 1 có 6 cặp (bàn 4×3), Level 2 có 8 cặp (4×4), Level 3 có 10 cặp (4×5). Ảnh lấy từ các ảnh đầu của album (cần ít nhất 10 ảnh).
+  - Chỉ cần để lại **tên và số điện thoại** là chơi và nhận giải, không cần xác nhận tham dự. Màn hướng dẫn của Đố vui và Lật hình có bảng xếp hạng; đang chơi chỉ hiện trò chơi; xong (hoặc hết giờ) thì **kết quả và bảng xếp hạng hiện trong hộp thoại** kèm nút "Chơi lại" và "Quay về".
+  - **Vòng quay:** mỗi tài khoản có 1 lượt khi tạo; mỗi ngày (giờ Việt Nam, GMT+7) được tặng thêm 1 lượt, dồn tối đa 3. Danh sách bên dưới có 2 tab: **Người may mắn** (mặc định, các lượt trúng quà của mọi người chơi: tên, giải, giờ) và **Lịch sử quay** của riêng bạn (kèm mã đổi quà).
+  - **Đố vui:** chơi lại nhiều lần, bảng xếp hạng lấy lượt tốt nhất: nhiều câu đúng nhất, rồi nhanh nhất. Đúng từ 8/10 câu được tặng thêm 1 lượt quay, chỉ nhận một lần cho mỗi tài khoản.
+  - **Lật hình:** 3 level, mỗi level có đồng hồ đếm ngược: Level 1 có 6 cặp (bàn 4×3) trong 45 giây, Level 2 có 8 cặp (4×4) trong 60 giây, Level 3 có 10 cặp (4×5) trong 75 giây. Đang chơi chỉ hiện đồng hồ và thanh thời gian rút dần. Bảng xếp hạng riêng từng level: ít lượt lật nhất, rồi nhanh nhất; ván hết giờ không được tính. Lần đầu hoàn thành mỗi level được tặng 1 lượt quay.
 - **Chữ và khoảng cách:** tên cô dâu chú rể luôn nằm một dòng (tự co chữ theo chiều ngang). Màn hình thấp (cao dưới 700px) thì cỡ chữ gốc nhỏ lại để mọi sector vẫn vừa một màn hình.
 - **Điện thoại nằm ngang** bị chặn: thử khoá hướng dọc (có tác dụng khi thêm thiệp vào màn hình chính, nhờ `manifest`), còn trên trình duyệt thường thì hiện lớp phủ nhắc xoay dọc. Máy tính và máy tính bảng không bị ảnh hưởng.
 

@@ -17,7 +17,7 @@ const dancing = Dancing_Script({
 const beVietnam = Be_Vietnam_Pro({
   variable: "--font-be",
   subsets: ["latin", "vietnamese"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 

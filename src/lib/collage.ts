@@ -2,8 +2,8 @@
 // Ảnh chia vào R hàng; mỗi hàng có cùng bề ngang W nên cả mảng là một hình chữ nhật không kẽ hở.
 // Hàng có tổng tỉ lệ (rộng/cao) lớn thì thấp hơn, hàng ít ảnh dẹt thì cao hơn → ảnh to nhỏ khác nhau.
 
-export type Tile = { i: number; w: number; h: number };
-export type CollageRow = { h: number; tiles: Tile[] };
+type Tile = { i: number; w: number; h: number };
+type CollageRow = { h: number; tiles: Tile[] };
 export type Collage = { W: number; H: number; rows: CollageRow[] };
 
 // Tỉ trọng tổng tỉ lệ ảnh của từng hàng (hàng nào lớn hơn thì ảnh nhỏ hơn); lặp lại nếu cần.

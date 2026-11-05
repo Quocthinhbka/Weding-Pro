@@ -5,7 +5,7 @@ import { configSchema, quizSchema } from "./config-schema";
 import { canChiYear, lunarText, solarToLunar } from "./lunar";
 import { mergeDefaults } from "./merge";
 import { buildIcs, eventRange, foldLine, googleCalendarUrl } from "./ics";
-import { accrueCredits, formatLucky, normalizePhone, pickPrize, scoreQuiz } from "./game-logic";
+import { accrueCredits, levelBonusGiven, withLevelBonus, formatLucky, normalizePhone, pickPrize, scoreQuiz } from "./game-logic";
 import { MEMORY_LEVELS } from "@/content/games";
 import { daysBetween, monthGrid, timeRemaining, vnDate, vnDay, vnToday } from "./wedding-time";
 
@@ -224,6 +224,17 @@ describe("cấu hình", () => {
 
   it("level lật hình: 6 cặp 4×3, 8 cặp 4×4, 10 cặp 4×5, đủ số ô", () => {
     expect(MEMORY_LEVELS.map((l) => [l.pairs, l.cols, l.rows])).toEqual([[6, 4, 3], [8, 4, 4], [10, 4, 5]]);
+    expect(MEMORY_LEVELS.map((l) => l.seconds)).toEqual([45, 60, 75]); // đếm ngược theo level
     for (const l of MEMORY_LEVELS) expect(l.pairs * 2).toBe(l.cols * l.rows);
+  });
+
+  it("thưởng lượt quay khi hoàn thành level lật hình: mỗi level một lần, các level độc lập", () => {
+    let mask = 0;
+    expect([1, 2, 3].map((l) => levelBonusGiven(mask, l))).toEqual([false, false, false]);
+    mask = withLevelBonus(mask, 2);
+    expect([1, 2, 3].map((l) => levelBonusGiven(mask, l))).toEqual([false, true, false]);
+    mask = withLevelBonus(withLevelBonus(mask, 1), 3);
+    expect([1, 2, 3].every((l) => levelBonusGiven(mask, l))).toBe(true);
+    expect(withLevelBonus(mask, 2)).toBe(mask);
   });
 });

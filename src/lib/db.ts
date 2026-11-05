@@ -138,11 +138,13 @@ const MIGRATIONS: string[] = [
                     credit_day = date('now', '+7 hours');
   ALTER TABLE game_attempts ADD COLUMN level INTEGER NOT NULL DEFAULT 2;
   `,
+  // Hoàn thành mỗi level lật hình được thưởng 1 lượt quay (một lần cho mỗi level): ghi nhớ bằng bitmask.
+  `ALTER TABLE guests ADD COLUMN memory_bonus INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 const globalForDb = globalThis as unknown as { weddingDb?: DatabaseSync };
 
-export function dataDir() {
+function dataDir() {
   return process.env.DATA_DIR || path.join(process.cwd(), "data");
 }
 
@@ -176,7 +178,7 @@ function migrate(db: DatabaseSync) {
   }
 }
 
-export function getDb() {
+function getDb() {
   globalForDb.weddingDb ??= open();
   return globalForDb.weddingDb;
 }
@@ -185,7 +187,7 @@ export function getDb() {
  * Cháº¡y fn trong má»™t giao dá»‹ch ghi. node:sqlite lÃ  Ä‘á»“ng bá»™ nÃªn khÃ´ng cÃ³ request nÃ o
  * khÃ¡c chen vÃ o giá»¯a chá»«ng â€“ miá»…n lÃ  fn khÃ´ng await.
  */
-export function transaction<T>(db: DatabaseSync, fn: () => T): T {
+function transaction<T>(db: DatabaseSync, fn: () => T): T {
   db.exec("BEGIN IMMEDIATE");
   try {
     const result = fn();

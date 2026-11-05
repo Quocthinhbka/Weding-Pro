@@ -10,8 +10,8 @@ import { secret } from "./session";
 // <id>.jpg (ảnh nhỏ), <id>.tiny.jpg (ảnh mờ cho clip riêng tư), <id>.json (thông tin, ghi cuối cùng
 // nên clip chỉ hiện khi đã lưu đủ). Xoá = chuyển sang wedmemo/trash/.
 
-export const MAX_UPLOAD = 100 * 1024 * 1024; // = client_max_body_size trong nginx
-export const MAX_THUMB = 1024 * 1024;
+const MAX_UPLOAD = 100 * 1024 * 1024; // = client_max_body_size trong nginx
+const MAX_THUMB = 1024 * 1024;
 const KEY_HOURS = 3;
 
 export const ID_RE = /^[0-9a-f]{32}$/;
@@ -21,7 +21,7 @@ export const TYPES: Record<string, string> = { jpg: "image/jpeg", "tiny.jpg": "i
 // Thư mục chỉ biết lúc chạy – báo Turbopack không lần theo để khỏi đóng gói cả dự án.
 const join = (...parts: string[]) => path.join(/*turbopackIgnore: true*/ ...parts);
 export const dataDir = () => join(uploadDir(), "wedmemo");
-export const trashDir = () => join(dataDir(), "trash");
+const trashDir = () => join(dataDir(), "trash");
 
 export type ClipMeta = { id: string; name: string; private: boolean; secs: number; ts: number; ext: "mp4" | "webm"; kiosk: boolean };
 

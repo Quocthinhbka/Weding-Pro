@@ -40,12 +40,8 @@ export function WedMemo({ kiosk = false, side = "groom" }: { kiosk?: boolean; si
       {/* eslint-disable-next-line @next/next/no-page-custom-font -- chỉ một ký tự, nạp khi cần */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&text=%E5%9B%8D&display=swap" precedence="default" />
 
-      <button type="button" className="wm-pill" id="fs" hidden>
-        ⛶
-      </button>
-
       {/* Thẻ mở đầu: bấm "Bắt đầu" mới hiện hộp thoại camera */}
-      <div className="wm-start" id="start">
+      <div className="wm-start">
         <p className="wm-eyebrow" id="sTitle" />
         <div className="wm-names" id="sNames" />
         <p className="wm-date" id="sDate" />
@@ -104,7 +100,7 @@ export function WedMemo({ kiosk = false, side = "groom" }: { kiosk?: boolean; si
             </button>
           </div>
           <div className="wm-opts">
-            <div className="wm-seg privs" id="privs">
+            <div className="wm-seg privs">
               <button type="button" data-p="0" className="on">
                 🌐 Công khai
               </button>
@@ -154,7 +150,7 @@ export function WedMemo({ kiosk = false, side = "groom" }: { kiosk?: boolean; si
           Tên của bạn <span className="wm-muted">(không bắt buộc)</span>
           <input className="wm-input" id="guest" maxLength={60} placeholder="VD: Cô Ba bên nội" autoComplete="off" />
         </label>
-        <div className="wm-seg privs" id="rprivs">
+        <div className="wm-seg privs">
           <button type="button" data-p="0" className="on">
             🌐 Công khai
           </button>

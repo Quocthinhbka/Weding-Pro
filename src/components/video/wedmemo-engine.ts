@@ -577,8 +577,6 @@ async function wake() { try { wl = await navigator.wakeLock.request('screen'); }
 listen(document, 'visibilitychange', () => { if (document.visibilityState === 'visible' && (KIOSK || $('#cam').open)) wake(); });
 
 $('#startBtn').onclick = () => { if (KIOSK) enterFs(); wake(); openCamDialog(); };
-$('#fs').hidden = true;   // trong thiệp không cần nút toàn màn hình
-$('#fs').onclick = () => document.fullscreenElement ? document.exitFullscreen() : enterFs();
 
 if (KIOSK) {
   listen(document, 'fullscreenchange', () => { $('#fsguard').hidden = !!document.fullscreenElement || !$('#cam').open; });

@@ -36,8 +36,6 @@ export const BANK_APPS = [
   { id: "coopbank", name: "Co-opBank" },
 ] as const;
 
-export type BankAppId = (typeof BANK_APPS)[number]["id"];
-
 export const bankAppName = (id: string) => BANK_APPS.find((b) => b.id === id)?.name ?? "";
 
 /** Link mở thẳng ứng dụng ngân hàng (iOS / Android). Chưa chọn ngân hàng thì không có link. */

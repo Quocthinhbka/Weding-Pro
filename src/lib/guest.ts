@@ -5,7 +5,7 @@ import { get, run } from "./db";
 import { isHttpsRequest } from "./http";
 import { vnDay } from "./wedding-time";
 
-export const GUEST_COOKIE = "guest_token";
+const GUEST_COOKIE = "guest_token";
 
 export type Guest = {
   id: number;
@@ -17,6 +17,7 @@ export type Guest = {
   spin_credits: number;
   credit_day: string | null;
   quiz_bonus: number;
+  memory_bonus: number;
 };
 
 export type Invite = { id: number; code: string; display_name: string; side: string | null };

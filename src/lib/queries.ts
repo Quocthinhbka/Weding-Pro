@@ -1,10 +1,10 @@
 import "server-only";
 import crypto from "node:crypto";
 import { customAlphabet } from "nanoid";
-import { MAX_SPIN_CREDITS, memoryLevel, memoryMinMsPerPair, QUIZ_BONUS_SCORE, quizMinMsPerQuestion } from "@/content/games";
+import { MAX_SPIN_CREDITS, MEMORY_GRACE_SECONDS, memoryLevel, memoryMinMsPerPair, QUIZ_BONUS_SCORE, quizMinMsPerQuestion } from "@/content/games";
 import { getConfig, getQuiz } from "./config";
 import { all, get, run, tx } from "./db";
-import { accrueCredits, pickPrize, scoreQuiz, type PrizeRow } from "./game-logic";
+import { accrueCredits, levelBonusGiven, pickPrize, scoreQuiz, withLevelBonus, type PrizeRow } from "./game-logic";
 import type { Guest } from "./guest";
 import { daysBetween, vnDay } from "./wedding-time";
 
@@ -115,7 +115,7 @@ export function wheelPrizesPublic() {
 }
 
 /** Lịch sử quay của khách, mới nhất trước. */
-export function spinsOf(guestId: number) {
+function spinsOf(guestId: number) {
   return all<Spin>("SELECT * FROM spins WHERE guest_id = ? ORDER BY id DESC", guestId);
 }
 
@@ -123,7 +123,7 @@ export function spinsOf(guestId: number) {
  * Số lượt quay hiện có. Mỗi ngày (theo giờ Việt Nam, GMT+7) mỗi tài khoản được tặng thêm 1 lượt, dồn lại tối đa MAX_SPIN_CREDITS;
  * lượt thưởng từ đố vui có thể làm vượt mức này. Cộng dồn theo số ngày đã qua kể từ lần cộng trước.
  */
-export function refreshCredits(guestId: number, now = Date.now()) {
+function refreshCredits(guestId: number, now = Date.now()) {
   // Không tự mở giao dịch (SQLite không lồng được): gọi trong tx(...) khi cần tính nguyên tử.
   const g = get<{ spin_credits: number; credit_day: string | null }>("SELECT spin_credits, credit_day FROM guests WHERE id = ?", guestId)!;
   const today = vnDay(now);
@@ -132,6 +132,17 @@ export function refreshCredits(guestId: number, now = Date.now()) {
   const credits = accrueCredits(g.spin_credits, days, MAX_SPIN_CREDITS);
   run("UPDATE guests SET spin_credits = ?, credit_day = ? WHERE id = ?", credits, today, guestId);
   return credits;
+}
+
+export type Winner = { name: string; label: string; at: number };
+
+/** Các lượt quay trúng quà của mọi người chơi (mới nhất trước). Chỉ có tên, giải và giờ: không lộ số điện thoại hay mã đổi quà. */
+export function luckyWinners(limit = 40): Winner[] {
+  return all<{ name: string; prize_label: string; created_at: number }>(
+    `SELECT g.name, s.prize_label, s.created_at FROM spins s JOIN guests g ON g.id = s.guest_id
+     WHERE s.is_win = 1 ORDER BY s.id DESC LIMIT ?`,
+    limit,
+  ).map((r) => ({ name: r.name, label: r.prize_label, at: r.created_at }));
 }
 
 export function spinWheel(guestId: number): { spin: Spin; credits: number } | { error: string } {
@@ -172,7 +183,7 @@ export type Attempt = {
 };
 
 /** Lượt đố vui gần nhất của khách (chơi lại bao nhiêu lần cũng được, mỗi lần là một lượt mới). */
-export function quizAttemptOf(guestId: number) {
+function quizAttemptOf(guestId: number) {
   return get<Attempt>("SELECT * FROM game_attempts WHERE guest_id = ? AND game = 'quiz' ORDER BY id DESC LIMIT 1", guestId);
 }
 
@@ -186,7 +197,7 @@ export function startQuiz(guestId: number) {
   return get<Attempt>("SELECT * FROM game_attempts WHERE id = ?", Number(result.lastInsertRowid))!;
 }
 
-export type QuizBonus = "granted" | "already" | "none";
+type QuizBonus = "granted" | "already" | "none";
 
 export function submitQuiz(guestId: number, answers: (number | null)[]) {
   return tx(() => {
@@ -225,25 +236,35 @@ export function startMemory(guestId: number, level: number) {
 }
 
 export function finishMemory(guestId: number, attemptId: number, moves: number) {
-  const attempt = get<Attempt>(
-    "SELECT * FROM game_attempts WHERE id = ? AND guest_id = ? AND game = 'memory'",
-    attemptId,
-    guestId,
-  );
-  if (!attempt) return { error: "Không tìm thấy lượt chơi" };
-  if (attempt.finished_at) return { attempt };
-  const now = Date.now();
-  const duration = now - attempt.started_at;
-  const pairs = memoryLevel(attempt.level)?.pairs ?? 0;
-  if (duration < pairs * memoryMinMsPerPair) return { error: "Kết quả không hợp lệ" };
-  run("UPDATE game_attempts SET finished_at = ?, moves = ?, duration_ms = ? WHERE id = ?", now, moves, duration, attempt.id);
-  return { attempt: get<Attempt>("SELECT * FROM game_attempts WHERE id = ?", attempt.id)! };
+  return tx(() => {
+    const attempt = get<Attempt>("SELECT * FROM game_attempts WHERE id = ? AND guest_id = ? AND game = 'memory'", attemptId, guestId);
+    if (!attempt) return { error: "Không tìm thấy lượt chơi" };
+    if (attempt.finished_at) return { attempt, bonus: false };
+    const level = memoryLevel(attempt.level);
+    if (!level) return { error: "Level không hợp lệ" };
+    const now = Date.now();
+    const duration = now - attempt.started_at;
+    if (duration < level.pairs * memoryMinMsPerPair) return { error: "Kết quả không hợp lệ" };
+    // Quá giờ thì không tính (trình duyệt đã báo hết giờ từ trước; đây là kiểm tra lại ở máy chủ).
+    if (duration > (level.seconds + MEMORY_GRACE_SECONDS) * 1000) return { error: "Đã hết giờ, lượt chơi này không được tính" };
+    run("UPDATE game_attempts SET finished_at = ?, moves = ?, duration_ms = ? WHERE id = ?", now, moves, duration, attempt.id);
+    // Hoàn thành một level được tặng 1 lượt quay, mỗi level nhận một lần.
+    const g = get<{ memory_bonus: number }>("SELECT memory_bonus FROM guests WHERE id = ?", guestId)!;
+    let bonus = false;
+    if (!levelBonusGiven(g.memory_bonus, level.level)) {
+      refreshCredits(guestId);
+      run("UPDATE guests SET spin_credits = spin_credits + 1, memory_bonus = ? WHERE id = ?", withLevelBonus(g.memory_bonus, level.level), guestId);
+      bonus = true;
+    }
+    return { attempt: get<Attempt>("SELECT * FROM game_attempts WHERE id = ?", attempt.id)!, bonus };
+  });
 }
 
+/** Thành tích tốt nhất ở một level: ít lượt lật nhất, bằng nhau thì nhanh hơn. */
 export function memoryBestOf(guestId: number, level: number) {
   return get<Attempt>(
     `SELECT * FROM game_attempts WHERE guest_id = ? AND game = 'memory' AND level = ? AND finished_at IS NOT NULL
-     ORDER BY duration_ms, moves LIMIT 1`,
+     ORDER BY moves, duration_ms LIMIT 1`,
     guestId,
     level,
   );
@@ -251,7 +272,10 @@ export function memoryBestOf(guestId: number, level: number) {
 
 export type LeaderRow = { guest_id: number; name: string; score: number | null; total: number | null; moves: number | null; duration_ms: number };
 
-/** Bảng xếp hạng: đố vui lấy lượt tốt nhất của mỗi khách (nhiều điểm hơn, rồi nhanh hơn); lật hình xếp riêng theo level. */
+/**
+ * Bảng xếp hạng: đố vui ưu tiên số câu đúng (rồi nhanh hơn); lật hình xếp riêng theo level, ưu tiên ít lượt lật nhất
+ * (rồi nhanh hơn). Mỗi khách lấy lượt tốt nhất. Lượt hết giờ chưa hoàn thành thì không có trong bảng.
+ */
 export function leaderboard(game: "quiz" | "memory", limit = 10, level = 1) {
   if (game === "quiz") {
     return all<LeaderRow>(
@@ -267,10 +291,10 @@ export function leaderboard(game: "quiz" | "memory", limit = 10, level = 1) {
   return all<LeaderRow>(
     `SELECT guest_id, name, NULL AS score, NULL AS total, moves, duration_ms FROM (
        SELECT a.guest_id, g.name, a.moves, a.duration_ms,
-              ROW_NUMBER() OVER (PARTITION BY a.guest_id ORDER BY a.duration_ms, a.moves) AS rn
+              ROW_NUMBER() OVER (PARTITION BY a.guest_id ORDER BY a.moves, a.duration_ms) AS rn
        FROM game_attempts a JOIN guests g ON g.id = a.guest_id
        WHERE a.game = 'memory' AND a.level = ? AND a.finished_at IS NOT NULL
-     ) WHERE rn = 1 ORDER BY duration_ms, moves LIMIT ?`,
+     ) WHERE rn = 1 ORDER BY moves, duration_ms LIMIT ?`,
     level,
     limit,
   );
@@ -278,7 +302,7 @@ export function leaderboard(game: "quiz" | "memory", limit = 10, level = 1) {
 
 /* ---------- Trạng thái của một khách (trả cho trình duyệt) ---------- */
 
-export type SpinInfo = { label: string; isWin: boolean; code: string | null; claimed: boolean; at: number };
+type SpinInfo = { label: string; isWin: boolean; code: string | null; claimed: boolean; at: number };
 
 export type GuestState = {
   guest: { name: string; phone: string | null; side: string | null; invited: boolean } | null;

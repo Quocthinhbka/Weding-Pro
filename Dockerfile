@@ -19,8 +19,7 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
     DATA_DIR=/data
-# ffmpeg: chuyển video lời chúc sang MP4 để mọi điện thoại đều xem được
-RUN apk add --no-cache ffmpeg && mkdir -p /data && chown node:node /data
+RUN mkdir -p /data && chown node:node /data
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public

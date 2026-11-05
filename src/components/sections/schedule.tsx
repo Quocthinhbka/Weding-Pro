@@ -6,7 +6,7 @@ import { SectionTitle } from "@/components/ui/section-title";
 type Row = { kind: "venue"; venue: Venue } | { kind: "event"; event: WeddingEvent };
 
 /** Các mốc theo giờ; khi sang địa điểm khác thì chèn một dòng tên địa điểm. */
-export function timeline(config: WeddingConfig): Row[] {
+function timeline(config: WeddingConfig): Row[] {
   const rows: Row[] = [];
   let last = "";
   for (const event of [...config.events].sort((a, b) => a.time.localeCompare(b.time))) {
