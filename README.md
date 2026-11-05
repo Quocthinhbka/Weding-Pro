@@ -116,13 +116,16 @@ Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nh
 - **Chuyện tình** là sector dài 1,75 màn hình: vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector, lần 3 sang sector sau (tối đa 4 kỷ niệm).
 - **Album** (tối đa 48 ảnh) là một sector một màn hình: ảnh xếp thành một mảng khít, to nhỏ khác nhau nhưng giữ nguyên tỉ lệ từng ảnh (không cắt xén), tự trôi chậm từ phải sang trái. Giữ tay (hoặc rê chuột) thì ảnh dừng, kéo / vuốt sang trái hoặc phải để xem nhanh; thả tay ra ảnh lại tự trôi. Chạm nhanh vào ảnh để xem lớn.
 - **Lịch trình** là một dòng thời gian gồm các mốc giờ, tự nhóm theo địa điểm (kèm Chỉ đường và thêm vào lịch). Mốc không gắn địa điểm (VD đoàn nhà trai xuất phát) chọn "Không gắn địa điểm".
-- **Link nhà trai / nhà gái:** link thường (hoặc `?f=groom`) là thiệp nhà trai, `?f=bride` là thiệp nhà gái. Mỗi bên chọn riêng sự kiện và tên hiện ở thẻ mời (mặc định Lễ Thành Hôn / Lễ Vu Quy, kèm giờ, địa điểm, chỉ đường) và buổi tiệc thân mật hiện ở phần gia đình, trong mục "Địa điểm & lịch trình" của trang cấu hình. Ghép được với link mời riêng: `https://<tên-miền>/?k=<mã>&f=bride`.
+- **Link nhà trai / nhà gái:** link thường (hoặc `?f=groom`) là thiệp nhà trai, `?f=bride` là thiệp từ nhà gái: cô dâu đứng trước (bên trái) ở bìa, phong bì, gia đình, ngôi nhà, lời cảm ơn và khung video; phần Đại diện gia đình đưa nhà gái lên trước, lời mời đổi sang "lễ vu quy", thẻ "Buổi tiệc thân mật" (thời gian hẹn khách) nổi bật. Mỗi bên chọn riêng sự kiện và tên hiện ở thẻ mời (mặc định Lễ Thành Hôn / Lễ Vu Quy, kèm giờ, địa điểm, chỉ đường) và buổi tiệc thân mật hiện ở phần gia đình, trong mục "Địa điểm & lịch trình" của trang cấu hình. Ghép được với link mời riêng: `https://<tên-miền>/?k=<mã>&f=bride`.
 - **Hộp mừng cưới** là một hòm bấm để mở hộp thoại mã QR. Chọn ứng dụng ngân hàng trong trang cấu hình thì bấm vào QR sẽ mở thẳng app đó (qua deeplink VietQR) và chép sẵn số tài khoản.
 - **Phong bì:** bấm vào phong bì hoặc nút "Mở thiệp" đều mở được; nắp mở trước, 0,3 giây sau giấy mời mới trượt lên và nằm trên nắp đã gập.
 - **Đĩa than** luôn hiện ở góc dưới bên trái để bật / tắt nhạc nền: đang phát thì đĩa quay, cần đọc đặt lên đĩa và có nốt nhạc bay; tắt thì đĩa đứng yên, cần nhấc lên.
-- **Trò chơi** (vòng quay, đố vui, lật hình) chơi ngay trong sector, có nút "‹ Trò chơi" để quay lại danh sách; link `/tro-choi/...` cũ chuyển về `/#games`.
+- **Trò chơi** chơi ngay trong sector, có nút "‹ Trò chơi" để quay lại danh sách; link `/tro-choi/...` cũ chuyển về `/#games`.
+  - **Vòng quay:** mỗi tài khoản (số điện thoại) có 1 lượt khi tạo; mỗi ngày (giờ Việt Nam, GMT+7) được tặng thêm 1 lượt, dồn tối đa 3. Quay cần xác nhận tham dự. Có lịch sử quay (giờ, giải, mã đổi quà).
+  - **Đố vui:** chơi lại nhiều lần, bảng xếp hạng lấy lượt tốt nhất. Đúng từ 8 câu được tặng thêm 1 lượt quay, chỉ nhận một lần cho mỗi tài khoản.
+  - **Lật hình:** 3 level, bảng xếp hạng riêng cho từng level: Level 1 có 6 cặp (bàn 4×3), Level 2 có 8 cặp (4×4), Level 3 có 10 cặp (4×5). Ảnh lấy từ các ảnh đầu của album (cần ít nhất 10 ảnh).
 - **Chữ và khoảng cách:** tên cô dâu chú rể luôn nằm một dòng (tự co chữ theo chiều ngang). Màn hình thấp (cao dưới 700px) thì cỡ chữ gốc nhỏ lại để mọi sector vẫn vừa một màn hình.
-- Màn hình quá thấp (cao dưới 560px, như máy nằm ngang) thì tắt snap, cuộn như trang thường.
+- **Điện thoại nằm ngang** bị chặn: thử khoá hướng dọc (có tác dụng khi thêm thiệp vào màn hình chính, nhờ `manifest`), còn trên trình duyệt thường thì hiện lớp phủ nhắc xoay dọc. Máy tính và máy tính bảng không bị ảnh hưởng.
 
 ## Nội dung nhiều dòng
 
@@ -152,9 +155,9 @@ Khách để lại lời chúc **công khai** hoặc **riêng tư**. Lời chúc
 
 ## Video lời chúc
 
-Sector "Video chúc mừng" trong thiệp (dựng từ dự án WedMemo, mã ở `src/components/video/`): quay bằng camera, chọn 1 trong 10 khung in thẳng vào video (tên và ngày lấy từ trang Cấu hình thiệp), đếm ngược, chọn 15/30/60 giây, đổi camera, xem lại rồi gửi, xem thư viện lời chúc. Không dẫn sang trang khác.
+Sector "Video chúc mừng" trong thiệp: thẻ mở đầu, bấm **Bắt đầu ghi lời chúc** thì hiện hộp thoại camera (khung dọc, cao/ngang = 4/3) có xem trước kèm khung đã chọn và nút quay đỏ. Bấm nút đỏ: đếm ngược 3 giây rồi quay; trên nút hiện số giây còn lại và vòng tròn bên ngoài chạy theo thời gian; bấm lần nữa để dừng. Quay xong xem lại rồi gửi. Cuối sector là dải thumbnail các lời chúc video (dựng từ dự án WedMemo, mã ở `src/components/video/`).
 
-- Clip **công khai** ai cũng xem được. Clip **riêng tư** chỉ xem khi bấm **Mở khoá** trong thư viện và nhập mã `WEDMEMO_CODE` trong `.env`; rời thư viện là tự khoá lại. Sau khi mở khoá có nút xoá (chuyển vào thư mục `trash`).
+- Clip **công khai** ai cũng xem được. Clip **riêng tư** chỉ xem khi bấm **Mở khoá** ở dải thumbnail và nhập mã `WEDMEMO_CODE` trong `.env` (tự khoá lại sau 3 giờ hoặc bấm **Khoá lại**). Sau khi mở khoá có nút xoá (chuyển vào thư mục `trash`).
 - Clip chưa gửi được (mất mạng) nằm trong trình duyệt của máy đã ghi và tự gửi lại khi có mạng.
 - **Máy ở sảnh:** mở `https://<tên-miền>/wedmemo/kiosk` bằng Chrome/Edge chế độ kiosk, cho phép camera + micro một lần. Có màn hình chào kèm mã QR (trỏ về sector video), chống thoát toàn màn hình, tự về màn hình chào sau 90 giây không ai chạm.
   ```

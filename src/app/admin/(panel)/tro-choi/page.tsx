@@ -19,7 +19,9 @@ export default async function GamesAdminPage() {
   );
   const boards = [
     ["Đố vui (top 10)", leaderboard("quiz")],
-    ["Lật hình (top 10)", leaderboard("memory")],
+    ["Lật hình level 1 – 6 cặp (top 10)", leaderboard("memory", 10, 1)],
+    ["Lật hình level 2 – 8 cặp (top 10)", leaderboard("memory", 10, 2)],
+    ["Lật hình level 3 – 10 cặp (top 10)", leaderboard("memory", 10, 3)],
   ] as const;
 
   return (

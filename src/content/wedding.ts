@@ -60,14 +60,14 @@ export type WeddingConfig = {
   events: WeddingEvent[];
   /** Nhà trai (link thường hoặc ?f=groom) và nhà gái (?f=bride). */
   sides: Record<"groom" | "bride", SideInfo>;
-  texts: { invitation: string; thankYou: string; guestFallback: string };
+  texts: { invitation: string; invitationBride: string; thankYou: string; guestFallback: string };
   heroImage: string;
   music: { src: string; title: string; artist: string };
   loveStory: StoryItem[];
   album: string[];
   gifts: Gift[];
   sections: Record<SectionKey, boolean>;
-  games: { quizSeconds: number; memoryPairs: number };
+  games: { quizSeconds: number };
 };
 
 export const defaultConfig: WeddingConfig = {
@@ -112,6 +112,7 @@ export const defaultConfig: WeddingConfig = {
   },
   texts: {
     invitation: "Trân trọng kính mời quý khách đến dự buổi lễ thành hôn và chung vui cùng gia đình chúng tôi!",
+    invitationBride: "Trân trọng kính mời quý khách đến dự buổi lễ vu quy và chung vui cùng gia đình chúng tôi!",
     thankYou: "Sự hiện diện của bạn sẽ khiến hôn lễ của chúng tôi trở nên ý nghĩa hơn bao giờ hết!",
     guestFallback: "Bạn & người thương",
   },
@@ -129,7 +130,7 @@ export const defaultConfig: WeddingConfig = {
     { title: "Mừng cưới cô dâu", bank: "Tên ngân hàng", accountNumber: "0000000000", accountName: "TEN CHU TAI KHOAN", qr: "/images/qr-bride.svg", bankApp: "" },
   ],
   sections: { music: true, loveStory: true, album: true, guestbook: true, video: true, games: true, gifts: true },
-  games: { quizSeconds: 20, memoryPairs: 8 },
+  games: { quizSeconds: 20 },
 };
 
 /* ---------- Giá trị suy ra từ cấu hình ---------- */
@@ -167,14 +168,23 @@ export function rsvpGroups(c: WeddingConfig) {
   return c.venues.map((v) => ({ key: v.id, label: v.rsvpLabel || v.name }));
 }
 
-export function memoryImages(c: WeddingConfig) {
-  const pairs = Math.max(2, Math.min(c.games.memoryPairs, c.album.length));
+/** Ảnh cho một level lật hình: lấy các ảnh đầu của album. Album chưa đủ ảnh thì level đó chưa chơi được (trả về mảng ngắn hơn). */
+export function memoryImages(c: WeddingConfig, pairs: number) {
   return c.album.slice(0, pairs);
 }
 
 /** Link mở thiệp có ?f=bride là thiệp nhà gái, còn lại (kể cả ?f=groom) là thiệp nhà trai. */
 export type Side = "groom" | "bride";
 export const sideFromParam = (f: unknown): Side => (f === "bride" ? "bride" : "groom");
+
+/**
+ * Thứ tự cô dâu chú rể: thiệp nhà gái (?f=bride) đưa cô dâu lên trước (bên trái), thiệp nhà trai thì chú rể trước.
+ */
+export function coupleOrder(c: WeddingConfig, side: Side) {
+  const groom = { key: "groom" as const, person: c.groom, role: "Chú rể" };
+  const bride = { key: "bride" as const, person: c.bride, role: "Cô dâu" };
+  return side === "bride" ? [bride, groom] : [groom, bride];
+}
 
 /** Sự kiện và tên hiện ở thẻ "Trân trọng kính mời": nhà trai Lễ Thành Hôn, nhà gái Lễ Vu Quy. */
 export function inviteEvent(c: WeddingConfig, side: Side) {

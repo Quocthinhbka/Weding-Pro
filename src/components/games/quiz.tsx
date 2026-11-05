@@ -2,16 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatDuration } from "@/lib/wedding-time";
-import { postJson } from "@/components/site/guest";
+import { postJson, useGuest } from "@/components/site/guest";
+import { QUIZ_BONUS_SCORE } from "@/content/games";
 import { Leaderboard } from "./shared";
 
 type Question = { question: string; options: string[] };
-type Start =
-  | { finished: true; score: number; total: number; durationMs: number }
-  | { finished: false; questions: Question[]; secondsPerQuestion: number };
-type Result = { score: number; total: number; durationMs: number; correct: number[] };
+type Start = { questions: Question[]; secondsPerQuestion: number };
+type Result = { score: number; total: number; durationMs: number; correct: number[]; bonus: "granted" | "already" | "none" };
 
 export function Quiz({ total, seconds }: { total: number; seconds: number }) {
+  const { refresh } = useGuest();
   const [phase, setPhase] = useState<"intro" | "playing" | "submitting" | "result">("intro");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [perQuestion, setPerQuestion] = useState(seconds);
@@ -28,11 +28,6 @@ export function Quiz({ total, seconds }: { total: number; seconds: number }) {
     setError("");
     try {
       const data = await postJson<Start>("/api/games/quiz/start");
-      if (data.finished) {
-        setResult({ score: data.score, total: data.total, durationMs: data.durationMs, correct: [] });
-        setPhase("result");
-        return;
-      }
       setQuestions(data.questions);
       setPerQuestion(data.secondsPerQuestion);
       nextDeadline(data.secondsPerQuestion);
@@ -52,6 +47,7 @@ export function Quiz({ total, seconds }: { total: number; seconds: number }) {
       setResult(data);
       setVersion((v) => v + 1);
       setPhase("result");
+      if (data.bonus === "granted") refresh(); // có thêm lượt quay: cập nhật số lượt ở vòng quay
     } catch (err) {
       setError((err as Error).message);
       setPhase("playing");
@@ -98,7 +94,8 @@ export function Quiz({ total, seconds }: { total: number; seconds: number }) {
       <div className="space-y-6">
         <div className="rounded-[2rem] bg-paper/70 p-6 text-center text-sm leading-relaxed text-ink-soft ring-1 ring-line">
           <p>Gồm <b className="text-ink">{total} câu hỏi</b>, mỗi câu có {perQuestion} giây.</p>
-          <p className="mt-1">Chỉ tính <b className="text-ink">lượt chơi đầu tiên</b>. Nhiều điểm hơn và nhanh hơn sẽ xếp hạng cao hơn.</p>
+          <p className="mt-1">Chơi lại bao nhiêu lần cũng được, bảng xếp hạng lấy <b className="text-ink">lượt tốt nhất</b> (nhiều điểm hơn, rồi nhanh hơn).</p>
+          <p className="mt-1">Đúng từ <b className="text-ink">{Math.min(QUIZ_BONUS_SCORE, total)} câu</b> được tặng thêm <b className="text-ink">1 lượt quay</b> (nhận một lần duy nhất) 🎡</p>
           <p className="mt-1">Top 3 nhận quà tại tiệc cưới 🎁</p>
           {error && <p className="mt-3 text-[#8a4a3e]">{error}</p>}
           <button type="button" onClick={start} className="btn btn-primary mt-5 w-full">
@@ -123,6 +120,14 @@ export function Quiz({ total, seconds }: { total: number; seconds: number }) {
           <p className="mt-3 font-script text-3xl text-olive">
             {result.score === result.total ? "Bạn hiểu dâu rể nhất rồi!" : result.score >= result.total / 2 ? "Giỏi quá!" : "Cảm ơn bạn đã chơi!"}
           </p>
+          {result.bonus === "granted" && <p className="mt-3 rounded-xl bg-olive/10 px-3 py-2 text-sm font-medium text-olive-deep">🎡 Bạn được tặng thêm 1 lượt quay! Sang Vòng quay may mắn để quay nhé.</p>}
+          {result.bonus === "already" && <p className="mt-3 text-sm text-ink-soft">Bạn đã nhận lượt quay thưởng từ đố vui rồi (chỉ nhận một lần).</p>}
+          {result.bonus === "none" && result.score < Math.min(QUIZ_BONUS_SCORE, result.total) && (
+            <p className="mt-3 text-sm text-ink-soft">Đúng từ {Math.min(QUIZ_BONUS_SCORE, result.total)} câu sẽ được tặng thêm 1 lượt quay – chơi lại để thử nhé!</p>
+          )}
+          <button type="button" onClick={() => setPhase("intro")} className="btn btn-primary mt-4">
+            Chơi lại
+          </button>
         </div>
         {result.correct.length > 0 && (
           <div className="space-y-2">

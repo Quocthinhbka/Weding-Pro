@@ -46,18 +46,18 @@ export function JoinGate({ children }: { children: ReactNode }) {
 
 type Row = { name: string; score: number | null; total: number | null; moves: number | null; durationMs: number; me: boolean };
 
-export function Leaderboard({ game, version = 0 }: { game: "quiz" | "memory"; version?: number }) {
+export function Leaderboard({ game, level = 1, version = 0 }: { game: "quiz" | "memory"; level?: number; version?: number }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   useEffect(() => {
     let alive = true;
-    fetch(`/api/games/leaderboard?game=${game}`, { cache: "no-store" })
+    fetch(`/api/games/leaderboard?game=${game}&level=${level}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => alive && setRows(d.rows))
       .catch(() => alive && setRows([]));
     return () => {
       alive = false;
     };
-  }, [game, version]);
+  }, [game, level, version]);
 
   return (
     <div className="rounded-[2rem] bg-white/80 p-5 ring-1 ring-line">

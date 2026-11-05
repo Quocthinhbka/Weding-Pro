@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { cookies } from "next/headers";
 import { get, run } from "./db";
 import { isHttpsRequest } from "./http";
+import { vnDay } from "./wedding-time";
 
 export const GUEST_COOKIE = "guest_token";
 
@@ -13,6 +14,9 @@ export type Guest = {
   phone: string | null;
   invite_id: number | null;
   side: string | null;
+  spin_credits: number;
+  credit_day: string | null;
+  quiz_bonus: number;
 };
 
 export type Invite = { id: number; code: string; display_name: string; side: string | null };
@@ -46,13 +50,14 @@ function guestById(id: number | bigint) {
 
 function createGuest(name: string, phone: string | null, inviteId: number | null, side: string | null) {
   const result = run(
-    "INSERT INTO guests (token, name, phone, invite_id, side, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+    "INSERT INTO guests (token, name, phone, invite_id, side, created_at, spin_credits, credit_day) VALUES (?, ?, ?, ?, ?, ?, 1, ?)",
     nanoid(32),
     name,
     phone,
     inviteId,
     side,
     Date.now(),
+    vnDay(Date.now()),
   );
   return guestById(result.lastInsertRowid);
 }

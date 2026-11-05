@@ -24,29 +24,32 @@ export function Schedule({ config }: { config: WeddingConfig }) {
   const rows = timeline(config);
   return (
     <>
-      <SectionTitle compact eyebrow="Lịch trình" title="Sự kiện cưới" subtitle={`${date.weekday}, ${date.day}.${date.month}.${date.year} · Tức ngày ${date.lunar}`} />
-      <Reveal className="flex min-h-0 max-h-[46rem] flex-1 flex-col overflow-y-auto rounded-[2rem] bg-cream px-4 py-4 shadow-sm ring-1 ring-line">
+      <SectionTitle compact eyebrow="Lịch trình" title="Sự kiện cưới" subtitle={`${date.weekday}, ${date.dots}`} />
+      <Reveal className="flex min-h-0 max-h-[46rem] flex-1 flex-col overflow-y-auto rounded-[2rem] bg-cream px-4 py-3 shadow-sm ring-1 ring-line">
         {/* justify-between: các mốc giãn đều theo chiều cao khung, màn hình cao thì thưa ra, màn hình thấp thì khít lại */}
         <ol className="relative ml-3 flex flex-1 flex-col justify-between border-l border-dashed border-olive/50">
           {rows.map((row, i) =>
             row.kind === "venue" ? (
-              <li key={`v-${i}`} className="relative -ml-px flex flex-wrap items-center gap-x-2 gap-y-1 pb-1.5 pl-5 pt-3 first:pt-0">
-                <span className="absolute -left-[7px] top-[1.15rem] grid h-3.5 w-3.5 place-items-center rounded-full bg-olive-deep text-[8px] text-white first:top-1" aria-hidden>
+              <li key={`v-${i}`} className="relative -ml-px pb-1 pl-5 pt-2 first:pt-0">
+                <span className="absolute -left-[7px] top-[0.8rem] grid h-3.5 w-3.5 place-items-center rounded-full bg-olive-deep text-[8px] text-white first:top-1" aria-hidden>
                   ●
                 </span>
-                <p className="min-w-0 flex-1 whitespace-pre-line text-[13px] font-semibold leading-tight text-olive-deep">📍 {row.venue.name}</p>
-                <a href={directionsUrl(row.venue)} target="_blank" rel="noopener noreferrer" className="rounded-full bg-olive px-2.5 py-0.5 text-[11px] text-white">
-                  Chỉ đường
-                </a>
-                <a href={googleCalendarUrl(config, row.venue.id)} target="_blank" rel="noopener noreferrer" className="rounded-full bg-paper px-2.5 py-0.5 text-[11px] ring-1 ring-line">
-                  + Lịch
-                </a>
+                <p className="whitespace-pre-line text-[12.5px] font-semibold leading-tight text-olive-deep">📍 {row.venue.name}</p>
+                {/* Chỉ đường và nhắc lịch nằm riêng một dòng bên dưới địa điểm */}
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <a href={directionsUrl(row.venue)} target="_blank" rel="noopener noreferrer" className="rounded-full bg-olive px-3 py-1 text-[11px] text-white">
+                    🧭 Chỉ đường
+                  </a>
+                  <a href={googleCalendarUrl(config, row.venue.id)} target="_blank" rel="noopener noreferrer" className="rounded-full bg-paper px-3 py-1 text-[11px] ring-1 ring-line">
+                    🔔 Nhắc lịch
+                  </a>
+                </div>
               </li>
             ) : (
-              <li key={row.event.id} className="relative flex items-baseline gap-3 py-[5px] pl-5">
-                <span className="absolute -left-[5px] top-[0.8rem] h-2.5 w-2.5 rounded-full border-2 border-cream bg-olive ring-1 ring-olive" />
-                <span className="w-12 shrink-0 font-serif text-lg leading-none text-olive-deep tabular-nums">{row.event.time}</span>
-                <span className="min-w-0 flex-1 whitespace-pre-line text-[14px] font-medium leading-snug text-ink">{row.event.title}</span>
+              <li key={row.event.id} className="relative flex items-baseline gap-2.5 py-[3px] pl-5">
+                <span className="absolute -left-[5px] top-[0.65rem] h-2.5 w-2.5 rounded-full border-2 border-cream bg-olive ring-1 ring-olive" />
+                <span className="w-11 shrink-0 font-serif text-[17px] leading-none text-olive-deep tabular-nums">{row.event.time}</span>
+                <span className="min-w-0 flex-1 whitespace-pre-line text-[13.5px] font-medium leading-snug text-ink">{row.event.title}</span>
               </li>
             ),
           )}

@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { dateInfo } from "@/content/wedding";
+import { coupleOrder, dateInfo, type Side } from "@/content/wedding";
 import { useWedding } from "./wedding-context";
 import { Daisy, DaisyDivider, DaisySprig, Heart } from "@/components/ui/daisy";
 import { FitText } from "@/components/ui/fit-text";
 import { useMusic } from "./music";
 
 /** Màn hình phong bì "Mở thiệp": luôn hiện đầu tiên mỗi lần vào link. Bấm mở thì phát nhạc (trình duyệt chỉ cho phép sau thao tác của khách). */
-export function Envelope({ guestName }: { guestName: string | null }) {
+export function Envelope({ guestName, side }: { guestName: string | null; side: Side }) {
   const { play, markOpened } = useMusic();
   const config = useWedding();
   const date = dateInfo(config);
+  const [first, second] = coupleOrder(config, side);
   const [phase, setPhase] = useState<"closed" | "opening" | "gone">("closed");
 
   useEffect(() => {
@@ -50,11 +51,11 @@ export function Envelope({ guestName }: { guestName: string | null }) {
         <p className="mt-5 text-xs font-medium uppercase tracking-[0.45em] text-ink-soft">Save the date</p>
         <h1 className="mt-3 w-full font-script leading-tight text-ink">
           <span className="block">
-            <FitText max={48}>{config.groom.name}</FitText>
+            <FitText max={48}>{first.person.name}</FitText>
           </span>
           <span className="block text-3xl leading-none text-olive">&</span>
           <span className="block">
-            <FitText max={48}>{config.bride.name}</FitText>
+            <FitText max={48}>{second.person.name}</FitText>
           </span>
         </h1>
         <DaisyDivider className="mt-3" />

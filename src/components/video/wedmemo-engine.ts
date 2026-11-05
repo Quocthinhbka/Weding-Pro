@@ -31,10 +31,10 @@ video.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:
 root.append(video);   // iPhone chỉ cập nhật khung hình khi video nằm trong trang
 
 let cam = null, facing = 'user', dur = 30, priv = false, state = 'idle', drawing = false;
-let rec, chunks, t0, secs, thumbs, tickIv, pending, key = null, list = [], cur = -1;
+let rec, chunks, t0, secs, thumbs, tickIv, pending, key = null, list = [], cur = -1, countIv, discard = false;
 
 const mmss = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-const when = ts => new Date(ts * 1000).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+const when = ts => new Date(ts * 1000).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
 const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
 
 /* ---------- Khung hình ---------- */
@@ -207,8 +207,7 @@ function renderOverlay() {
 
 function sizeCanvas() {
   if (state === 'idle') {   // đang ghi thì giữ nguyên kích thước video
-    const sr = $('#stage').getBoundingClientRect();
-    const [W, H] = sr.height > sr.width ? [720, 960] : [1280, 720];
+    const [W, H] = [720, 960];   // khung camera dạng dọc: cao/ngang = 4/3
     if (ov.width !== W || ov.height !== H) { cv.width = ov.width = W; cv.height = ov.height = H; renderOverlay(); }
   }
   const r = $('#stage').getBoundingClientRect(), k = Math.min(r.width / cv.width, r.height / cv.height);
@@ -328,14 +327,15 @@ const hintIv = setInterval(showHint, 7000);
 /* ---------- Ghi hình ---------- */
 const busy = on => root.classList.toggle('wm-busy', on);
 const limit = () => dur || CFG.max_minutes * 60;   // "Không giới hạn" vẫn dừng ở max_minutes để file không quá lớn
-$('#rec').onclick = () => state === 'idle' ? countdown() : state === 'rec' && stopRec();
+$('#rec').onclick = () => state === 'idle' ? countdown() : state === 'rec' && stopRec();   // quay: đếm ngược 3 giây; đang quay: bấm để dừng
 
+// Nhấn nút đỏ: đếm ngược 3 giây rồi bắt đầu quay.
 function countdown() {
   if (!cam) return openCam();
   state = 'count'; busy(true);
   let n = 3;
   const el = $('#count'); el.textContent = n; el.hidden = false;
-  const iv = setInterval(() => { if (--n) el.textContent = n; else { clearInterval(iv); el.hidden = true; startRec(); } }, 1000);
+  countIv = setInterval(() => { if (--n) el.textContent = n; else { clearInterval(countIv); el.hidden = true; startRec(); } }, 1000);
 }
 
 function startRec() {
@@ -349,13 +349,14 @@ function startRec() {
   rec.start(1000);
   state = 'rec'; t0 = performance.now(); thumbs = null;
   setTimeout(() => { if (state === 'rec') thumbs = snapAll(); }, 1500);
-  $('#durs').hidden = true; $('#timer').hidden = false;
+  $('#durs').hidden = true;
   tick(); tickIv = setInterval(tick, 250);
 }
 
+// Trên nút đỏ: số giây còn lại (đếm ngược); vòng tròn bên ngoài chạy theo thời gian đã quay.
 function tick() {
-  const s = (performance.now() - t0) / 1000;
-  $('#timer').textContent = mmss(s) + (dur ? ' / ' + mmss(dur) : '');
+  const s = (performance.now() - t0) / 1000, left = Math.max(0, Math.ceil(limit() - s));
+  $('#recTime').textContent = left > 99 ? mmss(left) : left;
   $('#ring').style.strokeDashoffset = C * (1 - Math.min(s / limit(), 1));
   if (s >= limit()) stopRec();
 }
@@ -377,11 +378,16 @@ const snap = w => new Promise(r => {
 const snapAll = () => Promise.all([snap(480), snap(24)]);   // ảnh nhỏ + ảnh 24px (hiện mờ cho clip riêng tư)
 
 async function finish() {
+  if (discard) {   // đóng hộp thoại giữa chừng: bỏ clip đang quay
+    discard = false; chunks = []; state = 'idle'; busy(false);
+    $('#durs').hidden = false; $('#recTime').textContent = ''; $('#ring').style.strokeDashoffset = C;
+    return;
+  }
   const type = rec.mimeType || MIME || 'video/webm';
   const blob = new Blob(chunks, { type: type.split(';')[0] });
   const th = await thumbs;
   state = 'idle'; busy(false);
-  $('#durs').hidden = false; $('#timer').hidden = true; $('#ring').style.strokeDashoffset = C;
+  $('#durs').hidden = false; $('#recTime').textContent = ''; $('#ring').style.strokeDashoffset = C;
   sizeCanvas();   // máy có thể đã xoay trong lúc ghi
   if (secs < 2 || !blob.size) return toast('Clip ngắn quá, bạn ghi lại nhé.');
   pending = { blob, type, secs, th };
@@ -404,10 +410,31 @@ $('#send').onclick = () => {
   if (!p) return;
   const name = $('#guest').value.trim();
   closeReview();
+  closeCam();   // xong thì đóng hộp thoại và tắt camera
   enqueue({ id: rid(), type: p.type, name, priv, secs: p.secs, kiosk: KIOSK, thumb: p.th[0], tiny: p.th[1], video: p.blob });
   toast('Cảm ơn bạn! Lời chúc đang được gửi tới cô dâu chú rể 💕');
   if (KIOSK) { $('#guest').value = ''; setPriv(false); }   // máy chung: khách sau bắt đầu lại từ đầu
 };
+
+/* ---------- Hộp thoại camera ---------- */
+function stopCam() {
+  if (cam) cam.getTracks().forEach(t => t.stop());
+  cam = null; video.srcObject = null;
+}
+function openCamDialog() {
+  if (!$('#cam').open) $('#cam').showModal();
+  requestAnimationFrame(sizeCanvas);   // hộp thoại vừa hiện: đo lại khung 3/4
+  if (!cam) openCam();
+}
+function closeCam() {
+  if (state === 'count') { clearInterval(countIv); $('#count').hidden = true; state = 'idle'; busy(false); }
+  else if (state === 'rec') { discard = true; clearInterval(tickIv); state = 'stopping'; rec.stop(); }
+  stopCam();
+  if ($('#cam').open) $('#cam').close();
+}
+$('#camClose').onclick = closeCam;
+$('#cam').oncancel = e => { e.preventDefault(); closeCam(); };
+$('#cam').onclose = stopCam;   // đóng bằng cách nào cũng nhả camera và micro
 
 /* ---------- Gửi lên máy chủ ---------- */
 // Lưu vào IndexedDB trước, chỉ xoá khi máy chủ đã nhận: mất mạng hay lỡ đóng trang thì lần mở sau vẫn gửi tiếp.
@@ -444,7 +471,7 @@ async function pump() {
       await upload(it);
       queue.shift(); offline = false;
       await store(s => s.delete(it.id));
-      refreshCount();
+      refresh();   // clip vừa gửi xong hiện ngay trong dải thumbnail
     } catch (e) {
       if (e.permanent) { queue.shift(); toast('Không gửi được một lời chúc: ' + e.message); }   // vẫn còn trong IndexedDB
       else { offline = true; showUp(); await new Promise(r => setTimeout(r, 5000)); }
@@ -479,19 +506,7 @@ function showUp() {
   el.title = offline ? 'Mất kết nối – lời chúc vẫn được giữ lại và sẽ tự gửi khi có mạng' : 'Đang gửi lời chúc';
 }
 
-async function refreshCount() {
-  try { const r = await fetch(BASE + 'api/clips'); if (r.ok) $('#gcount').textContent = (await r.json()).length || ''; } catch (e) {}
-}
-
-/* ---------- Thư viện ---------- */
-async function openGallery() {
-  if (!$('#gallery').open) $('#gallery').showModal();
-  await refresh();
-}
-$('#openG').onclick = $('#startG').onclick = openGallery;
-$('#closeG').onclick = () => $('#gallery').close();
-$('#gallery').onclose = () => { key = null; };   // rời thư viện là khoá lại clip riêng tư
-
+/* ---------- Dải thumbnail lời chúc (cuối sector) ---------- */
 async function refresh() {
   try {
     const r = await fetch(BASE + 'api/clips' + (key ? '?k=' + encodeURIComponent(key) : ''));
@@ -559,14 +574,14 @@ async function enterFs() {
 }
 let wl = null;
 async function wake() { try { wl = await navigator.wakeLock.request('screen'); } catch (e) {} }   // không cho màn hình tắt
-listen(document, 'visibilitychange', () => { if (document.visibilityState === 'visible' && (KIOSK || $('#start').hidden)) wake(); });
+listen(document, 'visibilitychange', () => { if (document.visibilityState === 'visible' && (KIOSK || $('#cam').open)) wake(); });
 
-$('#startBtn').onclick = () => { if (KIOSK) enterFs(); $('#start').hidden = true; wake(); if (!cam) openCam(); };
+$('#startBtn').onclick = () => { if (KIOSK) enterFs(); wake(); openCamDialog(); };
 $('#fs').hidden = true;   // trong thiệp không cần nút toàn màn hình
 $('#fs').onclick = () => document.fullscreenElement ? document.exitFullscreen() : enterFs();
 
 if (KIOSK) {
-  listen(document, 'fullscreenchange', () => { $('#fsguard').hidden = !!document.fullscreenElement || !$('#start').hidden; });
+  listen(document, 'fullscreenchange', () => { $('#fsguard').hidden = !!document.fullscreenElement || !$('#cam').open; });
   $('#fsguard').onclick = () => { $('#fsguard').hidden = true; enterFs(); };
   listen(window, 'contextmenu', e => e.preventDefault());
   // 90 giây không ai chạm: tự gửi clip đang xem lại (khách sau không thấy được), đóng thư viện (khoá lại), về màn hình chào có mã QR
@@ -574,8 +589,9 @@ if (KIOSK) {
   const onIdle = () => {
     if (!pv.paused || state === 'rec' || state === 'count' || state === 'stopping') return bump();
     if ($('#review').open) $('#send').click();
-    ['#pin', '#player', '#gallery'].forEach(d => { if ($(d).open) $(d).close(); });
-    $('#start').hidden = false;
+    ['#pin', '#player'].forEach(d => { if ($(d).open) $(d).close(); });
+    closeCam();   // về màn hình chào, tắt camera
+    key = null; refresh();   // máy sảnh: khoá lại clip riêng tư
   };
   const bump = () => { clearTimeout(idle); idle = setTimeout(onIdle, 90e3); };
   ['pointerdown', 'keydown'].forEach(e => listen(window, e, bump, { capture: true, passive: true }));
@@ -600,7 +616,7 @@ sizeCanvas();
 setTheme(savedFrame);
 applyNames();
 if (!savedFrame && CFG.frame) setTheme(CFG.frame);
-refreshCount();
+refresh();
 store(s => s.getAll(), 'readonly').then(items => { if (items && items.length) { queue.push(...items); pump(); } });
 
 return {

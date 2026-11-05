@@ -73,9 +73,6 @@ export function Guestbook({ initial }: { initial: PublicWish[] }) {
             </button>
           ))}
         </div>
-        <p className="text-[11px] leading-snug text-ink-soft">
-          {isPrivate ? "Lời chúc vẫn hiện trên thiệp nhưng bị làm mờ, chỉ cô dâu chú rể đọc được." : "Mọi người đều đọc được lời chúc này."}
-        </p>
         <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
         {error && <p className="text-sm text-[#8a4a3e]">{error}</p>}
         <button type="submit" className="btn btn-primary w-full" disabled={busy}>
@@ -83,7 +80,7 @@ export function Guestbook({ initial }: { initial: PublicWish[] }) {
         </button>
       </form>
 
-      <div className="mt-3 min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-1">
+      <div className="mt-3 min-h-0 flex-1 touch-pan-y space-y-2.5 overflow-y-auto overscroll-y-contain pr-1" tabIndex={0} aria-label="Danh sách lời chúc">
         {wishes.length === 0 && (
           <div className="grid h-full min-h-24 place-items-center text-center text-sm text-ink-soft">
             <div>

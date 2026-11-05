@@ -1,26 +1,26 @@
 import Image from "next/image";
-import { dateInfo, directionsUrl, feastOf, inviteEvent, venueById, type Side, type WeddingConfig } from "@/content/wedding";
+import { coupleOrder, dateInfo, directionsUrl, feastOf, inviteEvent, venueById, type Side, type WeddingConfig } from "@/content/wedding";
 import { Daisy, DaisySprig, Heart } from "@/components/ui/daisy";
 import { FitText } from "@/components/ui/fit-text";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionTitle } from "@/components/ui/section-title";
 
-export function Hero({ config }: { config: WeddingConfig }) {
-  const { groom, bride } = config;
+export function Hero({ config, side }: { config: WeddingConfig; side: Side }) {
+  const [first, second] = coupleOrder(config, side);
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <Image src={config.heroImage} alt={`${groom.name} và ${bride.name}`} fill priority sizes="480px" className="object-cover" />
+      <Image src={config.heroImage} alt={`${first.person.name} và ${second.person.name}`} fill priority sizes="480px" className="object-cover" />
       {/* Hai lớp tối: đầu ảnh cho tên nổi bật, đáy ảnh cho ngày và dòng giới thiệu */}
       <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-transparent via-48% to-ink/75" />
       {/* Tên đặt trên lớp tối mờ dạng vệt sáng-tối + bóng chữ 2 lớp + viền mảnh để không lẫn với ảnh nền */}
       <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_at_50%_35%,rgb(26_20_16/0.5),transparent_72%)]" aria-hidden />
       <div className="absolute inset-x-0 top-9 px-7 text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.7),0_3px_18px_rgb(0_0_0/0.6)]">
         <h2 className="font-script leading-none [-webkit-text-stroke:0.6px_rgb(0_0_0/0.25)]">
-          <FitText max={60}>{groom.name}</FitText>
+          <FitText max={60}>{first.person.name}</FitText>
         </h2>
         <p className="my-0.5 text-center font-script text-3xl text-daisy">&</p>
         <h2 className="text-right font-script leading-none [-webkit-text-stroke:0.6px_rgb(0_0_0/0.25)]">
-          <FitText max={60}>{bride.name}</FitText>
+          <FitText max={60}>{second.person.name}</FitText>
         </h2>
       </div>
       <div className="absolute inset-x-0 bottom-14 flex flex-col items-center gap-3 px-6 text-center text-white">
@@ -35,8 +35,9 @@ export function Hero({ config }: { config: WeddingConfig }) {
 }
 
 export function Family({ config, side }: { config: WeddingConfig; side: Side }) {
-  const { groom, bride } = config;
-  const sides = [config.families.trai, config.families.gai];
+  const couple = coupleOrder(config, side);
+  // Thiệp nhà gái: nhà gái đứng trước (bên trái); thiệp nhà trai: nhà trai đứng trước.
+  const families = side === "bride" ? [config.families.gai, config.families.trai] : [config.families.trai, config.families.gai];
   const feast = feastOf(config, side);
   const date = dateInfo(config);
   return (
@@ -45,11 +46,11 @@ export function Family({ config, side }: { config: WeddingConfig; side: Side }) 
       <Reveal>
         <SectionTitle title="Đại diện gia đình" />
         <div className="grid grid-cols-2 gap-4">
-          {sides.map((side) => (
-            <div key={side.label}>
-              <p className="whitespace-pre-line text-xs font-semibold uppercase tracking-[0.3em] text-olive">{side.label}</p>
+          {families.map((family) => (
+            <div key={family.label}>
+              <p className="whitespace-pre-line text-xs font-semibold uppercase tracking-[0.3em] text-olive">{family.label}</p>
               <div className="mt-3 space-y-1.5">
-                {side.members.map((m) => (
+                {family.members.map((m) => (
                   <p key={`${m.role}-${m.name}`} className="text-[15px] text-ink">
                     <span className="text-ink-soft">{m.role}:</span> <b className="font-medium">{m.name}</b>
                   </p>
@@ -58,31 +59,34 @@ export function Family({ config, side }: { config: WeddingConfig; side: Side }) 
             </div>
           ))}
         </div>
-        <p className="mx-auto mt-10 max-w-xs whitespace-pre-line font-serif text-[17px] italic leading-relaxed text-ink">{config.texts.invitation}</p>
-        <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
-          <div className="min-w-0">
-            <p className="font-script text-ink">
-              <FitText max={36}>{groom.name}</FitText>
-            </p>
-            {groom.born && <p className="text-xs tracking-widest text-ink-soft">{groom.born}</p>}
-          </div>
-          <Heart className="mb-3 h-5 w-5 animate-heartbeat text-rose" />
-          <div className="min-w-0">
-            <p className="font-script text-ink">
-              <FitText max={36}>{bride.name}</FitText>
-            </p>
-            {bride.born && <p className="text-xs tracking-widest text-ink-soft">{bride.born}</p>}
-          </div>
+        <p className="mx-auto mt-8 max-w-xs whitespace-pre-line font-serif text-[17px] italic leading-relaxed text-ink">
+          {side === "bride" ? config.texts.invitationBride : config.texts.invitation}
+        </p>
+        <div className="mt-7 grid grid-cols-[1fr_auto_1fr] items-end gap-3">
+          {[couple[0], null, couple[1]].map((c, i) =>
+            c ? (
+              <div key={c.key} className="min-w-0">
+                <p className="font-script text-ink">
+                  <FitText max={36}>{c.person.name}</FitText>
+                </p>
+                {c.person.born && <p className="text-xs tracking-widest text-ink-soft">{c.person.born}</p>}
+              </div>
+            ) : (
+              <Heart key={i} className="mb-3 h-5 w-5 animate-heartbeat text-rose" />
+            ),
+          )}
         </div>
         {feast && (
-          <div className="mx-auto mt-7 max-w-[19rem] rounded-2xl border border-olive/30 bg-white/60 px-4 py-3 text-center shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-olive">Buổi tiệc thân mật</p>
-            <p className="mt-1 font-serif text-lg text-ink">
-              vào lúc {feast.event.time.replace(":", "h")} · {date.weekday}, {date.dots}
-            </p>
+          <div className="relative mx-auto mt-7 max-w-[20rem] overflow-hidden rounded-[1.75rem] bg-olive px-5 py-5 text-center text-white shadow-xl ring-4 ring-olive/20">
+            <Daisy size={90} className="pointer-events-none absolute -right-5 -top-5 opacity-20" />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-daisy">Buổi tiệc thân mật</p>
+            <p className="mt-1 text-xs text-white/80">Thời gian hẹn quý khách</p>
+            <p className="mt-1.5 font-serif text-[2.1rem] leading-none tracking-wide">{feast.event.time.replace(":", "h")}</p>
+            <p className="mt-1.5 font-serif text-lg tracking-[0.2em]">{date.dots}</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-white/85">{date.weekday}</p>
             {feast.venue && (
-              <p className="mt-0.5 whitespace-pre-line text-sm leading-snug text-ink-soft">
-                <b className="font-medium text-ink">{feast.venue.name}</b>
+              <p className="mt-3 whitespace-pre-line border-t border-white/25 pt-3 text-sm leading-snug text-white/90">
+                <b className="font-semibold text-white">{feast.venue.name}</b>
                 <br />
                 {feast.venue.address}
               </p>
@@ -154,21 +158,22 @@ function Roof() {
       </g>
       <rect x="6" y="104" width="348" height="9" rx="4.5" fill="var(--olive-deep)" />
       <circle cx="180" cy="62" r="19" fill="var(--cream)" stroke="var(--olive-deep)" strokeWidth="3" />
-      <Heart x="168" y="50" width="24" height="24" className="text-rose" />
+      <Heart x="168" y="50" width="24" height="24" className="animate-heartbeat-fast text-rose" style={{ transformBox: "fill-box", transformOrigin: "center" }} />
     </svg>
   );
 }
 
-/** Ngôi nhà bao lấy ảnh cô dâu chú rể: mái ở trên, thân nhà ôm hai bức chân dung, nền cỏ hoa ở dưới. */
-export function HouseOfCouple({ config }: { config: WeddingConfig }) {
+/** Ngôi nhà bao lấy ảnh cô dâu chú rể: mái ở trên, thân nhà ôm hai bức chân dung, nền cỏ hoa ở dưới. Thiệp nhà gái: cô dâu bên trái. */
+export function HouseOfCouple({ config, side }: { config: WeddingConfig; side: Side }) {
+  const [left, right] = coupleOrder(config, side);
   return (
     <div className="shrink-0">
       <p className="mb-2 text-center font-script text-4xl leading-none text-olive">Về chung một nhà</p>
       <Reveal className="mx-auto w-full max-w-[400px]">
         <Roof />
         <div className="mx-[4.5%] grid grid-cols-2 gap-4 rounded-b-[1.5rem] border-x-[5px] border-b-[5px] border-olive-deep bg-cream px-4 pb-4 pt-4 shadow-lg">
-          <Portrait src={config.groom.photo} name={config.groom.name} role="Chú rể" />
-          <Portrait src={config.bride.photo} name={config.bride.name} role="Cô dâu" />
+          <Portrait src={left.person.photo} name={left.person.name} role={left.role} />
+          <Portrait src={right.person.photo} name={right.person.name} role={right.role} />
         </div>
         <div className="mx-[1%] -mt-1 flex items-end justify-between" aria-hidden>
           <Daisy size={22} />

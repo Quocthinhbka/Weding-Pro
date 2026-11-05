@@ -41,7 +41,7 @@ export function relativeTimeVi(from: Date, now: Date = new Date()) {
   if (abs < 3600) return rtf.format(Math.round(seconds / 60), "minute");
   if (abs < 86400) return rtf.format(Math.round(seconds / 3600), "hour");
   if (abs < 86400 * 30) return rtf.format(Math.round(seconds / 86400), "day");
-  return from.toLocaleDateString("vi-VN");
+  return from.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 }
 
 export function formatDuration(ms: number) {
@@ -49,4 +49,25 @@ export function formatDuration(ms: number) {
   if (s < 60) return `${s.toFixed(1)} giây`;
   const m = Math.floor(s / 60);
   return `${m} phút ${Math.round(s % 60)} giây`;
+}
+
+/** Ngày hiện tại theo giờ Việt Nam (GMT+7), không phụ thuộc múi giờ của máy chủ hay của khách. */
+export function vnToday(now: Date = new Date()) {
+  const [year, month, day] = new Date(now.getTime() + 7 * 3600_000).toISOString().slice(0, 10).split("-").map(Number);
+  return { year, month, day };
+}
+
+/** Chuỗi ngày YYYY-MM-DD theo giờ Việt Nam của một mốc thời gian (ms). */
+export function vnDay(ms: number) {
+  return new Date(ms + 7 * 3600_000).toISOString().slice(0, 10);
+}
+
+/** Số ngày (theo giờ Việt Nam) từ ngày `from` đến ngày `to`, dạng YYYY-MM-DD. */
+export function daysBetween(from: string, to: string) {
+  return Math.round((Date.parse(to + "T00:00:00Z") - Date.parse(from + "T00:00:00Z")) / 86_400_000);
+}
+
+/** Giờ:phút ngày/tháng theo giờ Việt Nam (GMT+7), VD "14:05 04/11". */
+export function formatVnTime(ms: number) {
+  return new Date(ms).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", hour12: false });
 }

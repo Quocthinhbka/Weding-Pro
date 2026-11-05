@@ -25,15 +25,20 @@ export function SiteSections({ config, wishes, side = "groom", quizTotal, albumR
   const show = config.sections;
 
   const items: Item[] = [
-    { id: "hero", node: <Hero config={config} />, flush: true },
+    { id: "hero", node: <Hero config={config} side={side} />, flush: true },
     { id: "family", node: <Family config={config} side={side} /> },
     {
       id: "couple",
       node: (
-        <>
-          <HouseOfCouple config={config} />
-          {show.music && <div className="mt-4 shrink-0"><MusicCard /></div>}
-        </>
+        // Giãn đều các phần theo chiều cao sector: tiêu đề + ngôi nhà, rồi thẻ nhạc
+        <div className="flex flex-1 flex-col justify-evenly gap-3">
+          <HouseOfCouple config={config} side={side} />
+          {show.music && (
+            <div className="shrink-0">
+              <MusicCard />
+            </div>
+          )}
+        </div>
       ),
       tone: "paper",
     },
@@ -54,10 +59,10 @@ export function SiteSections({ config, wishes, side = "groom", quizTotal, albumR
     ...(show.loveStory && config.loveStory.length > 0 ? [{ id: "story", node: <LoveStory config={config} />, screens: 1.75 }] : []),
     ...(show.album && config.album.length > 0 ? [{ id: "album", node: <Album config={config} ratios={albumRatios} />, tone: "paper" as const }] : []),
     ...(show.guestbook ? [{ id: "guestbook", node: <Guestbook initial={wishes} /> }] : []),
-    ...(show.video ? [{ id: "video", node: <VideoWishes />, tone: "paper" as const }] : []),
+    ...(show.video ? [{ id: "video", node: <VideoWishes side={side} />, tone: "paper" as const }] : []),
     ...(show.games ? [{ id: "games", node: <GamesSector quizTotal={quizTotal} />, tone: "paper" as const }] : []),
     ...(show.gifts && config.gifts.length > 0 ? [{ id: "gifts", node: <GiftBox /> }] : []),
-    { id: "thanks", node: <ThankYou />, tone: "paper" },
+    { id: "thanks", node: <ThankYou side={side} />, tone: "paper" },
   ];
 
   return (

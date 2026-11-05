@@ -306,7 +306,8 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
       </Card>
 
       <Card id="loi-moi" title="Lời mời & lời cảm ơn">
-        <TextArea label="Lời mời (phần Đại diện gia đình)" value={config.texts.invitation} maxLength={300} onChange={(v) => edit((d) => void (d.texts.invitation = v))} />
+        <TextArea label="Lời mời – thiệp nhà trai (phần Đại diện gia đình)" value={config.texts.invitation} maxLength={300} onChange={(v) => edit((d) => void (d.texts.invitation = v))} />
+        <TextArea label="Lời mời – thiệp nhà gái (link ?f=bride)" value={config.texts.invitationBride} maxLength={300} onChange={(v) => edit((d) => void (d.texts.invitationBride = v))} />
         <TextArea label="Lời cảm ơn (cuối thiệp)" value={config.texts.thankYou} maxLength={300} onChange={(v) => edit((d) => void (d.texts.thankYou = v))} />
         <TextField
           multiline
@@ -409,17 +410,12 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
         )}
       </Card>
 
-      <Card id="tro-choi" title="Trò chơi" description="Giải thưởng vòng quay chỉnh ở trang Trò chơi. Đáp án đố vui chỉ lưu trên máy chủ, khách không xem trước được.">
+      <Card id="tro-choi" title="Trò chơi" description="Giải thưởng vòng quay chỉnh ở trang Trò chơi. Đáp án đố vui chỉ lưu trên máy chủ, khách không xem trước được. Đúng từ 8 câu trở lên được tặng thêm 1 lượt quay.">
         <div className="grid gap-4 sm:grid-cols-2">
           <NumberField label="Số giây cho mỗi câu đố" value={config.games.quizSeconds} min={5} max={120} onChange={(v) => edit((d) => void (d.games.quizSeconds = v))} />
-          <NumberField
-            label="Số cặp thẻ trò lật hình"
-            value={config.games.memoryPairs}
-            min={2}
-            max={12}
-            hint={`Lấy từ ${config.games.memoryPairs} ảnh đầu của album (album đang có ${config.album.length} ảnh).`}
-            onChange={(v) => edit((d) => void (d.games.memoryPairs = v))}
-          />
+          <p className="self-end rounded-xl bg-paper px-3 py-2 text-xs text-ink-soft">
+            Lật hình có 3 level (6, 8 và 10 cặp) lấy ảnh từ các ảnh đầu của album; album hiện có {config.album.length} ảnh (cần ít nhất 10 ảnh để chơi đủ 3 level).
+          </p>
         </div>
         <p className="pt-2 font-semibold">Câu đố ({quiz.length} câu)</p>
         {quiz.map((q, i) => (

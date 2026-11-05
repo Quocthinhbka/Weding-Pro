@@ -58,6 +58,7 @@ export const configSchema = z
     ),
     texts: z.object({
       invitation: required(300, "Lời mời"),
+      invitationBride: required(300, "Lời mời thiệp nhà gái"),
       thankYou: required(300, "Lời cảm ơn"),
       guestFallback: required(40, "Lời chào khi không có tên khách"),
     }),
@@ -84,7 +85,6 @@ export const configSchema = z
     ),
     games: z.object({
       quizSeconds: z.number().int().min(5, "Mỗi câu đố tối thiểu 5 giây").max(120),
-      memoryPairs: z.number().int().min(2).max(12),
     }),
   })
   .superRefine((c, ctx) => {

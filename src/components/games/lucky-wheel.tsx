@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MAX_SPIN_CREDITS, QUIZ_BONUS_SCORE } from "@/content/games";
 import type { GuestState } from "@/lib/queries";
+import { formatVnTime } from "@/lib/wedding-time";
 import { postJson, useGuest } from "@/components/site/guest";
 import { Daisy } from "@/components/ui/daisy";
 
@@ -42,23 +44,20 @@ export function LuckyWheel() {
   useEffect(() => {
     fetch("/api/games/wheel", { cache: "no-store" })
       .then((r) => r.json())
-      .then((d: GuestState & { prizes: Prize[] }) => {
-        setPrizes(d.prizes);
-        if (d.spin) {
-          setResult(d.spin);
-          const idx = d.prizes.findIndex((p) => p.label === d.spin!.label);
-          if (idx >= 0) setRotation(angleFor(idx, d.prizes.length));
-        }
-      })
+      .then((d: { prizes: Prize[] }) => setPrizes(d.prizes))
       .catch(() => setError("Không tải được vòng quay"));
   }, []);
 
+  const credits = state?.credits ?? 0;
+  const history = state?.spins ?? [];
+
   async function spin() {
-    if (!prizes || spinning) return;
+    if (!prizes || spinning || !state) return;
     setError("");
+    setResult(null);
     setSpinning(true);
     try {
-      const data = await postJson<{ prizeId: number; spin: SpinResult; already: boolean }>("/api/games/wheel/spin");
+      const data = await postJson<{ prizeId: number; credits: number; spin: SpinResult }>("/api/games/wheel/spin");
       const idx = Math.max(0, prizes.findIndex((p) => p.id === data.prizeId));
       const seg = 360 / prizes.length;
       const jitter = (Math.random() - 0.5) * seg * 0.6;
@@ -67,7 +66,8 @@ export function LuckyWheel() {
       setTimeout(() => {
         setSpinning(false);
         setResult(data.spin);
-        if (state) setState({ ...state, spin: data.spin });
+        // Cập nhật lượt còn lại và lịch sử sau khi vòng quay dừng (không lộ kết quả sớm).
+        setState({ ...state, credits: data.credits, spin: data.spin, spins: [data.spin, ...state.spins] });
       }, SPIN_MS);
     } catch (err) {
       setSpinning(false);
@@ -79,6 +79,8 @@ export function LuckyWheel() {
 
   const seg = 360 / prizes.length;
   const attending = state?.rsvp?.attending;
+  // Lượt đang quay đã bị trừ ở máy chủ nhưng chưa hiện ra: hiển thị cộng thêm 1 cho đến khi vòng quay dừng.
+  const shownCredits = credits;
 
   return (
     <div className="text-center">
@@ -125,18 +127,28 @@ export function LuckyWheel() {
         <button
           type="button"
           onClick={spin}
-          disabled={spinning || !!result || !attending}
+          disabled={spinning || !attending || shownCredits <= 0}
           className="absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-cream text-sm font-bold uppercase tracking-wider text-olive-deep shadow-lg ring-4 ring-white disabled:opacity-100"
         >
-          {result ? <Daisy size={44} /> : spinning ? "…" : "Quay"}
+          {spinning ? "…" : shownCredits <= 0 && attending ? <Daisy size={44} /> : "Quay"}
         </button>
+      </div>
+
+      {/* Số lượt quay */}
+      <div className="mx-auto mt-4 max-w-[340px] rounded-2xl bg-white/80 px-4 py-3 text-sm ring-1 ring-line">
+        <p className="text-ink">
+          Lượt quay còn lại: <b className="text-lg text-olive-deep">{shownCredits}</b>
+          <span className="text-ink-soft"> / {MAX_SPIN_CREDITS}+</span>
+        </p>
+        <p className="mt-0.5 text-xs text-ink-soft">Mỗi ngày bạn được tặng thêm 1 lượt (dồn tối đa {MAX_SPIN_CREDITS} lượt). Đố vui đúng từ {QUIZ_BONUS_SCORE} câu tặng thêm 1 lượt.</p>
+        {attending && shownCredits <= 0 && !spinning && <p className="mt-1 text-xs font-medium text-[#8a4a3e]">Hết lượt rồi, mai quay tiếp nhé!</p>}
       </div>
 
       {error && <p className="mt-4 text-sm text-[#8a4a3e]">{error}</p>}
 
-      {!attending && !result && (
-        <div className="mt-6 rounded-2xl bg-paper p-5 text-sm text-ink-soft">
-          Mỗi khách đã xác nhận tham dự có 1 lượt quay.
+      {!attending && (
+        <div className="mt-4 rounded-2xl bg-paper p-5 text-sm text-ink-soft">
+          Xác nhận tham dự để được quay.
           <button type="button" onClick={openRsvp} className="btn btn-primary mt-3 w-full">
             Xác nhận tham dự để quay
           </button>
@@ -144,7 +156,7 @@ export function LuckyWheel() {
       )}
 
       {result && !spinning && (
-        <div className="mt-6 rounded-[2rem] bg-cream p-6 shadow-sm ring-1 ring-line">
+        <div className="mt-4 rounded-[2rem] bg-cream p-6 shadow-sm ring-1 ring-line">
           {result.isWin ? (
             <>
               <p className="font-script text-4xl text-olive">Chúc mừng bạn!</p>
@@ -153,9 +165,7 @@ export function LuckyWheel() {
               </p>
               <p className="mt-4 text-xs uppercase tracking-[0.3em] text-ink-soft">Mã đổi quà</p>
               <p className="font-serif text-4xl tracking-[0.3em] text-olive-deep">{result.code}</p>
-              <p className="mt-3 text-sm text-ink-soft">
-                {result.claimed ? "Bạn đã nhận quà rồi 🎉" : "Hãy đưa mã này cho cô dâu chú rể tại tiệc để nhận quà nhé!"}
-              </p>
+              <p className="mt-3 text-sm text-ink-soft">Hãy đưa mã này cho cô dâu chú rể tại tiệc để nhận quà nhé!</p>
             </>
           ) : (
             <>
@@ -165,6 +175,30 @@ export function LuckyWheel() {
           )}
         </div>
       )}
+
+      {/* Lịch sử quay */}
+      <div className="mt-5 rounded-[1.75rem] bg-white/80 p-4 text-left ring-1 ring-line">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] text-olive">Lịch sử quay ({history.length})</p>
+        {history.length === 0 ? (
+          <p className="py-3 text-center text-sm text-ink-soft">Bạn chưa quay lần nào.</p>
+        ) : (
+          <ol className="mt-2 max-h-52 divide-y divide-line/70 overflow-y-auto overscroll-y-contain text-sm">
+            {history.map((h, i) => (
+              <li key={`${h.at}-${i}`} className="flex items-start gap-3 py-2">
+                <span className="w-24 shrink-0 text-xs tabular-nums text-ink-soft">{formatVnTime(h.at)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className={h.isWin ? "font-semibold text-olive-deep" : "text-ink-soft"}>{h.isWin ? `🎁 ${h.label}` : h.label}</span>
+                  {h.isWin && h.code && (
+                    <span className="mt-0.5 block text-xs text-ink-soft">
+                      Mã <b className="font-mono tracking-widest text-ink">{h.code}</b> · {h.claimed ? "đã nhận quà" : "chưa nhận quà"}
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useWedding } from "@/components/site/wedding-context";
-import { dateInfo } from "@/content/wedding";
+import { coupleOrder, dateInfo, type Side } from "@/content/wedding";
 import { startWedMemo, type WedMemoConfig } from "./wedmemo-engine";
 import "./wedmemo.css";
 
@@ -11,13 +11,13 @@ import "./wedmemo.css";
  * `kiosk` = máy ở sảnh tiệc: toàn màn hình, có màn hình chào kèm mã QR, tự về màn hình chào sau 90 giây không ai chạm.
  * Phần giao diện chỉ là khung HTML tĩnh; toàn bộ hoạt động do wedmemo-engine điều khiển trực tiếp trên DOM.
  */
-export function WedMemo({ kiosk = false }: { kiosk?: boolean }) {
+export function WedMemo({ kiosk = false, side = "groom" }: { kiosk?: boolean; side?: Side }) {
   const root = useRef<HTMLDivElement>(null);
   const engine = useRef<ReturnType<typeof startWedMemo> | null>(null);
   const config = useWedding();
   const cfg = useMemo<WedMemoConfig>(
-    () => ({ groom: config.groom.name, bride: config.bride.name, date: dateInfo(config).dots.replaceAll(".", " · "), title: "Gửi lời chúc đến", frame: "gold", max_minutes: 5 }),
-    [config],
+    () => ({ groom: coupleOrder(config, side)[0].person.name, bride: coupleOrder(config, side)[1].person.name, date: dateInfo(config).dots.replaceAll(".", " · "), title: "Gửi lời chúc đến", frame: "gold", max_minutes: 5 }),
+    [config, side],
   );
   const latest = useRef(cfg);
 
@@ -40,91 +40,108 @@ export function WedMemo({ kiosk = false }: { kiosk?: boolean }) {
       {/* eslint-disable-next-line @next/next/no-page-custom-font -- chỉ một ký tự, nạp khi cần */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&text=%E5%9B%8D&display=swap" precedence="default" />
 
-      <div className="wm-bar">
-        <span className="wm-pill wm-up" id="up" hidden />
-        <button type="button" className="wm-pill wm-gal" id="openG">
-          🎞 Lời chúc <b id="gcount" />
+      <button type="button" className="wm-pill" id="fs" hidden>
+        ⛶
+      </button>
+
+      {/* Thẻ mở đầu: bấm "Bắt đầu" mới hiện hộp thoại camera */}
+      <div className="wm-start" id="start">
+        <p className="wm-eyebrow" id="sTitle" />
+        <div className="wm-names" id="sNames" />
+        <p className="wm-date" id="sDate" />
+        <p className="wm-lead">Hãy để lại một lời chúc bằng video cho cô dâu chú rể nhé! 💕</p>
+        <button type="button" className="wm-btn wm-big" id="startBtn">
+          🎥 Bắt đầu ghi lời chúc
         </button>
-        <button type="button" className="wm-pill" id="fs" hidden>
-          ⛶
-        </button>
+        <div className="wm-qr">
+          {/* eslint-disable-next-line @next/next/no-img-element -- mã QR tĩnh nhỏ */}
+          <img src="/images/qr-video.svg" alt="Mã QR" />
+          <span>
+            Quét mã để ghi bằng
+            <br />
+            điện thoại của bạn
+          </span>
+        </div>
       </div>
 
-      <div className="wm-stage" id="stage">
-        <div className="wm-cvwrap" id="cvwrap">
-          <canvas id="cv" width={1280} height={720} />
-          <button type="button" className="wm-flip" id="flip" title="Đổi camera trước/sau" hidden>
+      {/* Hộp thoại camera: xem trước kèm khung đã chọn, nút quay đỏ có đếm ngược và vòng tiến trình */}
+      <dialog id="cam" className="wm-cam">
+        <div className="wm-cam-head">
+          <b>Ghi lời chúc</b>
+          <button type="button" className="wm-pill" id="flip" title="Đổi camera trước/sau" hidden>
             🔄
           </button>
-          <div className="wm-count" id="count" hidden />
-        </div>
-        <div className="wm-camerr" id="camErr" hidden>
-          <p id="camErrMsg" />
-          <button type="button" className="wm-btn" id="retry">
-            Thử lại
+          <button type="button" className="wm-pill" id="camClose" aria-label="Đóng">
+            ✕
           </button>
         </div>
-
-        <div className="wm-start" id="start">
-          <p className="wm-eyebrow" id="sTitle" />
-          <div className="wm-names" id="sNames" />
-          <p className="wm-date" id="sDate" />
-          <p className="wm-lead">Hãy để lại một lời chúc bằng video cho cô dâu chú rể nhé! 💕</p>
-          <button type="button" className="wm-btn wm-big" id="startBtn">
-            🎥 Bắt đầu ghi lời chúc
-          </button>
-          <button type="button" className="wm-btn wm-ghost" id="startG">
-            🎞 Xem lời chúc
-          </button>
-          <div className="wm-qr">
-            {/* eslint-disable-next-line @next/next/no-img-element -- mã QR tĩnh nhỏ */}
-            <img src="/images/qr-video.svg" alt="Mã QR" />
-            <span>
-              Quét mã để ghi bằng
-              <br />
-              điện thoại của bạn
-            </span>
+        <div className="wm-stage" id="stage">
+          <div className="wm-cvwrap" id="cvwrap">
+            <canvas id="cv" width={720} height={960} />
+            <div className="wm-count" id="count" hidden />
           </div>
-        </div>
-      </div>
-
-      <section className="wm-ctrl">
-        <p className="wm-hint" id="hint" />
-        <div className="wm-seg wm-durs" id="durs">
-          <button type="button" data-d="15">
-            15s
-          </button>
-          <button type="button" data-d="30" className="on">
-            30s
-          </button>
-          <button type="button" data-d="60">
-            60s
-          </button>
-          <button type="button" data-d="0">
-            Không giới hạn
-          </button>
-        </div>
-        <div className="wm-pill wm-timer" id="timer" hidden />
-        <div className="wm-opts">
-          <div className="wm-seg privs" id="privs">
-            <button type="button" data-p="0" className="on">
-              🌐 Công khai
-            </button>
-            <button type="button" data-p="1">
-              🔒 Riêng tư
+          <div className="wm-camerr" id="camErr" hidden>
+            <p id="camErrMsg" />
+            <button type="button" className="wm-btn" id="retry">
+              Thử lại
             </button>
           </div>
-          <button type="button" className="wm-pill" id="frameBtn">
-            🎨 Khung
+        </div>
+        <section className="wm-ctrl">
+          <p className="wm-hint" id="hint" />
+          <div className="wm-seg wm-durs" id="durs">
+            <button type="button" data-d="15">
+              15s
+            </button>
+            <button type="button" data-d="30" className="on">
+              30s
+            </button>
+            <button type="button" data-d="60">
+              60s
+            </button>
+            <button type="button" data-d="0">
+              Tối đa
+            </button>
+          </div>
+          <div className="wm-opts">
+            <div className="wm-seg privs" id="privs">
+              <button type="button" data-p="0" className="on">
+                🌐 Công khai
+              </button>
+              <button type="button" data-p="1">
+                🔒 Riêng tư
+              </button>
+            </div>
+            <button type="button" className="wm-pill" id="frameBtn">
+              🎨 Khung
+            </button>
+          </div>
+          <div className="wm-rw">
+            <svg viewBox="0 0 84 84" aria-hidden>
+              <circle cx="42" cy="42" r="38" fill="none" stroke="var(--line)" strokeWidth="4" />
+              <circle id="ring" cx="42" cy="42" r="38" fill="none" stroke="var(--rose)" strokeWidth="4" strokeLinecap="round" strokeDasharray="238.76" strokeDashoffset="238.76" />
+            </svg>
+            <button type="button" id="rec" aria-label="Bắt đầu / dừng ghi hình">
+              <span id="recTime" />
+            </button>
+          </div>
+        </section>
+      </dialog>
+
+      <section className="wm-thumbs" aria-label="Lời chúc video">
+        <div className="wm-thumbs-head">
+          <h4>
+            Lời chúc video <b id="gcount" />
+          </h4>
+          <span className="wm-pill wm-up" id="up" hidden />
+          <button type="button" className="wm-pill" id="lockBtn">
+            🔓 Mở khoá
           </button>
         </div>
-        <div className="wm-rw">
-          <svg viewBox="0 0 84 84" aria-hidden>
-            <circle cx="42" cy="42" r="38" fill="none" stroke="var(--line)" strokeWidth="4" />
-            <circle id="ring" cx="42" cy="42" r="38" fill="none" stroke="var(--rose)" strokeWidth="4" strokeLinecap="round" strokeDasharray="238.76" strokeDashoffset="238.76" />
-          </svg>
-          <button type="button" id="rec" aria-label="Bắt đầu / dừng ghi hình" />
-        </div>
+        <div className="wm-grid" id="grid" />
+        <p className="wm-empty" id="empty" hidden>
+          Chưa có lời chúc video nào. Hãy là người đầu tiên! 💕
+        </p>
       </section>
 
       <div className="wm-fsguard" id="fsguard" hidden>
@@ -154,22 +171,6 @@ export function WedMemo({ kiosk = false }: { kiosk?: boolean }) {
             💌 Gửi lời chúc
           </button>
         </div>
-      </dialog>
-
-      <dialog id="gallery" className="wm-full">
-        <div className="wm-ghead">
-          <h3>Lời chúc</h3>
-          <button type="button" className="wm-pill" id="lockBtn">
-            🔓 Mở khoá
-          </button>
-          <button type="button" className="wm-pill" id="closeG">
-            ✕ Đóng
-          </button>
-        </div>
-        <div className="wm-grid" id="grid" />
-        <p className="wm-empty" id="empty" hidden>
-          Chưa có lời chúc nào. Hãy là người đầu tiên! 💕
-        </p>
       </dialog>
 
       <dialog id="frames">

@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   if (error) return error;
   const result = finishMemory(guest.id, data.attemptId, data.moves);
   if ("error" in result) return jsonError(result.error ?? "Không lưu được kết quả");
-  const best = memoryBestOf(guest.id);
+  const best = memoryBestOf(guest.id, result.attempt.level);
   return Response.json({
     durationMs: result.attempt.duration_ms,
     moves: result.attempt.moves,

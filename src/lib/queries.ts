@@ -1,12 +1,12 @@
 import "server-only";
 import crypto from "node:crypto";
 import { customAlphabet } from "nanoid";
-import { memoryMinMsPerPair, quizMinMsPerQuestion } from "@/content/games";
-import { memoryImages } from "@/content/wedding";
+import { MAX_SPIN_CREDITS, memoryLevel, memoryMinMsPerPair, QUIZ_BONUS_SCORE, quizMinMsPerQuestion } from "@/content/games";
 import { getConfig, getQuiz } from "./config";
 import { all, get, run, tx } from "./db";
-import { pickPrize, scoreQuiz, type PrizeRow } from "./game-logic";
+import { accrueCredits, pickPrize, scoreQuiz, type PrizeRow } from "./game-logic";
 import type { Guest } from "./guest";
+import { daysBetween, vnDay } from "./wedding-time";
 
 const claimCode = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
@@ -108,25 +108,42 @@ export function addWish(guestId: number | null, name: string, message: string, i
 
 /* ---------- Vòng quay ---------- */
 
-export type Spin = { id: number; prize_label: string; is_win: number; claim_code: string | null; claimed_at: number | null; prize_id: number };
+export type Spin = { id: number; guest_id: number; prize_label: string; is_win: number; claim_code: string | null; claimed_at: number | null; prize_id: number; created_at: number };
 
 export function wheelPrizesPublic() {
   return all<Pick<PrizeRow, "id" | "label" | "color">>("SELECT id, label, color FROM prizes ORDER BY sort, id");
 }
 
-export function spinOf(guestId: number) {
-  return get<Spin>("SELECT * FROM spins WHERE guest_id = ?", guestId);
+/** Lịch sử quay của khách, mới nhất trước. */
+export function spinsOf(guestId: number) {
+  return all<Spin>("SELECT * FROM spins WHERE guest_id = ? ORDER BY id DESC", guestId);
 }
 
-export function spinWheel(guestId: number): { spin: Spin; already: boolean } | { error: string } {
+/**
+ * Số lượt quay hiện có. Mỗi ngày (theo giờ Việt Nam, GMT+7) mỗi tài khoản được tặng thêm 1 lượt, dồn lại tối đa MAX_SPIN_CREDITS;
+ * lượt thưởng từ đố vui có thể làm vượt mức này. Cộng dồn theo số ngày đã qua kể từ lần cộng trước.
+ */
+export function refreshCredits(guestId: number, now = Date.now()) {
+  // Không tự mở giao dịch (SQLite không lồng được): gọi trong tx(...) khi cần tính nguyên tử.
+  const g = get<{ spin_credits: number; credit_day: string | null }>("SELECT spin_credits, credit_day FROM guests WHERE id = ?", guestId)!;
+  const today = vnDay(now);
+  if (g.credit_day === today) return g.spin_credits;
+  const days = g.credit_day ? Math.max(0, daysBetween(g.credit_day, today)) : 0;
+  const credits = accrueCredits(g.spin_credits, days, MAX_SPIN_CREDITS);
+  run("UPDATE guests SET spin_credits = ?, credit_day = ? WHERE id = ?", credits, today, guestId);
+  return credits;
+}
+
+export function spinWheel(guestId: number): { spin: Spin; credits: number } | { error: string } {
   return tx(() => {
-    const existing = spinOf(guestId);
-    if (existing) return { spin: existing, already: true };
+    const credits = refreshCredits(guestId);
+    if (credits <= 0) return { error: "Bạn hết lượt quay rồi. Mỗi ngày bạn được tặng thêm 1 lượt (dồn tối đa 3 lượt)!" };
     const prizes = all<PrizeRow>("SELECT * FROM prizes ORDER BY sort, id");
     const prize = pickPrize(prizes, crypto.randomInt(0, 1_000_000) / 1_000_000);
     if (!prize) return { error: "Vòng quay tạm hết giải, bạn quay lại sau nhé!" };
     if (prize.stock !== null) run("UPDATE prizes SET stock = stock - 1 WHERE id = ?", prize.id);
-    run(
+    run("UPDATE guests SET spin_credits = spin_credits - 1 WHERE id = ?", guestId);
+    const result = run(
       "INSERT INTO spins (guest_id, prize_id, prize_label, is_win, claim_code, created_at) VALUES (?, ?, ?, ?, ?, ?)",
       guestId,
       prize.id,
@@ -135,7 +152,7 @@ export function spinWheel(guestId: number): { spin: Spin; already: boolean } | {
       prize.is_win ? claimCode() : null,
       Date.now(),
     );
-    return { spin: spinOf(guestId)!, already: false };
+    return { spin: get<Spin>("SELECT * FROM spins WHERE id = ?", Number(result.lastInsertRowid))!, credits: credits - 1 };
   });
 }
 
@@ -151,16 +168,15 @@ export type Attempt = {
   total: number | null;
   moves: number | null;
   duration_ms: number | null;
+  level: number;
 };
 
+/** Lượt đố vui gần nhất của khách (chơi lại bao nhiêu lần cũng được, mỗi lần là một lượt mới). */
 export function quizAttemptOf(guestId: number) {
-  // Chỉ lượt đầu tiên được tính.
-  return get<Attempt>("SELECT * FROM game_attempts WHERE guest_id = ? AND game = 'quiz' ORDER BY id LIMIT 1", guestId);
+  return get<Attempt>("SELECT * FROM game_attempts WHERE guest_id = ? AND game = 'quiz' ORDER BY id DESC LIMIT 1", guestId);
 }
 
 export function startQuiz(guestId: number) {
-  const existing = quizAttemptOf(guestId);
-  if (existing) return existing;
   const result = run(
     "INSERT INTO game_attempts (guest_id, game, started_at, total) VALUES (?, 'quiz', ?, ?)",
     guestId,
@@ -170,11 +186,13 @@ export function startQuiz(guestId: number) {
   return get<Attempt>("SELECT * FROM game_attempts WHERE id = ?", Number(result.lastInsertRowid))!;
 }
 
+export type QuizBonus = "granted" | "already" | "none";
+
 export function submitQuiz(guestId: number, answers: (number | null)[]) {
   return tx(() => {
     const attempt = quizAttemptOf(guestId);
     if (!attempt) return { error: "Bạn chưa bắt đầu lượt chơi" as const };
-    if (attempt.finished_at) return { attempt, already: true };
+    if (attempt.finished_at) return { attempt, already: true, bonus: "none" as QuizBonus };
     const quiz = getQuiz();
     const now = Date.now();
     // Người thật không thể đọc và trả lời nhanh hơn ~0,8 giây mỗi câu.
@@ -185,19 +203,24 @@ export function submitQuiz(guestId: number, answers: (number | null)[]) {
     const maxMs = (quiz.length * getConfig().games.quizSeconds + 5) * 1000;
     const duration = Math.min(now - attempt.started_at, maxMs);
     const score = scoreQuiz(answers, quiz.map((q) => q.answer));
-    run(
-      "UPDATE game_attempts SET finished_at = ?, score = ?, duration_ms = ? WHERE id = ?",
-      now,
-      score,
-      duration,
-      attempt.id,
-    );
-    return { attempt: quizAttemptOf(guestId)!, already: false };
+    run("UPDATE game_attempts SET finished_at = ?, score = ?, duration_ms = ? WHERE id = ?", now, score, duration, attempt.id);
+    // Đúng từ 8 câu: tặng thêm 1 lượt quay, chỉ một lần cho mỗi tài khoản dù chơi lại nhiều lần.
+    let bonus: QuizBonus = "none";
+    if (score >= Math.min(QUIZ_BONUS_SCORE, quiz.length)) {
+      const g = get<{ quiz_bonus: number }>("SELECT quiz_bonus FROM guests WHERE id = ?", guestId)!;
+      if (g.quiz_bonus) bonus = "already";
+      else {
+        refreshCredits(guestId);
+        run("UPDATE guests SET spin_credits = spin_credits + 1, quiz_bonus = 1 WHERE id = ?", guestId);
+        bonus = "granted";
+      }
+    }
+    return { attempt: quizAttemptOf(guestId)!, already: false, bonus };
   });
 }
 
-export function startMemory(guestId: number) {
-  const result = run("INSERT INTO game_attempts (guest_id, game, started_at) VALUES (?, 'memory', ?)", guestId, Date.now());
+export function startMemory(guestId: number, level: number) {
+  const result = run("INSERT INTO game_attempts (guest_id, game, started_at, level) VALUES (?, 'memory', ?, ?)", guestId, Date.now(), level);
   return Number(result.lastInsertRowid);
 }
 
@@ -211,29 +234,33 @@ export function finishMemory(guestId: number, attemptId: number, moves: number) 
   if (attempt.finished_at) return { attempt };
   const now = Date.now();
   const duration = now - attempt.started_at;
-  if (duration < memoryImages(getConfig()).length * memoryMinMsPerPair) return { error: "Kết quả không hợp lệ" };
+  const pairs = memoryLevel(attempt.level)?.pairs ?? 0;
+  if (duration < pairs * memoryMinMsPerPair) return { error: "Kết quả không hợp lệ" };
   run("UPDATE game_attempts SET finished_at = ?, moves = ?, duration_ms = ? WHERE id = ?", now, moves, duration, attempt.id);
   return { attempt: get<Attempt>("SELECT * FROM game_attempts WHERE id = ?", attempt.id)! };
 }
 
-export function memoryBestOf(guestId: number) {
+export function memoryBestOf(guestId: number, level: number) {
   return get<Attempt>(
-    `SELECT * FROM game_attempts WHERE guest_id = ? AND game = 'memory' AND finished_at IS NOT NULL
+    `SELECT * FROM game_attempts WHERE guest_id = ? AND game = 'memory' AND level = ? AND finished_at IS NOT NULL
      ORDER BY duration_ms, moves LIMIT 1`,
     guestId,
+    level,
   );
 }
 
 export type LeaderRow = { guest_id: number; name: string; score: number | null; total: number | null; moves: number | null; duration_ms: number };
 
-export function leaderboard(game: "quiz" | "memory", limit = 10) {
+/** Bảng xếp hạng: đố vui lấy lượt tốt nhất của mỗi khách (nhiều điểm hơn, rồi nhanh hơn); lật hình xếp riêng theo level. */
+export function leaderboard(game: "quiz" | "memory", limit = 10, level = 1) {
   if (game === "quiz") {
     return all<LeaderRow>(
-      `SELECT a.guest_id, g.name, a.score, a.total, a.moves, a.duration_ms
-       FROM game_attempts a JOIN guests g ON g.id = a.guest_id
-       WHERE a.game = 'quiz' AND a.finished_at IS NOT NULL
-         AND a.id = (SELECT MIN(id) FROM game_attempts WHERE guest_id = a.guest_id AND game = 'quiz')
-       ORDER BY a.score DESC, a.duration_ms ASC LIMIT ?`,
+      `SELECT guest_id, name, score, total, NULL AS moves, duration_ms FROM (
+         SELECT a.guest_id, g.name, a.score, a.total, a.duration_ms,
+                ROW_NUMBER() OVER (PARTITION BY a.guest_id ORDER BY a.score DESC, a.duration_ms ASC) AS rn
+         FROM game_attempts a JOIN guests g ON g.id = a.guest_id
+         WHERE a.game = 'quiz' AND a.finished_at IS NOT NULL
+       ) WHERE rn = 1 ORDER BY score DESC, duration_ms ASC LIMIT ?`,
       limit,
     );
   }
@@ -242,13 +269,16 @@ export function leaderboard(game: "quiz" | "memory", limit = 10) {
        SELECT a.guest_id, g.name, a.moves, a.duration_ms,
               ROW_NUMBER() OVER (PARTITION BY a.guest_id ORDER BY a.duration_ms, a.moves) AS rn
        FROM game_attempts a JOIN guests g ON g.id = a.guest_id
-       WHERE a.game = 'memory' AND a.finished_at IS NOT NULL
+       WHERE a.game = 'memory' AND a.level = ? AND a.finished_at IS NOT NULL
      ) WHERE rn = 1 ORDER BY duration_ms, moves LIMIT ?`,
+    level,
     limit,
   );
 }
 
 /* ---------- Trạng thái của một khách (trả cho trình duyệt) ---------- */
+
+export type SpinInfo = { label: string; isWin: boolean; code: string | null; claimed: boolean; at: number };
 
 export type GuestState = {
   guest: { name: string; phone: string | null; side: string | null; invited: boolean } | null;
@@ -262,13 +292,20 @@ export type GuestState = {
     note: string | null;
     luckyNumber: number | null;
   } | null;
-  spin: { label: string; isWin: boolean; code: string | null; claimed: boolean } | null;
+  /** Lượt quay gần nhất. */
+  spin: SpinInfo | null;
+  /** Lịch sử quay, mới nhất trước. */
+  spins: SpinInfo[];
+  /** Số lượt quay còn lại. */
+  credits: number;
 };
 
+const spinInfo = (s: Spin): SpinInfo => ({ label: s.prize_label, isWin: s.is_win === 1, code: s.claim_code, claimed: !!s.claimed_at, at: s.created_at });
+
 export function guestState(guest: Guest | undefined): GuestState {
-  if (!guest) return { guest: null, rsvp: null, spin: null };
+  if (!guest) return { guest: null, rsvp: null, spin: null, spins: [], credits: 0 };
   const rsvp = rsvpOf(guest.id);
-  const spin = spinOf(guest.id);
+  const spins = spinsOf(guest.id).map(spinInfo);
   return {
     guest: { name: guest.name, phone: guest.phone, side: guest.side, invited: guest.invite_id !== null },
     rsvp: rsvp
@@ -283,6 +320,8 @@ export function guestState(guest: Guest | undefined): GuestState {
           luckyNumber: rsvp.attending === 1 ? rsvp.lucky_number : null,
         }
       : null,
-    spin: spin ? { label: spin.prize_label, isWin: spin.is_win === 1, code: spin.claim_code, claimed: !!spin.claimed_at } : null,
+    spin: spins[0] ?? null,
+    spins,
+    credits: tx(() => refreshCredits(guest.id)),
   };
 }

@@ -5,8 +5,9 @@ import { configSchema, quizSchema } from "./config-schema";
 import { canChiYear, lunarText, solarToLunar } from "./lunar";
 import { mergeDefaults } from "./merge";
 import { buildIcs, eventRange, foldLine, googleCalendarUrl } from "./ics";
-import { formatLucky, normalizePhone, pickPrize, scoreQuiz } from "./game-logic";
-import { monthGrid, timeRemaining, vnDate } from "./wedding-time";
+import { accrueCredits, formatLucky, normalizePhone, pickPrize, scoreQuiz } from "./game-logic";
+import { MEMORY_LEVELS } from "@/content/games";
+import { daysBetween, monthGrid, timeRemaining, vnDate, vnDay, vnToday } from "./wedding-time";
 
 describe("ngày cưới", () => {
   it("29/11/2026 là Chủ Nhật", () => {
@@ -146,8 +147,8 @@ describe("cấu hình", () => {
 
   it("mỗi địa điểm là một lựa chọn khi xác nhận; số cặp lật hình không vượt quá album", () => {
     expect(rsvpGroups(defaultConfig).map((g) => g.key)).toEqual(["nha-gai", "nha-hang"]);
-    expect(memoryImages({ ...defaultConfig, album: defaultConfig.album.slice(0, 3) })).toHaveLength(3);
-    expect(memoryImages(defaultConfig)).toHaveLength(8);
+    expect(memoryImages({ ...defaultConfig, album: defaultConfig.album.slice(0, 3) }, 6)).toHaveLength(3);
+    expect(memoryImages(defaultConfig, 8)).toHaveLength(8);
   });
 
   it("dữ liệu cũ: album chia chủ đề được gộp lại thành một danh sách, hộp mừng có thêm bankApp", () => {
@@ -188,5 +189,22 @@ describe("cấu hình", () => {
     expect(parsed.success && parsed.data.texts.thankYou).toBe("Dòng một\nDòng hai");
     expect(venueQuery(c.venues[0])).toBe("Nhà hàng Sao Mai, Số 1 Phố A");
     expect(buildIcs(c, [c.events[1]])).toContain("LOCATION:Nhà hàng Sao Mai\\, Số 1 Phố A");
+  });
+
+  it("giờ Việt Nam GMT+7: qua nửa đêm 17:00 UTC là sang ngày mới; lượt quay dồn theo ngày, tối đa 3", () => {
+    expect(vnDay(Date.parse("2026-11-04T16:59:59Z"))).toBe("2026-11-04");
+    expect(vnDay(Date.parse("2026-11-04T17:00:00Z"))).toBe("2026-11-05");
+    expect(vnToday(new Date("2026-12-31T20:00:00Z"))).toEqual({ year: 2027, month: 1, day: 1 });
+    expect(daysBetween("2026-11-04", "2026-11-07")).toBe(3);
+    expect(daysBetween("2026-12-30", "2027-01-02")).toBe(3);
+    expect(accrueCredits(0, 1, 3)).toBe(1);
+    expect(accrueCredits(2, 5, 3)).toBe(3);
+    expect(accrueCredits(4, 2, 3)).toBe(4); // lượt thưởng vượt mức vẫn giữ
+    expect(accrueCredits(1, 0, 3)).toBe(1);
+  });
+
+  it("level lật hình: 6 cặp 4×3, 8 cặp 4×4, 10 cặp 4×5, đủ số ô", () => {
+    expect(MEMORY_LEVELS.map((l) => [l.pairs, l.cols, l.rows])).toEqual([[6, 4, 3], [8, 4, 4], [10, 4, 5]]);
+    for (const l of MEMORY_LEVELS) expect(l.pairs * 2).toBe(l.cols * l.rows);
   });
 });

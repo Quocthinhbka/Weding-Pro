@@ -38,3 +38,8 @@ export function normalizePhone(input: string): string | null {
 export function formatLucky(n: number) {
   return String(n).padStart(3, "0");
 }
+
+/** Cộng dồn lượt quay theo số ngày đã qua; không vượt `max` (lượt thưởng đã vượt mức thì giữ nguyên, không bị cắt). */
+export function accrueCredits(credits: number, days: number, max: number) {
+  return credits >= max ? credits : Math.min(max, credits + Math.max(0, days));
+}

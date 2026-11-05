@@ -15,9 +15,10 @@ export async function POST(req: Request) {
   if (error) return error;
   const result = submitQuiz(guest.id, data.answers);
   if ("error" in result) return jsonError(result.error ?? "Không gửi được bài");
-  const { attempt, already } = result;
+  const { attempt, already, bonus } = result;
   return Response.json({
     already,
+    bonus, // "granted" = vừa được tặng 1 lượt quay, "already" = đã nhận lượt thưởng này trước đó
     score: attempt.score,
     total: attempt.total,
     durationMs: attempt.duration_ms,

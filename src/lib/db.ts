@@ -113,6 +113,31 @@ const MIGRATIONS: string[] = [
   `,
   // Lời chúc riêng tư: vẫn hiện trên thiệp nhưng nội dung bị làm mờ, chỉ cô dâu chú rể đọc được trong trang quản trị.
   `ALTER TABLE wishes ADD COLUMN private INTEGER NOT NULL DEFAULT 0;`,
+  // Vòng quay nhiều lượt: bỏ UNIQUE(guest_id) của spins (SQLite phải dựng lại bảng), khách có số lượt quay (mỗi ngày +1, tối đa 3),
+  // thưởng đố vui nhận một lần, trò lật hình có level.
+  `
+  CREATE TABLE spins_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guest_id INTEGER NOT NULL REFERENCES guests(id) ON DELETE CASCADE,
+    prize_id INTEGER NOT NULL REFERENCES prizes(id),
+    prize_label TEXT NOT NULL,
+    is_win INTEGER NOT NULL,
+    claim_code TEXT UNIQUE,
+    claimed_at INTEGER,
+    created_at INTEGER NOT NULL
+  );
+  INSERT INTO spins_new (id, guest_id, prize_id, prize_label, is_win, claim_code, claimed_at, created_at)
+    SELECT id, guest_id, prize_id, prize_label, is_win, claim_code, claimed_at, created_at FROM spins;
+  DROP TABLE spins;
+  ALTER TABLE spins_new RENAME TO spins;
+  CREATE INDEX spins_guest ON spins(guest_id);
+  ALTER TABLE guests ADD COLUMN spin_credits INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE guests ADD COLUMN credit_day TEXT;
+  ALTER TABLE guests ADD COLUMN quiz_bonus INTEGER NOT NULL DEFAULT 0;
+  UPDATE guests SET spin_credits = CASE WHEN EXISTS (SELECT 1 FROM spins WHERE spins.guest_id = guests.id) THEN 0 ELSE 1 END,
+                    credit_day = date('now', '+7 hours');
+  ALTER TABLE game_attempts ADD COLUMN level INTEGER NOT NULL DEFAULT 2;
+  `,
 ];
 
 const globalForDb = globalThis as unknown as { weddingDb?: DatabaseSync };

@@ -397,3 +397,59 @@ body {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
 }
+
+/* Trái tim ở mái nhà đập nhanh */
+@keyframes heartbeat-fast {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.28);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.2);
+  }
+  56% {
+    transform: scale(1);
+  }
+}
+.animate-heartbeat-fast {
+  animation: heartbeat-fast 0.8s ease-in-out infinite;
+}
+
+/* Điện thoại nằm ngang: che màn hình bằng lời nhắc xoay dọc (máy tính và máy tính bảng không bị ảnh hưởng) */
+.orient-guard {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+  .orient-guard {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--cream);
+    padding: 1rem;
+    text-align: center;
+    color: var(--olive-deep);
+  }
+}
+@keyframes rotate-hint {
+  0%,
+  35% {
+    transform: rotate(-90deg);
+  }
+  65%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+.animate-rotate-hint {
+  animation: rotate-hint 2.4s ease-in-out infinite;
+}

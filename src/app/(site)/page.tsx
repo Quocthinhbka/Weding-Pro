@@ -12,11 +12,12 @@ export default async function Home(props: PageProps<"/">) {
   const to = typeof sp.to === "string" ? sp.to.trim().slice(0, 80) : undefined;
   const guestName = findInvite(code)?.display_name ?? (to || null);
   const config = getConfig();
+  const side = sideFromParam(sp.f);
 
   return (
     <>
-      <Envelope guestName={guestName} />
-      <SiteSections config={config} wishes={visibleWishes()} side={sideFromParam(sp.f)} quizTotal={getQuiz().length} albumRatios={await albumRatios(config.album)} />
+      <Envelope guestName={guestName} side={side} />
+      <SiteSections config={config} wishes={visibleWishes()} side={side} quizTotal={getQuiz().length} albumRatios={await albumRatios(config.album)} />
     </>
   );
 }

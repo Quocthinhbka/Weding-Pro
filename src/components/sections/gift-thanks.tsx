@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { bankAppName, bankAppUrl } from "@/content/banks";
-import { coupleNames, type Gift } from "@/content/wedding";
+import { coupleNames, coupleOrder, type Gift, type Side } from "@/content/wedding";
 import { useWedding } from "@/components/site/wedding-context";
 import { CopyButton, copyText } from "@/components/ui/copy-button";
 import { Daisy, Heart } from "@/components/ui/daisy";
@@ -128,8 +128,9 @@ export function GiftBox() {
   );
 }
 
-export function ThankYou() {
+export function ThankYou({ side }: { side: Side }) {
   const config = useWedding();
+  const [first, second] = coupleOrder(config, side);
   const [copied, setCopied] = useState(false);
   const shareUrl = () => window.location.origin;
 
@@ -156,9 +157,9 @@ export function ThankYou() {
         <p className="mt-3 font-script text-6xl text-olive">Thank you!</p>
         <p className="mx-auto mt-4 max-w-xs whitespace-pre-line font-serif text-[17px] italic leading-relaxed text-ink">{config.texts.thankYou}</p>
         <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-2 font-script text-ink">
-          <FitText max={30}>{config.groom.name}</FitText>
+          <FitText max={30}>{first.person.name}</FitText>
           <Heart className="h-5 w-5 text-rose" />
-          <FitText max={30}>{config.bride.name}</FitText>
+          <FitText max={30}>{second.person.name}</FitText>
         </div>
         <div className="mx-auto mt-10 max-w-xs">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-ink-soft">Chia sẻ thiệp</p>

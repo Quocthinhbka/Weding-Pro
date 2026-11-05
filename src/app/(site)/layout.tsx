@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { GuestProvider } from "@/components/site/guest";
 import { MusicProvider } from "@/components/site/music";
+import { OrientationGuard } from "@/components/site/orientation-guard";
 import { Vinyl } from "@/components/site/vinyl";
 import { WeddingProvider } from "@/components/site/wedding-context";
 import { DaisySprig } from "@/components/ui/daisy";
@@ -41,6 +42,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
             <main className="card-frame relative mx-auto min-h-dvh max-w-[480px] overflow-x-hidden">{children}</main>
             <FallingPetals />
             <Vinyl />
+            <OrientationGuard />
           </div>
         </GuestProvider>
       </MusicProvider>
