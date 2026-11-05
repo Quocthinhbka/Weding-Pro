@@ -18,10 +18,10 @@ type Item = { id: string; node: ReactNode; tone?: "paper"; screens?: number; flu
 
 /**
  * Các sector của thiệp theo thứ tự, dùng chung cho trang chủ và khung xem trước trong trang cấu hình.
- * Mỗi sector trọn một màn hình; câu chuyện tình yêu và album dài 1,75 màn hình.
+ * Mỗi sector trọn một màn hình; câu chuyện tình yêu dài 1,75 màn hình.
  * `side` là bên mời (?f=groom | bride): đổi sự kiện, giờ, địa điểm và chỉ đường ở thẻ mời.
  */
-export function SiteSections({ config, wishes, side = "groom", quizTotal }: { config: WeddingConfig; wishes: PublicWish[]; side?: Side; quizTotal: number }) {
+export function SiteSections({ config, wishes, side = "groom", quizTotal, albumRatios = {} }: { config: WeddingConfig; wishes: PublicWish[]; side?: Side; quizTotal: number; albumRatios?: Record<string, number> }) {
   const show = config.sections;
 
   const items: Item[] = [
@@ -52,7 +52,7 @@ export function SiteSections({ config, wishes, side = "groom", quizTotal }: { co
     },
     { id: "schedule", node: <Schedule config={config} />, tone: "paper" },
     ...(show.loveStory && config.loveStory.length > 0 ? [{ id: "story", node: <LoveStory config={config} />, screens: 1.75 }] : []),
-    ...(show.album && config.album.length > 0 ? [{ id: "album", node: <Album config={config} />, tone: "paper" as const, screens: 1.75 }] : []),
+    ...(show.album && config.album.length > 0 ? [{ id: "album", node: <Album config={config} ratios={albumRatios} />, tone: "paper" as const }] : []),
     ...(show.guestbook ? [{ id: "guestbook", node: <Guestbook initial={wishes} /> }] : []),
     ...(show.video ? [{ id: "video", node: <VideoWishes />, tone: "paper" as const }] : []),
     ...(show.games ? [{ id: "games", node: <GamesSector quizTotal={quizTotal} />, tone: "paper" as const }] : []),

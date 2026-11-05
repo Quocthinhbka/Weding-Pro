@@ -112,7 +112,7 @@ export function Envelope({ guestName }: { guestName: string | null }) {
           {/* Tên khách mời viết trên phong bì */}
           <div className="absolute inset-x-0 bottom-[7%] z-[2] px-6">
             <p className="text-[11px] uppercase tracking-[0.3em] text-ink-soft">Thân mời</p>
-            <p className="mt-1 truncate font-script text-2xl text-ink">{guestName || config.texts.guestFallback}</p>
+            <p className="mt-1 line-clamp-2 whitespace-pre-line font-script text-2xl leading-tight text-ink">{guestName || config.texts.guestFallback}</p>
           </div>
         </div>
 

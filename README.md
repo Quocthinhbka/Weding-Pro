@@ -113,7 +113,8 @@ Caddy sẽ tự xin chứng chỉ HTTPS. Sau khoảng một phút, mở `https:/
 
 Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nhấn PageDown) trượt tới sector kế tiếp; có chấm điều hướng ở mép phải. Link có `#video`, `#gifts`… mở thẳng tới sector đó.
 - Mỗi sector vừa trọn một màn hình (đã kiểm tra ở 360×640, 390×844, 430×932). Thứ tự: bìa, gia đình (kèm buổi tiệc thân mật), ngôi nhà cô dâu chú rể + thẻ nhạc, thẻ mời, đếm ngược + lịch, lịch trình, chuyện tình, album, sổ lưu bút, video lời chúc, trò chơi, hộp mừng cưới, cảm ơn.
-- **Chuyện tình** và **Album** là sector dài 1,75 màn hình: vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector, lần 3 sang sector sau. Tối đa 4 kỷ niệm và 48 ảnh album; ảnh xếp theo hàng với nhiều cỡ nhưng luôn khít.
+- **Chuyện tình** là sector dài 1,75 màn hình: vuốt lần 1 tới đầu sector, vuốt lần 2 trượt xuống cuối sector, lần 3 sang sector sau (tối đa 4 kỷ niệm).
+- **Album** (tối đa 48 ảnh) là một sector một màn hình: ảnh xếp thành một mảng khít, to nhỏ khác nhau nhưng giữ nguyên tỉ lệ từng ảnh (không cắt xén), tự trôi chậm từ phải sang trái. Giữ tay (hoặc rê chuột) thì ảnh dừng, kéo / vuốt sang trái hoặc phải để xem nhanh; thả tay ra ảnh lại tự trôi. Chạm nhanh vào ảnh để xem lớn.
 - **Lịch trình** là một dòng thời gian gồm các mốc giờ, tự nhóm theo địa điểm (kèm Chỉ đường và thêm vào lịch). Mốc không gắn địa điểm (VD đoàn nhà trai xuất phát) chọn "Không gắn địa điểm".
 - **Link nhà trai / nhà gái:** link thường (hoặc `?f=groom`) là thiệp nhà trai, `?f=bride` là thiệp nhà gái. Mỗi bên chọn riêng sự kiện và tên hiện ở thẻ mời (mặc định Lễ Thành Hôn / Lễ Vu Quy, kèm giờ, địa điểm, chỉ đường) và buổi tiệc thân mật hiện ở phần gia đình, trong mục "Địa điểm & lịch trình" của trang cấu hình. Ghép được với link mời riêng: `https://<tên-miền>/?k=<mã>&f=bride`.
 - **Hộp mừng cưới** là một hòm bấm để mở hộp thoại mã QR. Chọn ứng dụng ngân hàng trong trang cấu hình thì bấm vào QR sẽ mở thẳng app đó (qua deeplink VietQR) và chép sẵn số tài khoản.
@@ -122,6 +123,10 @@ Thiệp là một khung cuộn theo từng sector, mỗi lần vuốt (hoặc nh
 - **Trò chơi** (vòng quay, đố vui, lật hình) chơi ngay trong sector, có nút "‹ Trò chơi" để quay lại danh sách; link `/tro-choi/...` cũ chuyển về `/#games`.
 - **Chữ và khoảng cách:** tên cô dâu chú rể luôn nằm một dòng (tự co chữ theo chiều ngang). Màn hình thấp (cao dưới 700px) thì cỡ chữ gốc nhỏ lại để mọi sector vẫn vừa một màn hình.
 - Màn hình quá thấp (cao dưới 560px, như máy nằm ngang) thì tắt snap, cuộn như trang thường.
+
+## Nội dung nhiều dòng
+
+Các ô nội dung trong trang Cấu hình (lời mời, lời cảm ơn, lời chào phong bì, tên và địa chỉ địa điểm, tên sự kiện và tên ở thẻ mời, tiêu đề kỷ niệm, thông tin mừng cưới, câu đố…) cho phép nhấn Enter để xuống dòng; thiệp hiển thị đúng các dòng đã xuống. Riêng tên cô dâu chú rể luôn một dòng. Khi gửi địa chỉ cho Google Maps hoặc file lịch, các dòng được nối lại thành một.
 
 ## Sổ lưu bút
 

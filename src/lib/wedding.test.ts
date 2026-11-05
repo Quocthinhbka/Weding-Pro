@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bankAppUrl } from "@/content/banks";
-import { albumRows } from "@/components/sections/album-grid";
-import { dateInfo, defaultConfig, feastOf, inviteEvent, memoryImages, normalizeConfig, rsvpGroups, sideFromParam } from "@/content/wedding";
+import { dateInfo, defaultConfig, feastOf, venueQuery, inviteEvent, memoryImages, normalizeConfig, rsvpGroups, sideFromParam } from "@/content/wedding";
 import { configSchema, quizSchema } from "./config-schema";
 import { canChiYear, lunarText, solarToLunar } from "./lunar";
 import { mergeDefaults } from "./merge";
@@ -178,13 +177,16 @@ describe("cấu hình", () => {
     expect(bankAppUrl("khong-co")).toBe("");
   });
 
-  it("album xếp theo hàng: đủ mọi ảnh, mỗi ảnh một ô, nhiều cỡ khác nhau", () => {
-    for (const n of [1, 2, 3, 5, 9, 14, 20, 33, 40, 48]) {
-      const rows = albumRows(n);
-      expect(rows.reduce((a, r) => a + r.w.length, 0)).toBe(n);
-      expect(rows.every((r) => r.w.length >= 1 && r.h > 0)).toBe(true);
-    }
-    const sizes = new Set(albumRows(40).map((r) => `${r.h}:${r.w.join("")}`));
-    expect(sizes.size).toBeGreaterThanOrEqual(5);
+  it("nội dung nhiều dòng: xuống dòng được lưu nguyên, nhưng địa chỉ gửi Google Maps / lịch chỉ một dòng", () => {
+    const c = structuredClone(defaultConfig);
+    c.texts.thankYou = "Dòng một\nDòng hai";
+    c.venues[0].name = "Nhà hàng\nSao Mai";
+    c.venues[0].address = "Số 1\n  Phố A";
+    c.events[1].title = "Lễ\năn hỏi";
+    const parsed = configSchema.safeParse(c);
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.texts.thankYou).toBe("Dòng một\nDòng hai");
+    expect(venueQuery(c.venues[0])).toBe("Nhà hàng Sao Mai, Số 1 Phố A");
+    expect(buildIcs(c, [c.events[1]])).toContain("LOCATION:Nhà hàng Sao Mai\\, Số 1 Phố A");
   });
 });

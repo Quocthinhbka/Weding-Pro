@@ -95,7 +95,7 @@ export function GiftBox() {
             const bankUrl = bankAppUrl(g.bankApp);
             return (
               <div key={i} className="rounded-2xl bg-white/80 p-3 text-center ring-1 ring-line">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-olive">{g.title}</p>
+                <p className="whitespace-pre-line text-[11px] font-semibold uppercase tracking-[0.2em] text-olive">{g.title}</p>
                 {g.qr && (
                   <a
                     href={bankUrl || g.qr}
@@ -107,9 +107,9 @@ export function GiftBox() {
                   </a>
                 )}
                 {g.qr && bankUrl && <p className="mt-1.5 text-[11px] leading-tight text-olive-deep">Chạm vào mã QR để mở {bankAppName(g.bankApp)}</p>}
-                <p className="mt-2 text-xs text-ink-soft">{g.bank}</p>
+                <p className="mt-2 whitespace-pre-line text-xs text-ink-soft">{g.bank}</p>
                 <p className="font-serif text-lg tracking-wider text-ink">{g.accountNumber}</p>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-ink-soft">{g.accountName}</p>
+                <p className="whitespace-pre-line text-[11px] font-medium uppercase tracking-wider text-ink-soft">{g.accountName}</p>
                 <div className="mt-2 flex flex-wrap justify-center gap-1.5">
                   {g.accountNumber && <CopyButton text={g.accountNumber} label="Chép số TK" />}
                   {g.qr && (
@@ -154,7 +154,7 @@ export function ThankYou() {
       <Reveal>
         <Daisy size={44} className="mx-auto" />
         <p className="mt-3 font-script text-6xl text-olive">Thank you!</p>
-        <p className="mx-auto mt-4 max-w-xs font-serif text-[17px] italic leading-relaxed text-ink">{config.texts.thankYou}</p>
+        <p className="mx-auto mt-4 max-w-xs whitespace-pre-line font-serif text-[17px] italic leading-relaxed text-ink">{config.texts.thankYou}</p>
         <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-2 font-script text-ink">
           <FitText max={30}>{config.groom.name}</FitText>
           <Heart className="h-5 w-5 text-rose" />

@@ -130,7 +130,7 @@ export function Quiz({ total, seconds }: { total: number; seconds: number }) {
               const ok = answers[i] === result.correct[i];
               return (
                 <div key={i} className="rounded-2xl bg-white/80 p-4 text-sm ring-1 ring-line">
-                  <p className="font-medium text-ink">
+                  <p className="whitespace-pre-line font-medium text-ink">
                     {ok ? "✅" : "❌"} {q.question}
                   </p>
                   <p className="mt-1 text-ink-soft">Đáp án: <b className="text-olive-deep">{q.options[result.correct[i]]}</b></p>
@@ -157,7 +157,7 @@ export function Quiz({ total, seconds }: { total: number; seconds: number }) {
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-paper-deep">
         <div className="h-full bg-olive transition-all duration-1000 ease-linear" style={{ width: `${(left / perQuestion) * 100}%` }} />
       </div>
-      <p className="mt-6 font-serif text-xl leading-snug text-ink">{q.question}</p>
+      <p className="mt-6 whitespace-pre-line font-serif text-xl leading-snug text-ink">{q.question}</p>
       <div className="mt-5 grid gap-2.5">
         {q.options.map((opt, i) => (
           <button

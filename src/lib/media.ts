@@ -100,3 +100,32 @@ export function fileResponse(file: string, mime: string, rangeHeader: string | n
   const stream = Readable.toWeb(fs.createReadStream(file)) as ReadableStream;
   return new Response(stream, { headers: { ...headers, "Content-Length": String(stat.size) } });
 }
+
+const ratioCache = new Map<string, number>();
+
+/**
+ * Tỉ lệ rộng/cao của từng ảnh album (đọc phần đầu file bằng sharp, không giải mã cả ảnh) để xếp khít mà không cắt xén.
+ * Ảnh không đọc được thì coi là 4:3. Ảnh đã tải lên không bao giờ bị ghi đè nên cache theo đường dẫn là an toàn.
+ */
+export async function albumRatios(srcs: string[]) {
+  const { default: sharp } = await import("sharp");
+  const out: Record<string, number> = {};
+  for (const src of new Set(srcs)) {
+    let ratio = ratioCache.get(src);
+    if (ratio === undefined) {
+      try {
+        const file = src.startsWith("/api/media/")
+          ? path.join(/*turbopackIgnore: true*/ mediaDir(), path.basename(src))
+          : path.join(/*turbopackIgnore: true*/ process.cwd(), "public", src.replace(/^\/+/, ""));
+        if (!src.startsWith("/api/media/") && !path.resolve(file).startsWith(path.resolve(process.cwd(), "public") + path.sep)) throw new Error("ngoài thư mục public");
+        const { width, height } = await sharp(file).metadata();
+        ratio = width && height ? width / height : 4 / 3;
+      } catch {
+        ratio = 4 / 3;
+      }
+      ratioCache.set(src, ratio);
+    }
+    out[src] = ratio;
+  }
+  return out;
+}

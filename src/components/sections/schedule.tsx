@@ -34,7 +34,7 @@ export function Schedule({ config }: { config: WeddingConfig }) {
                 <span className="absolute -left-[7px] top-[1.15rem] grid h-3.5 w-3.5 place-items-center rounded-full bg-olive-deep text-[8px] text-white first:top-1" aria-hidden>
                   ●
                 </span>
-                <p className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-olive-deep">📍 {row.venue.name}</p>
+                <p className="min-w-0 flex-1 whitespace-pre-line text-[13px] font-semibold leading-tight text-olive-deep">📍 {row.venue.name}</p>
                 <a href={directionsUrl(row.venue)} target="_blank" rel="noopener noreferrer" className="rounded-full bg-olive px-2.5 py-0.5 text-[11px] text-white">
                   Chỉ đường
                 </a>
@@ -46,7 +46,7 @@ export function Schedule({ config }: { config: WeddingConfig }) {
               <li key={row.event.id} className="relative flex items-baseline gap-3 py-[5px] pl-5">
                 <span className="absolute -left-[5px] top-[0.8rem] h-2.5 w-2.5 rounded-full border-2 border-cream bg-olive ring-1 ring-olive" />
                 <span className="w-12 shrink-0 font-serif text-lg leading-none text-olive-deep tabular-nums">{row.event.time}</span>
-                <span className="min-w-0 flex-1 text-[14px] font-medium leading-snug text-ink">{row.event.title}</span>
+                <span className="min-w-0 flex-1 whitespace-pre-line text-[14px] font-medium leading-snug text-ink">{row.event.title}</span>
               </li>
             ),
           )}

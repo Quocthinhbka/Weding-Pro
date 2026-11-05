@@ -47,7 +47,7 @@ export function Family({ config, side }: { config: WeddingConfig; side: Side }) 
         <div className="grid grid-cols-2 gap-4">
           {sides.map((side) => (
             <div key={side.label}>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-olive">{side.label}</p>
+              <p className="whitespace-pre-line text-xs font-semibold uppercase tracking-[0.3em] text-olive">{side.label}</p>
               <div className="mt-3 space-y-1.5">
                 {side.members.map((m) => (
                   <p key={`${m.role}-${m.name}`} className="text-[15px] text-ink">
@@ -81,7 +81,7 @@ export function Family({ config, side }: { config: WeddingConfig; side: Side }) 
               vào lúc {feast.event.time.replace(":", "h")} · {date.weekday}, {date.dots}
             </p>
             {feast.venue && (
-              <p className="mt-0.5 text-sm leading-snug text-ink-soft">
+              <p className="mt-0.5 whitespace-pre-line text-sm leading-snug text-ink-soft">
                 <b className="font-medium text-ink">{feast.venue.name}</b>
                 <br />
                 {feast.venue.address}
@@ -190,7 +190,7 @@ export function InviteCard({ config, side }: { config: WeddingConfig; side: Side
   return (
     <Reveal className="rounded-[2rem] bg-cream px-6 py-8 text-center shadow-sm ring-1 ring-line">
       <p className="text-sm text-ink-soft">Trân trọng kính mời bạn tới dự</p>
-      <h3 className="mt-2 text-balance font-serif text-3xl font-semibold uppercase tracking-[0.12em] text-olive-deep">{main.title}</h3>
+      <h3 className="mt-2 whitespace-pre-line text-balance font-serif text-3xl font-semibold uppercase tracking-[0.12em] text-olive-deep">{main.title}</h3>
       <p className="mt-4 text-sm uppercase tracking-[0.25em] text-ink-soft">Vào lúc</p>
       <p className="font-serif text-4xl text-ink">{main.time.replace(":", "h")}</p>
       <div className="mx-auto mt-5 grid max-w-[300px] grid-cols-[1fr_auto_1fr] items-center">
@@ -204,8 +204,8 @@ export function InviteCard({ config, side }: { config: WeddingConfig; side: Side
         <>
           <div className="mt-6">
             <Daisy size={26} className="mx-auto" />
-            <p className="mt-2 text-balance font-semibold text-ink">{venue.name}</p>
-            <p className="text-sm text-ink-soft">{venue.address}</p>
+            <p className="mt-2 whitespace-pre-line text-balance font-semibold text-ink">{venue.name}</p>
+            <p className="whitespace-pre-line text-sm text-ink-soft">{venue.address}</p>
           </div>
           <a href={directionsUrl(venue)} target="_blank" rel="noopener noreferrer" className="btn btn-outline mt-6">
             Chỉ đường

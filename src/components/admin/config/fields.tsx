@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { CropDialog } from "./crop-dialog";
 
 // Các ô nhập dùng trong trang cấu hình thiệp.
@@ -29,6 +29,7 @@ export function Card({ id, title, description, children }: { id: string; title: 
   );
 }
 
+/** Ô nhập một dòng; `multiline` cho phép xuống dòng (Enter) và tự giãn chiều cao theo nội dung. */
 export function TextField({
   label,
   value,
@@ -37,6 +38,7 @@ export function TextField({
   hint,
   type = "text",
   maxLength,
+  multiline = false,
   className = "",
 }: {
   label: string;
@@ -46,17 +48,30 @@ export function TextField({
   hint?: string;
   type?: "text" | "date" | "time" | "tel";
   maxLength?: number;
+  multiline?: boolean;
   className?: string;
 }) {
+  const area = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight + 2}px`;
+  }, [value, multiline]);
   return (
     <label className={`block ${className}`}>
       <span className="label">{label}</span>
-      <input type={type} className="field" value={value} placeholder={placeholder} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} />
+      {multiline ? (
+        <textarea ref={area} rows={1} className="field resize-none overflow-hidden" value={value} placeholder={placeholder} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} />
+      ) : (
+        <input type={type} className="field" value={value} placeholder={placeholder} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} />
+      )}
       {hint && <span className="mt-1 block text-xs text-ink-soft">{hint}</span>}
     </label>
   );
 }
 
+/** Ô nhập nhiều dòng: Enter xuống dòng, thiệp hiển thị đúng các dòng đã xuống. */
 export function TextArea({ label, value, onChange, rows = 3, maxLength }: { label: string; value: string; onChange: (v: string) => void; rows?: number; maxLength?: number }) {
   return (
     <label className="block">

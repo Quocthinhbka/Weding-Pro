@@ -3,7 +3,7 @@ import type { WeddingConfig } from "@/content/wedding";
 import { Daisy } from "@/components/ui/daisy";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionTitle } from "@/components/ui/section-title";
-import { AlbumGrid } from "./album-grid";
+import { AlbumDrift } from "./album-grid";
 
 /** Sector dài 1,75 màn hình: các kỷ niệm chia đều chiều cao, nên vừa mọi cỡ màn hình. */
 export function LoveStory({ config }: { config: WeddingConfig }) {
@@ -19,7 +19,7 @@ export function LoveStory({ config }: { config: WeddingConfig }) {
             <div className="min-w-0 flex-1">
               <div className={`flex items-center gap-1.5 ${i % 2 ? "justify-end" : ""}`}>
                 <Daisy size={18} />
-                <p className="font-script text-2xl text-olive">{s.title}</p>
+                <p className="whitespace-pre-line font-script text-2xl text-olive">{s.title}</p>
               </div>
               <p className="mt-1 line-clamp-6 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{s.text}</p>
             </div>
@@ -35,12 +35,12 @@ export function LoveStory({ config }: { config: WeddingConfig }) {
   );
 }
 
-/** Album: một sector dài 1,75 màn hình, ảnh xếp mosaic phủ kín chiều cao. Bấm vào ảnh để xem lớn. */
-export function Album({ config }: { config: WeddingConfig }) {
+/** Album: một sector một màn hình, ảnh xếp thành mảng khít giữ tỉ lệ và trôi chậm từ phải sang trái. */
+export function Album({ config, ratios }: { config: WeddingConfig; ratios: Record<string, number> }) {
   return (
     <>
       <SectionTitle compact eyebrow="Our Moments" title="Album cưới" />
-      <AlbumGrid images={config.album} />
+      <AlbumDrift images={config.album} ratios={ratios} />
     </>
   );
 }

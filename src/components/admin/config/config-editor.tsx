@@ -149,7 +149,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
         <div className="grid gap-6 sm:grid-cols-2">
           {(["trai", "gai"] as const).map((side) => (
             <div key={side} className="space-y-3">
-              <TextField label="Tiêu đề" value={config.families[side].label} onChange={(v) => edit((d) => void (d.families[side].label = v))} />
+              <TextField multiline label="Tiêu đề" value={config.families[side].label} onChange={(v) => edit((d) => void (d.families[side].label = v))} />
               {config.families[side].members.map((m, i) => (
                 <div key={i} className="flex items-end gap-2">
                   <TextField label="Vai trò" value={m.role} placeholder="Bố / Mẹ / Ông…" className="w-24" onChange={(v) => edit((d) => void (d.families[side].members[i].role = v))} />
@@ -205,8 +205,8 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
               />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <TextField label="Tên địa điểm" value={v.name} onChange={(val) => edit((d) => void (d.venues[i].name = val))} />
-              <TextField label="Địa chỉ" value={v.address} onChange={(val) => edit((d) => void (d.venues[i].address = val))} />
+              <TextField multiline label="Tên địa điểm" value={v.name} onChange={(val) => edit((d) => void (d.venues[i].name = val))} />
+              <TextField multiline label="Địa chỉ" value={v.address} onChange={(val) => edit((d) => void (d.venues[i].address = val))} />
               <TextField
                 label="Toạ độ Google Maps (không bắt buộc)"
                 value={v.latLng}
@@ -244,7 +244,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
                     ))}
                   </select>
                 </label>
-                <TextField label="Tên hiện ở thẻ mời" value={config.sides[k].title} maxLength={40} placeholder={k === "groom" ? "Lễ Thành Hôn" : "Lễ Vu Quy"} onChange={(v) => edit((d) => void (d.sides[k].title = v))} />
+                <TextField multiline label="Tên hiện ở thẻ mời" value={config.sides[k].title} maxLength={40} placeholder={k === "groom" ? "Lễ Thành Hôn" : "Lễ Vu Quy"} onChange={(v) => edit((d) => void (d.sides[k].title = v))} />
                 <label className="block">
                   <span className="label">Buổi tiệc thân mật</span>
                   <select className="field" value={config.sides[k].feastEventId} onChange={(e) => edit((d) => void (d.sides[k].feastEventId = e.target.value))}>
@@ -266,7 +266,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
             {config.events.map((e, i) => (
               <div key={e.id} className="grid grid-cols-[150px_1fr] gap-2 rounded-2xl bg-white/70 p-3 ring-1 ring-line sm:grid-cols-[150px_1fr_1fr_auto]">
                 <TextField label="Giờ" type="time" value={e.time} onChange={(v) => v && edit((d) => void (d.events[i].time = v))} />
-                <TextField label="Tên sự kiện" value={e.title} onChange={(v) => edit((d) => void (d.events[i].title = v))} />
+                <TextField multiline label="Tên sự kiện" value={e.title} onChange={(v) => edit((d) => void (d.events[i].title = v))} />
                 <label className="col-span-2 block sm:col-span-1">
                   <span className="label">Địa điểm</span>
                   <select className="field" value={e.venueId} onChange={(ev) => edit((d) => void (d.events[i].venueId = ev.target.value))}>
@@ -309,6 +309,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
         <TextArea label="Lời mời (phần Đại diện gia đình)" value={config.texts.invitation} maxLength={300} onChange={(v) => edit((d) => void (d.texts.invitation = v))} />
         <TextArea label="Lời cảm ơn (cuối thiệp)" value={config.texts.thankYou} maxLength={300} onChange={(v) => edit((d) => void (d.texts.thankYou = v))} />
         <TextField
+          multiline
           label="Lời chào trên phong bì khi không có tên khách"
           value={config.texts.guestFallback}
           maxLength={40}
@@ -341,7 +342,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
                   onRemove={() => edit((d) => void d.loveStory.splice(i, 1))}
                 />
               </div>
-              <TextField label="Tiêu đề" value={s.title} onChange={(v) => edit((d) => void (d.loveStory[i].title = v))} />
+              <TextField multiline label="Tiêu đề" value={s.title} onChange={(v) => edit((d) => void (d.loveStory[i].title = v))} />
               <TextArea label="Nội dung" value={s.text} maxLength={400} onChange={(v) => edit((d) => void (d.loveStory[i].text = v))} />
             </div>
           </div>
@@ -372,8 +373,8 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
                   onRemove={() => edit((d) => void d.gifts.splice(i, 1))}
                 />
               </div>
-              <TextField label="Tiêu đề" value={g.title} placeholder="Mừng cưới chú rể" onChange={(v) => edit((d) => void (d.gifts[i].title = v))} />
-              <TextField label="Ngân hàng" value={g.bank} onChange={(v) => edit((d) => void (d.gifts[i].bank = v))} />
+              <TextField multiline label="Tiêu đề" value={g.title} placeholder="Mừng cưới chú rể" onChange={(v) => edit((d) => void (d.gifts[i].title = v))} />
+              <TextField multiline label="Ngân hàng" value={g.bank} onChange={(v) => edit((d) => void (d.gifts[i].bank = v))} />
               <label className="block">
                 <span className="label">Mở ứng dụng ngân hàng khi khách bấm vào mã QR</span>
                 <select
@@ -398,7 +399,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <TextField label="Số tài khoản" value={g.accountNumber} onChange={(v) => edit((d) => void (d.gifts[i].accountNumber = v))} />
-                <TextField label="Chủ tài khoản" value={g.accountName} onChange={(v) => edit((d) => void (d.gifts[i].accountName = v.toUpperCase()))} />
+                <TextField multiline label="Chủ tài khoản" value={g.accountName} onChange={(v) => edit((d) => void (d.gifts[i].accountName = v.toUpperCase()))} />
               </div>
             </div>
           </div>
@@ -424,7 +425,7 @@ export function ConfigEditor({ initialConfig, initialQuiz }: { initialConfig: We
         {quiz.map((q, i) => (
           <div key={i} className="space-y-3 rounded-2xl bg-white/70 p-4 ring-1 ring-line">
             <div className="flex items-start gap-3">
-              <TextField label={`Câu ${i + 1}`} value={q.question} className="flex-1" onChange={(v) => editQuiz((d) => void (d[i].question = v))} />
+              <TextField multiline label={`Câu ${i + 1}`} value={q.question} className="flex-1" onChange={(v) => editQuiz((d) => void (d[i].question = v))} />
               <div className="pt-6">
                 <ItemTools index={i} count={quiz.length} onMove={(to) => setQuiz((qs) => move(qs, i, to))} onRemove={() => editQuiz((d) => void d.splice(i, 1))} />
               </div>

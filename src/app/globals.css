@@ -391,3 +391,9 @@ body {
 .vinyl-guide {
   animation: vinyl-in 0.45s ease-out both, vinyl-bob 1.6s ease-in-out 0.45s infinite;
 }
+
+/* Album: mép trái và phải mờ dần (chuyển động do album-grid.tsx điều khiển) */
+.album-drift {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}

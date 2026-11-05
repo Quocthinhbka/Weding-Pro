@@ -201,7 +201,7 @@ export function normalizeConfig(c: WeddingConfig): WeddingConfig {
 }
 
 export function venueQuery(venue: Venue) {
-  return venue.latLng.trim() || `${venue.name}, ${venue.address}`;
+  return venue.latLng.trim() || `${venue.name}, ${venue.address}`.replace(/\s+/g, " ");
 }
 
 export function mapEmbedUrl(venue: Venue) {

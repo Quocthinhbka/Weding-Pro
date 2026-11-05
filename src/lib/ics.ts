@@ -61,7 +61,7 @@ export function buildIcs(c: WeddingConfig, events: WeddingEvent[], now = new Dat
       `DTSTART:${icsDate(start)}`,
       `DTEND:${icsDate(end)}`,
       `SUMMARY:${escapeText(`${e.title} · ${coupleNames(c)}`)}`,
-      `LOCATION:${escapeText(venue ? `${venue.name}, ${venue.address}` : "")}`,
+      `LOCATION:${escapeText(venue ? `${venue.name}, ${venue.address}`.replace(/\s+/g, " ") : "")}`,
       `DESCRIPTION:${escapeText(`${e.title} lúc ${e.time}, ${info.weekday} ${info.day}/${info.month}/${info.year} (tức ${info.lunar}).`)}`,
       "BEGIN:VALARM",
       "TRIGGER:-PT2H",
@@ -89,7 +89,7 @@ export function googleCalendarUrl(c: WeddingConfig, venueId: string) {
     text: `${main.title} · ${coupleNames(c)}`,
     dates: `${icsDate(start)}/${icsDate(end)}`,
     details: `${details}\n(${dateInfo(c).lunar})`,
-    location: `${venue.name}, ${venue.address}`,
+    location: `${venue.name}, ${venue.address}`.replace(/\s+/g, " "),
   });
   return `https://calendar.google.com/calendar/render?${params}`;
 }
